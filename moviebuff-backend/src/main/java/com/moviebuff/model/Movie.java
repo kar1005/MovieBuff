@@ -16,7 +16,7 @@ public class Movie {
     private String posterUrl;
     private String trailerLink;
     private int duration;  // in minutes
-    private String grade;  // like U, U/A, A
+    private String grade;  // like U/A, A, U
     private String releaseDate;
     private double rating;
 }
