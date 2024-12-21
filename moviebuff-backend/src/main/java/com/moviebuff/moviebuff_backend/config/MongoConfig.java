@@ -1,4 +1,4 @@
-package com.moviebuff.config;
+package com.moviebuff.moviebuff_backend.config;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;

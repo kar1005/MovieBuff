@@ -1,4 +1,4 @@
-package com.moviebuff.config;
+package com.moviebuff.moviebuff_backend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

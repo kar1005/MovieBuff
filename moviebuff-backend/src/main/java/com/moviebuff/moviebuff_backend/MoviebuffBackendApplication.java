@@ -1,5 +1,5 @@
 // src/main/java/com/moviebuff/MoviebuffBackendApplication.java
-package com.moviebuff;  // Make sure this matches your directory structure
+package com.moviebuff.moviebuff_backend;  // Make sure this matches your directory structure
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
