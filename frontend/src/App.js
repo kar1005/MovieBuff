@@ -1,46 +1,70 @@
-// App.js
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import { Container, Navbar, Nav } from 'react-bootstrap';
-import TheaterLayoutDesigner from './components/theater/TheaterLayoutDesigner';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Container, Navbar, Nav, NavDropdown } from 'react-bootstrap';
+import { Provider } from 'react-redux';
+import store from './redux/store';
 
-// Import Bootstrap CSS
+// Theater Manager Components
+import TheaterManagerHome from './components/theater/TheaterManagerHome';
+import TheaterList from './components/theater/TheaterList';
+import AddTheater from './components/theater/AddTheater';
+import TheaterEdit from './components/theater/TheaterEdit';
+import ScreenSetup from './components/theater/ScreenSetup';
+import ShowList from './components/theater/ShowList';
+import ShowSchedule from './components/theater/ShowSchedule';
+import Analytics from './components/theater/Analytics';
+
+// Import other components for customer and admin interfaces
+// ...
+
+// Styles
 import 'bootstrap/dist/css/bootstrap.min.css';
-// Import custom styles
-import './styles/TheaterLayout.css';
-import TheaterLayoutViewer from './components/theater/TheaterLayoutViewer';
+import './styles/main.css';
 
 function App() {
   return (
-    <Router>
-      <div className="App">
-        <Navbar bg="dark" variant="dark" expand="lg">
-          <Container>
-            <Navbar.Brand as={Link} to="/">MovieBuff</Navbar.Brand>
-            <Navbar.Toggle aria-controls="basic-navbar-nav" />
-            <Navbar.Collapse id="basic-navbar-nav">
-              <Nav className="me-auto">
-                <Nav.Link as={Link} to="/theater-setup">Theater Setup</Nav.Link>
-                <Nav.Link as={Link} to="/theater-layout">Theater Layout</Nav.Link>
-
-              </Nav>
-            </Navbar.Collapse>
-          </Container>
-        </Navbar>
-
-        <Routes>
-          <Route path="/" element={
-            <Container className="py-4 text-center">
-              <h1>Welcome to MovieBuff</h1>
-              <p>Click on Theater Setup to design your theater layout</p>
+    <Provider store={store}>
+      <Router>
+        <div className="App">
+          <Navbar bg="dark" variant="dark" expand="lg" sticky="top">
+            <Container>
+              <Navbar.Brand href="/">MovieBuff</Navbar.Brand>
+              <Navbar.Toggle aria-controls="basic-navbar-nav" />
+              <Navbar.Collapse id="basic-navbar-nav">
+                <Nav className="me-auto">
+                  <NavDropdown title="Theater Manager" id="manager-nav-dropdown">
+                    <NavDropdown.Item href="/manager/theaters">Theaters</NavDropdown.Item>
+                    <NavDropdown.Item href="/manager/screen-setup">Screen Setup</NavDropdown.Item>
+                    <NavDropdown.Item href="/manager/shows">Shows</NavDropdown.Item>
+                    <NavDropdown.Item href="/manager/analytics">Analytics</NavDropdown.Item>
+                  </NavDropdown>
+                  {/* Add more navigation items for customer and admin interfaces */}
+                </Nav>
+              </Navbar.Collapse>
             </Container>
-          } />
-          <Route path="/theater-setup" element={<TheaterLayoutDesigner />} />
-          <Route path="/theater-layout" element={<TheaterLayoutViewer />} />
+          </Navbar>
 
-        </Routes>
-      </div>
-    </Router>
+          <main className="py-3">
+            <Routes>
+              {/* Theater Manager Routes */}
+              <Route path="/manager" element={<TheaterManagerHome />} />
+              <Route path="/manager/theaters" element={<TheaterList />} />
+              <Route path="/manager/theaters/add" element={<AddTheater />} />
+              <Route path="/manager/theaters/:id" element={<TheaterEdit />} />
+              <Route path="/manager/screen-setup" element={<ScreenSetup />} />
+              <Route path="/manager/shows" element={<ShowList />} />
+              <Route path="/manager/shows/schedule" element={<ShowSchedule />} />
+              <Route path="/manager/analytics" element={<Analytics />} />
+
+              {/* Add routes for customer and admin interfaces */}
+              
+              {/* Default redirect */}
+              <Route path="/" element={<Navigate to="/manager" replace />} />
+            </Routes>
+          </main>
+        </div>
+      </Router>
+    </Provider>
   );
 }
 
