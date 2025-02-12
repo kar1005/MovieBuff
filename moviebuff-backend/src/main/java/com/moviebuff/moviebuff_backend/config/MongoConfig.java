@@ -18,11 +18,13 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
     @Value("${spring.data.mongodb.database}")
     private String databaseName;
 
+    @SuppressWarnings("null")
     @Override
     protected String getDatabaseName() {
         return databaseName;
     }
 
+    @SuppressWarnings("null")
     @Override
     @Bean
     public MongoClient mongoClient() {

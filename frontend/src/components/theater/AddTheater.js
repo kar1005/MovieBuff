@@ -1,30 +1,72 @@
 import React, { useState } from 'react';
 import { Container, Card, Form, Button, Row, Col, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { addTheater } from '../../redux/slices/theaterSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import axios from 'axios';
+import { createTheater } from '../../redux/slices/theaterSlice';
 
 const AddTheater = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const userId = useSelector(state => state.auth.user?.id);
+  
   const [validated, setValidated] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [error, setError] = useState('');
+  
   const [formData, setFormData] = useState({
     name: '',
-    location: '',
+    managerId: userId,
     description: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    totalScreens: '',
+    emailAddress: '',
+    phoneNumber: '',
+    amenities: [],
+    location: {
+      coordinates: [0, 0],
+      address: '',
+      city: '',
+      state: '',
+      zipCode: ''
+    },
+    status: 'ACTIVE'
   });
+
+  const amenitiesList = [
+    'Parking',
+    'Food Court',
+    'Wheelchair Access',
+    'Dolby Sound',
+    'IMAX',
+    '4K Projection',
+    'VIP Lounge',
+    'Online Booking'
+  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name.includes('.')) {
+      const [parent, child] = name.split('.');
+      setFormData(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
+
+  const handleAmenityToggle = (amenity) => {
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      amenities: prev.amenities.includes(amenity)
+        ? prev.amenities.filter(a => a !== amenity)
+        : [...prev.amenities, amenity]
     }));
   };
 
@@ -39,20 +81,17 @@ const AddTheater = () => {
     }
 
     try {
-      // In production, this would be an API call
-      const newTheater = {
-        id: Date.now(), // Temporary ID for demo
-        ...formData,
-        status: 'ACTIVE',
-      };
-
-      dispatch(addTheater(newTheater));
+      const response = await axios.post('http://localhost:8080/api/theaters', formData);
+      dispatch(createTheater(response.data));
       setShowSuccess(true);
       setTimeout(() => {
-        navigate('/manager/theaters');
+        navigate('/manager/screen-setup',{ 
+          state: { theaterId: response.data.id }
+        });
       }, 2000);
-    } catch (error) {
-      console.error('Error adding theater:', error);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Error adding theater');
+      console.error('Error adding theater:', err);
     }
   };
 
@@ -60,15 +99,23 @@ const AddTheater = () => {
     <Container className="py-4">
       {showSuccess && (
         <Alert variant="success" className="mb-4">
-          Theater added successfully! Redirecting...
+          Theater added successfully! Redirecting to screen setup...
+        </Alert>
+      )}
+      
+      {error && (
+        <Alert variant="danger" className="mb-4" onClose={() => setError('')} dismissible>
+          {error}
         </Alert>
       )}
 
       <Card>
-        <Card.Header as="h5">Add New Theater</Card.Header>
+        <Card.Header className="bg-primary text-white">
+          <h5 className="mb-0">Add New Theater</h5>
+        </Card.Header>
         <Card.Body>
           <Form noValidate validated={validated} onSubmit={handleSubmit}>
-            <Row className="mb-3">
+            <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Theater Name</Form.Label>
@@ -86,33 +133,33 @@ const AddTheater = () => {
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  <Form.Label>Location</Form.Label>
+                  <Form.Label>Email Address</Form.Label>
                   <Form.Control
                     required
-                    type="text"
-                    name="location"
-                    value={formData.location}
+                    type="email"
+                    name="emailAddress"
+                    value={formData.emailAddress}
                     onChange={handleChange}
-                    placeholder="Enter location"
+                    placeholder="Enter email address"
                   />
                   <Form.Control.Feedback type="invalid">
-                    Please enter location
+                    Please enter a valid email address
                   </Form.Control.Feedback>
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  <Form.Label>Total Screens</Form.Label>
+                  <Form.Label>Phone Number</Form.Label>
                   <Form.Control
                     required
-                    type="number"
-                    name="totalScreens"
-                    value={formData.totalScreens}
+                    type="tel"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
                     onChange={handleChange}
-                    placeholder="Enter number of screens"
-                    min="1"
+                    placeholder="Enter phone number"
+                    pattern="^\+?[0-9]{10,12}$"
                   />
                   <Form.Control.Feedback type="invalid">
-                    Please enter valid number of screens
+                    Please enter a valid phone number
                   </Form.Control.Feedback>
                 </Form.Group>
               </Col>
@@ -123,8 +170,8 @@ const AddTheater = () => {
                   <Form.Control
                     required
                     type="text"
-                    name="address"
-                    value={formData.address}
+                    name="location.address"
+                    value={formData.location.address}
                     onChange={handleChange}
                     placeholder="Enter street address"
                   />
@@ -137,8 +184,8 @@ const AddTheater = () => {
                       <Form.Control
                         required
                         type="text"
-                        name="city"
-                        value={formData.city}
+                        name="location.city"
+                        value={formData.location.city}
                         onChange={handleChange}
                       />
                     </Form.Group>
@@ -149,8 +196,8 @@ const AddTheater = () => {
                       <Form.Control
                         required
                         type="text"
-                        name="state"
-                        value={formData.state}
+                        name="location.state"
+                        value={formData.location.state}
                         onChange={handleChange}
                       />
                     </Form.Group>
@@ -161,8 +208,8 @@ const AddTheater = () => {
                       <Form.Control
                         required
                         type="text"
-                        name="zipCode"
-                        value={formData.zipCode}
+                        name="location.zipCode"
+                        value={formData.location.zipCode}
                         onChange={handleChange}
                       />
                     </Form.Group>
@@ -183,9 +230,25 @@ const AddTheater = () => {
               />
             </Form.Group>
 
+            <Form.Group className="mb-4">
+              <Form.Label>Amenities</Form.Label>
+              <div className="d-flex flex-wrap gap-2">
+                {amenitiesList.map(amenity => (
+                  <Button
+                    key={amenity}
+                    variant={formData.amenities.includes(amenity) ? 'primary' : 'outline-primary'}
+                    onClick={() => handleAmenityToggle(amenity)}
+                    type="button"
+                  >
+                    {amenity}
+                  </Button>
+                ))}
+              </div>
+            </Form.Group>
+
             <div className="d-flex gap-2">
               <Button variant="primary" type="submit">
-                Add Theater
+                Save and Continue to Screen Setup
               </Button>
               <Button variant="outline-secondary" onClick={() => navigate('/manager/theaters')}>
                 Cancel

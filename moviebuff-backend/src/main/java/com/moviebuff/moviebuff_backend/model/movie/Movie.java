@@ -4,12 +4,10 @@ package com.moviebuff.moviebuff_backend.model.movie;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.moviebuff.moviebuff_backend.model.base.BaseEntity;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -19,8 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "movies")
-@EqualsAndHashCode(callSuper = true)
-public class Movie extends BaseEntity {
+public class Movie {
     @Id
     private String id;
     private String title;

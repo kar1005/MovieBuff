@@ -1,11 +1,9 @@
 // src/main/java/com/moviebuff/model/user/User.java
 package com.moviebuff.moviebuff_backend.model.user;
 
-import com.moviebuff.moviebuff_backend.model.base.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -16,8 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "users")
-@EqualsAndHashCode(callSuper = true)
-public class User extends BaseEntity {
+public class User {
     @Id
     private String id;
     private String username;

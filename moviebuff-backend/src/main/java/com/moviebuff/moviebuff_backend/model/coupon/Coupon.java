@@ -5,11 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import lombok.EqualsAndHashCode;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.moviebuff.moviebuff_backend.model.base.BaseEntity;
 
 import java.time.LocalDateTime;
 
@@ -18,8 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "coupons")
-@EqualsAndHashCode(callSuper = true)
-public class Coupon extends BaseEntity {
+public class Coupon {
     @Id
     private String id;
     private String code;

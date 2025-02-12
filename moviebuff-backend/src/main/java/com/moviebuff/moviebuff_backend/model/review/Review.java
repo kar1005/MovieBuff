@@ -4,20 +4,17 @@ package com.moviebuff.moviebuff_backend.model.review;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.moviebuff.moviebuff_backend.model.base.BaseEntity;
 
 @Data
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "reviews")
-@EqualsAndHashCode(callSuper = true)
-public class Review extends BaseEntity {
+public class Review {
     @Id
     private String id;
     private String movieId;

@@ -1,0 +1,173 @@
+/* TheaterSeatLayout.css */
+.theater-layout-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .screen-container {
+    background-color: #e9ecef;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 40px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: #666;
+    position: relative;
+  }
+  
+  .screen-container::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 10%;
+    right: 10%;
+    height: 4px;
+    background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.1), transparent);
+  }
+  
+  .seats-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    padding: 20px 0;
+    overflow-x: auto;
+  }
+  
+  .seat-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .row-label {
+    width: 30px;
+    text-align: center;
+    font-weight: bold;
+    color: #666;
+  }
+  
+  .seat-wrapper {
+    position: relative;
+  }
+  
+  .seat-cell {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    margin: 2px;
+    transition: all 0.2s ease;
+    font-weight: bold;
+    font-size: 16px;
+  }
+  
+  .seat-available {
+    cursor: pointer;
+    color: white;
+  }
+  
+  .seat-available:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  .premium {
+    background-color: #9333ea;
+  }
+  
+  .gold {
+    background-color: #fbbf24;
+    color: black;
+  }
+  
+  .silver {
+    background-color: #9ca3af;
+  }
+  
+  .gap-cell {
+    background-color: transparent;
+  }
+  
+  .stairs-cell {
+    background-color: #fed7aa;
+    color: #c2410c;
+    font-size: 20px;
+  }
+  
+  .exit-cell {
+    background-color: #ef4444;
+    color: white;
+    position: relative;
+  }
+  
+  .exit-text {
+    font-size: 8px;
+    position: absolute;
+    bottom: 2px;
+  }
+  
+  .layout-legend {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #dee2e6;
+  }
+  
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .legend-box {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .seat-cell {
+      width: 32px;
+      height: 32px;
+    }
+  
+    .row-label {
+      width: 24px;
+      font-size: 14px;
+    }
+  
+    .legend-box {
+      width: 24px;
+      height: 24px;
+    }
+  
+    .legend-item span {
+      font-size: 14px;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .seat-cell {
+      width: 28px;
+      height: 28px;
+    }
+  
+    .exit-text {
+      font-size: 7px;
+    }
+  
+    .stairs-cell {
+      font-size: 16px;
+    }
+  }

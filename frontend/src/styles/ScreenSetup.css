@@ -1,0 +1,89 @@
+.theater-grid-container {
+  overflow-x: auto;
+}
+
+.theater-screen {
+  background-color: #e2e8f0;
+  padding: 10px;
+  text-align: center;
+  border-radius: 4px;
+}
+
+.legend-box {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+.cell-aisle { background-color: #e2e8f0; }
+.cell-stairs { background-color: #fde68a; }
+.cell-exit { background-color: #ef4444; color: white; }
+.cell-gap { background-color: #f3f4f6; }
+
+.category-premium { background-color: #9333ea; color: white; }
+.category-gold { background-color: #fbbf24; color: black; }
+.category-silver { background-color: #9ca3af; color: white; }
+
+.seat-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 10px;
+}
+
+.seat-type-indicator {
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.grid-cell {
+  position: relative;
+}
+
+.grid-cell.seat {
+  padding: 2px;
+}
+
+.legend-box {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border: 1px solid #dee2e6;
+}
+
+.is-drawing {
+  cursor: pointer;
+}
+
+.theater-grid-container {
+  overflow-x: auto;
+}
+
+.theater-screen {
+  background-color: #e2e8f0;
+  padding: 10px;
+  text-align: center;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.grid-content {
+  min-width: fit-content;
+}
+
+.cell-aisle { background-color: #e2e8f0; }
+.cell-stairs { background-color: #fde68a; }
+.cell-exit { background-color: #ef4444; color: white; }
+.cell-gap { background-color: #f3f4f6; }

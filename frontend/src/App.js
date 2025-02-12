@@ -13,13 +13,12 @@ import ScreenSetup from './components/theater/ScreenSetup';
 import ShowList from './components/theater/ShowList';
 import ShowSchedule from './components/theater/ShowSchedule';
 import Analytics from './components/theater/Analytics';
-
-// Import other components for customer and admin interfaces
-// ...
+import TheaterScreens from './components/theater/TheaterScreens';
 
 // Styles
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/main.css';
+import TheaterSeatLayout from './components/theater/TheaterSeatLayout';
 
 function App() {
   return (
@@ -51,6 +50,14 @@ function App() {
               <Route path="/manager/theaters" element={<TheaterList />} />
               <Route path="/manager/theaters/add" element={<AddTheater />} />
               <Route path="/manager/theaters/:id" element={<TheaterEdit />} />
+              <Route path="/manager/theaters/:theaterId/edit" element={<TheaterEdit />} />  {/* Add this line */}
+              <Route path="/viewScreen" element={<TheaterSeatLayout/>}/>
+              {/* New Theater Screen Routes */}
+              <Route path="/manager/theaters/:theaterId/screens" element={<TheaterScreens />} />
+              <Route path="/manager/theaters/:theaterId/screens/:screenId/edit" element={<ScreenSetup />} />
+              <Route path="/manager/theaters/:theaterId/screens/add" element={<ScreenSetup />} />
+
+
               <Route path="/manager/screen-setup" element={<ScreenSetup />} />
               <Route path="/manager/shows" element={<ShowList />} />
               <Route path="/manager/shows/schedule" element={<ShowSchedule />} />

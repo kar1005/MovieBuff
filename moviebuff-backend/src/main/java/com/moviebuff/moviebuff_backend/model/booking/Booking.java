@@ -4,11 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import lombok.EqualsAndHashCode;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.moviebuff.moviebuff_backend.model.base.BaseEntity;
 
 import java.util.List;
 
@@ -16,9 +14,8 @@ import java.util.List;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
 @Document(collection = "bookings")
-public class Booking extends BaseEntity {
+public class Booking {
     @Id
     private String id;
     private String userId;

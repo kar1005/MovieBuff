@@ -1,42 +1,73 @@
-import React, { useState } from 'react';
-import { Container, Card, Table, Button, Badge, Form, InputGroup } from 'react-bootstrap';
+// src/components/theater/TheaterList.js
+import React, { useState, useEffect } from 'react';
+import { Container, Card, Table, Button, Badge, Form, InputGroup, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { Edit, Trash2, Plus, Search, Monitor } from 'lucide-react';
-import { deleteTheater } from '../../redux/slices/theaterSlice';
+import { fetchTheaters } from '../../redux/slices/theaterSlice';
+import { theaterService } from '../../services/theaterService';
 
 const TheaterList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const theaters = useSelector(state => state.theater.theaters);
+  const { theaters, loading, error } = useSelector((state) => state.theater);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
 
-  const handleDelete = (theaterId) => {
+  useEffect(() => {
+    dispatch(fetchTheaters());
+  }, [dispatch]);
+
+  const handleDelete = async (theaterId) => {
     if (window.confirm('Are you sure you want to delete this theater? This action cannot be undone.')) {
-      dispatch(deleteTheater(theaterId));
+      try {
+        await theaterService.deleteTheater(theaterId);
+        dispatch(fetchTheaters()); // Refresh the list
+      } catch (error) {
+        console.error('Error deleting theater:', error);
+      }
     }
   };
 
-  const filteredTheaters = theaters.filter(theater => {
-    const matchesSearch = 
+  const filteredTheaters = theaters.filter((theater) => {
+    const matchesSearch =
       theater.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       theater.location.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = 
-      filterStatus === 'ALL' || theater.status === filterStatus;
+
+    const matchesStatus = filterStatus === 'ALL' || theater.status === filterStatus;
 
     return matchesSearch && matchesStatus;
   });
+
+  if (loading) {
+    return (
+      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
+        <Spinner animation="border" variant="primary" />
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container fluid className="py-4">
+        <Card>
+          <Card.Body className="text-center text-danger">
+            <h5>Error loading theaters</h5>
+            <p>{error.message}</p>
+          </Card.Body>
+        </Card>
+      </Container>
+    );
+  }
 
   return (
     <Container fluid className="py-4">
       <Card>
         <Card.Header className="bg-white d-flex justify-content-between align-items-center">
           <h5 className="mb-0">Theaters</h5>
-          <Button 
-            variant="primary" 
-            onClick={() => navigate('/manager/add-theater')}
+          <Button
+            variant="primary"
+            onClick={() => navigate('/manager/theaters/add')}
             className="d-flex align-items-center gap-2"
           >
             <Plus size={18} />
@@ -57,7 +88,7 @@ const TheaterList = () => {
               />
             </InputGroup>
 
-            <Form.Select 
+            <Form.Select
               style={{ maxWidth: '150px' }}
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
@@ -80,13 +111,13 @@ const TheaterList = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredTheaters.map(theater => (
+              {filteredTheaters.map((theater) => (
                 <tr key={theater.id}>
                   <td>{theater.name}</td>
                   <td>
-                    <div>{theater.address}</div>
+                    <div>{theater.location.address}</div>
                     <small className="text-muted">
-                      {theater.city}, {theater.state} {theater.zipCode}
+                      {theater.location.city}, {theater.location.state} {theater.location.zipCode}
                     </small>
                   </td>
                   <td>
@@ -112,7 +143,16 @@ const TheaterList = () => {
                       <Button 
                         variant="outline-primary" 
                         size="sm"
-                        onClick={() => navigate(`/manager/theaters/${theater.id}`)}
+                        onClick={() => navigate(`/manager/theaters/${theater.id}/screens`)}
+                        title="View Screens"
+                      >
+                        <Monitor size={16} />
+                      </Button>
+                      <Button 
+                        variant="outline-primary" 
+                        size="sm"
+                        onClick={() => navigate(`/manager/theaters/${theater.id}/edit`)}
+                        title="Edit Theater"
                       >
                         <Edit size={16} />
                       </Button>
@@ -120,6 +160,7 @@ const TheaterList = () => {
                         variant="outline-danger" 
                         size="sm"
                         onClick={() => handleDelete(theater.id)}
+                        title="Delete Theater"
                       >
                         <Trash2 size={16} />
                       </Button>

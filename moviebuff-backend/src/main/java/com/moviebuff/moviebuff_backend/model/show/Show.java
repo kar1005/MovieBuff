@@ -4,12 +4,10 @@ package com.moviebuff.moviebuff_backend.model.show;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.moviebuff.moviebuff_backend.model.base.BaseEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,8 +18,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "shows")
-@EqualsAndHashCode(callSuper = true)
-public class Show extends BaseEntity {
+public class Show {
     @Id
     private String id;
     private String movieId;
@@ -55,7 +52,10 @@ public class Show extends BaseEntity {
 
     public enum ShowStatus {
         OPEN,
-        FULL,
+        SOLDOUT,
+        FILLINGFAST,
+        FEWSEATSLEFT,
+        STARTED,
         CANCELLED
     }
 }
