@@ -3,8 +3,11 @@ package com.moviebuff.moviebuff_backend.controller.user;
 
 import com.moviebuff.moviebuff_backend.model.user.User;
 import com.moviebuff.moviebuff_backend.repository.interfaces.user.IUserRepository;
+import com.moviebuff.moviebuff_backend.service.Email.EmailService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,10 +18,29 @@ public class UserController {
     @Autowired
     private IUserRepository userRepository;
 
+    @Autowired
+    private EmailService emailService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userRepository.findAll();
         return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/customer")
+    public ResponseEntity<List<User>> getCustomers() {
+        List<User> users = userRepository.findByRole(User.UserRole.CUSTOMER);
+        System.out.println(users);
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/theatremanager")
+    public ResponseEntity<List<User>> getTheaterManagers() {
+        List<User> theaterManagers = userRepository.findByRole(User.UserRole.THEATER_MANAGER);
+        return ResponseEntity.ok(theaterManagers);
     }
 
     @GetMapping("/{id}")
@@ -30,7 +52,19 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user) {
+        // Hash the password
+        String rawPassword = user.getPassword(); // Get raw password before hashing
+        user.setPassword(passwordEncoder.encode(rawPassword));
+        
         User savedUser = userRepository.save(user);
+        
+        // Send email if the role is THEATER_MANAGER
+        if (user.getRole() == User.UserRole.THEATER_MANAGER) {
+            String subject = "Your Account Credentials";
+            String text = "Your account has been created.\nUsername: " + user.getUsername() + "\nPassword: " + rawPassword;
+            emailService.sendMail(user.getEmail(), subject, text);
+        }
+        
         return ResponseEntity.ok(savedUser);
     }
 
@@ -40,9 +74,16 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
         user.setId(id);
+        
+        // Hash the password if it is not empty
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+        
         User updatedUser = userRepository.save(user);
         return ResponseEntity.ok(updatedUser);
     }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable String id) {

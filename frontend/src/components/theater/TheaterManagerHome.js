@@ -1,4 +1,3 @@
-// src/components/theater/TheaterManagerHome.js
 import { Container, Row, Col, Card, Badge, Spinner, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
