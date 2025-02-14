@@ -1,14 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Card, Form, Button, Row, Col, Alert } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import axios from 'axios';
 import { createTheater } from '../../redux/slices/theaterSlice';
 
 const AddTheater = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
-  const userId = useSelector(state => state.auth.user?.id);
+  
+  // Get managerId from URL query parameters
+  const queryParams = new URLSearchParams(location.search);
+  const managerId = queryParams.get('managerId');
   
   const [validated, setValidated] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -16,7 +20,7 @@ const AddTheater = () => {
   
   const [formData, setFormData] = useState({
     name: '',
-    managerId: userId,
+    managerId: managerId, // Initialize with managerId from URL
     description: '',
     emailAddress: '',
     phoneNumber: '',
@@ -28,8 +32,19 @@ const AddTheater = () => {
       state: '',
       zipCode: ''
     },
-    status: 'ACTIVE'
+    status: 'ACTIVE',
+    totalScreens: 0  // Initialize totalScreens to 0
   });
+
+  // Redirect if no managerId is provided
+  useEffect(() => {
+    if (!managerId) {
+      setError('Manager ID is required');
+      setTimeout(() => {
+        navigate('/manager/theaters');
+      }, 2000);
+    }
+  }, [managerId, navigate]);
 
   const amenitiesList = [
     'Parking',
@@ -80,12 +95,19 @@ const AddTheater = () => {
       return;
     }
 
+    // Ensure managerId and totalScreens are included in the submission
+    const theaterData = {
+      ...formData,
+      managerId: managerId, // Explicitly set managerId
+      totalScreens: 0 // Explicitly set totalScreens
+    };
+
     try {
-      const response = await axios.post('http://localhost:8080/api/theaters', formData);
+      const response = await axios.post('http://localhost:8080/api/theaters', theaterData);
       dispatch(createTheater(response.data));
       setShowSuccess(true);
       setTimeout(() => {
-        navigate('/manager/screen-setup',{ 
+        navigate('/manager/screen-setup', { 
           state: { theaterId: response.data.id }
         });
       }, 2000);
@@ -94,6 +116,16 @@ const AddTheater = () => {
       console.error('Error adding theater:', err);
     }
   };
+
+  if (!managerId) {
+    return (
+      <Container className="py-4">
+        <Alert variant="danger">
+          Manager ID is required. Redirecting...
+        </Alert>
+      </Container>
+    );
+  }
 
   return (
     <Container className="py-4">

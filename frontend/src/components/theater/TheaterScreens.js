@@ -1,15 +1,19 @@
 // src/components/theater/TheaterScreens.js
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Card, Table, Button, Badge, Row, Col, Spinner } from 'react-bootstrap';
+import { Container, Card, Table, Button, Badge, Row, Col, Spinner, Modal } from 'react-bootstrap';
 import { useSelector, useDispatch } from 'react-redux';
-import { Edit, Plus, Monitor } from 'lucide-react';
-import { fetchTheaterById, fetchTheaterScreens } from '../../redux/slices/theaterSlice';
+import { Edit, Plus, Monitor, Trash2 } from 'lucide-react';
+import { fetchTheaterById, fetchTheaterScreens, deleteScreen } from '../../redux/slices/theaterSlice';
 
 const TheaterScreens = () => {
   const { theaterId } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  
+  // State for delete confirmation modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [screenToDelete, setScreenToDelete] = useState(null);
   
   const { currentTheater, screens, loading } = useSelector((state) => ({
     currentTheater: state.theater.currentTheater,
@@ -24,6 +28,25 @@ const TheaterScreens = () => {
     }
   }, [dispatch, theaterId]);
 
+  const handleDeleteClick = (screen) => {
+    setScreenToDelete(screen);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (screenToDelete) {
+      try {
+        await dispatch(deleteScreen({ theaterId, screenNumber: screenToDelete.screenNumber })).unwrap();
+        // Refresh screens list after deletion
+        dispatch(fetchTheaterScreens(theaterId));
+      } catch (error) {
+        console.error('Failed to delete screen:', error);
+      }
+    }
+    setShowDeleteModal(false);
+    setScreenToDelete(null);
+  };
+
   if (loading || !currentTheater) {
     return (
       <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
@@ -35,7 +58,7 @@ const TheaterScreens = () => {
   // Ensure we have an array to map over, even if empty
   const theaterScreens = (screens[theaterId] || []).map(screen => ({
     ...screen,
-    supportedExperiences: screen.supportedExperiences || [] // Ensure this is always an array
+    supportedExperiences: screen.supportedExperiences || []
   }));
 
   return (
@@ -122,13 +145,22 @@ const TheaterScreens = () => {
                       </div>
                     </td>
                     <td>
-                      <Button
-                        variant="outline-primary"
-                        size="sm"
-                        onClick={() => navigate(`/manager/theaters/${theaterId}/screens/${screen.screenNumber}/edit`)}
-                      >
-                        <Edit size={16} />
-                      </Button>
+                      <div className="d-flex gap-2">
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          onClick={() => navigate(`/manager/theaters/${theaterId}/screens/${screen.screenNumber}/edit`)}
+                        >
+                          <Edit size={16} />
+                        </Button>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => handleDeleteClick(screen)}
+                        >
+                          <Trash2 size={16} />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -143,6 +175,24 @@ const TheaterScreens = () => {
           </Table>
         </Card.Body>
       </Card>
+
+      {/* Delete Confirmation Modal */}
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Delete</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete Screen {screenToDelete?.screenNumber}? This action cannot be undone.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleConfirmDelete}>
+            Delete Screen
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

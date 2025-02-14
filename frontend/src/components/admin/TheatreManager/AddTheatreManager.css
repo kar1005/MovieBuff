@@ -1,18 +1,19 @@
-.register-page {
+.manager-page {
     min-height: 100vh;
     background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
     padding: 2rem 0;
   }
   
-  .register-card {
+  .manager-card {
     border: none;
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     background: #ffffff;
+    margin-bottom: 2rem;
   }
   
-  .register-title {
+  .manager-title {
     color: #2c3e50;
     font-size: 2rem;
     font-weight: 600;
@@ -55,6 +56,12 @@
     padding: 1.5rem;
     background-color: #f8f9fa;
     border-radius: 10px;
+    transition: all 0.3s ease;
+  }
+  
+  .section-container:hover {
+    background-color: #f9fafb;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
   
   .section-title {
@@ -82,9 +89,10 @@
   .form-control:focus {
     border-color: #4a90e2;
     box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.1);
+    transform: translateY(-2px);
   }
   
-  .register-button {
+  .manager-button {
     background-color: #4a90e2;
     border: none;
     border-radius: 8px;
@@ -95,41 +103,21 @@
     transition: all 0.3s ease;
   }
   
-  .register-button:hover {
+  .manager-button:hover:not(:disabled) {
     background-color: #357abd;
     transform: translateY(-1px);
     box-shadow: 0 4px 15px rgba(74, 144, 226, 0.2);
   }
   
+  .manager-button:disabled {
+    background-color: #a0a0a0;
+    cursor: not-allowed;
+  }
+  
   .alert {
     border-radius: 8px;
     font-size: 0.9rem;
-  }
-  
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    .register-card {
-      margin: 1rem;
-    }
-  
-    .section-container {
-      padding: 1rem;
-    }
-  
-    .register-title {
-      font-size: 1.75rem;
-    }
-  }
-  
-  /* Animation for form elements */
-  .form-control {
-    transform: translateY(0);
-    opacity: 1;
-    transition: all 0.3s ease;
-  }
-  
-  .form-control:focus {
-    transform: translateY(-2px);
+    margin-bottom: 1rem;
   }
   
   /* Custom styling for Google button container */
@@ -138,8 +126,62 @@
     margin: 1rem 0;
   }
   
-  /* Hover effects for sections */
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .manager-card {
+      margin: 1rem;
+    }
+  
+    .section-container {
+      padding: 1rem;
+    }
+  
+    .manager-title {
+      font-size: 1.75rem;
+    }
+  }
+  
+  /* Animation for form elements */
+  .form-control, .manager-button {
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Enhanced invalid feedback styling */
+  .invalid-feedback {
+    font-size: 0.85rem;
+    color: #dc3545;
+    margin-top: 0.25rem;
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  /* Loading state styling */
+  .manager-button:disabled {
+    position: relative;
+    background-color: #4a90e2;
+    opacity: 0.7;
+  }
+  
+  /* Form group spacing */
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Section container transition */
+  .section-container {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
   .section-container:hover {
-    background-color: #f9fafb;
-    transition: background-color 0.3s ease;
+    transform: translateY(-2px);
   }

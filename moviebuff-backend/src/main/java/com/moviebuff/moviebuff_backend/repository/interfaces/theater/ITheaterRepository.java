@@ -11,7 +11,8 @@ public interface ITheaterRepository extends MongoRepository<Theater, String> {
     // Basic queries
     List<Theater> findTheatersByLocation_City(String city);
     List<Theater> findTheatersByStatus(Theater.TheaterStatus status);
-    
+    List<Theater> findByManagerId(String managerId);
+
     // Location-based queries
     @Query("{'location.coordinates': {$near: {$geometry: {type: 'Point', coordinates: ?0}, $maxDistance: ?1}}}")
     List<Theater> findTheatersNearLocation(double[] coordinates, double radius);

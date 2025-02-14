@@ -21,7 +21,17 @@ export const createTheater = createAsyncThunk(
     return response;
   }
 );
-
+export const deleteScreen = createAsyncThunk(
+  'theater/deleteScreen',
+  async ({ theaterId, screenNumber }, { rejectWithValue }) => {
+    try {
+      await theaterService.deleteScreen(theaterId, screenNumber);
+      return { theaterId, screenNumber };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || 'Failed to delete screen');
+    }
+  }
+);
 export const fetchTheaters = createAsyncThunk(
   'theater/fetchTheaters',
   async () => {
@@ -51,6 +61,14 @@ export const fetchTheaterById = createAsyncThunk(
   async (id) => {
     const response = await theaterService.getTheaterById(id);
     return response;
+  }
+);
+
+export const fetchManagerTheaters = createAsyncThunk(
+  'theaters/fetchByManager',
+  async (managerId) => {
+      const response = await theaterService.getTheatersByManagerId(managerId);
+      return response;
   }
 );
 
@@ -167,6 +185,17 @@ const theaterSlice = createSlice({
         state.loading = false;
         state.error = action.error.message;
       })
+      .addCase(fetchManagerTheaters.pending, (state) => {
+        state.loading = true;
+    })
+    .addCase(fetchManagerTheaters.fulfilled, (state, action) => {
+        state.loading = false;
+        state.managerTheaters = action.payload;
+    })
+    .addCase(fetchManagerTheaters.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+    })
 
       // Update Theater
       .addCase(updateTheaterAsync.pending, (state) => {
@@ -198,7 +227,26 @@ const theaterSlice = createSlice({
         state.loading = false;
         state.error = action.error.message;
       })
-
+      .addCase(deleteScreen.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteScreen.fulfilled, (state, action) => {
+        state.loading = false;
+        // Remove the deleted screen from the screens list
+        if (state.screens[action.payload.theaterId]) {
+          state.screens[action.payload.theaterId] = state.screens[action.payload.theaterId]
+            .filter(screen => screen.screenNumber !== action.payload.screenNumber);
+        }
+        // Update total screens count in current theater
+        if (state.currentTheater) {
+          state.currentTheater.totalScreens = (state.currentTheater.totalScreens || 1) - 1;
+        }
+      })
+      .addCase(deleteScreen.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
       // Fetch Theater By Id
       .addCase(fetchTheaterById.pending, (state) => {
         state.loading = true;

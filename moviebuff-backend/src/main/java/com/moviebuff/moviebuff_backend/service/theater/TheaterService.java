@@ -41,6 +41,24 @@ public class TheaterService implements ITheaterService {
         return theaterMapper.mapEntityToResponse(theater);
     }
 
+
+    @Override
+    public List<TheaterResponse> getTheatersByManagerId(String managerId) {
+        // Fetch theaters by managerId
+        List<Theater> theaters = theaterRepository.findByManagerId(managerId);
+        
+        // If no theaters found, throw exception
+        if (theaters.isEmpty()) {
+            throw new ResourceNotFoundException(
+                "No theaters found for manager with ID: " + managerId);
+        }
+        
+        // Map theaters to response DTOs
+        return theaters.stream()
+            .map(theaterMapper::mapEntityToResponse)
+            .collect(Collectors.toList());
+    }
+
     @Override
     @Transactional
     public void deleteTheater(String id) {
@@ -119,6 +137,9 @@ public class TheaterService implements ITheaterService {
     @Override
     @Transactional
     public TheaterResponse updateScreen(String theaterId, int screenNumber, ScreenDTO screenRequest) {
+        System.out.println("+++++++++++++++++++++++++++++++++++++++++++Update Screen ScreenRequest+++++++++++++++++++++++++++++++++++++++++++");
+        System.out.println(screenRequest);
+        System.out.println("+++++++++++++++++++++++++++++++++++++++++++Update Screen ScreenRequest+++++++++++++++++++++++++++++++++++++++++++");
         Theater theater = getTheaterById(theaterId);
         List<Theater.Screen> screens = theater.getScreens();
         

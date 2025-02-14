@@ -23,7 +23,8 @@ public interface ITheaterService {
     List<TheaterResponse> getTheatersByCity(String city);
     List<TheaterResponse> getTheatersNearby(Double latitude, Double longitude, Double radius);
     List<TheaterResponse> searchTheaters(String query, List<String> amenities, String city);
-    
+    List<TheaterResponse> getTheatersByManagerId(String managerId);
+
     // Theater Status Management
     TheaterResponse updateTheaterStatus(String id, Theater.TheaterStatus status);
     

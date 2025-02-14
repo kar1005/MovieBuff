@@ -38,7 +38,7 @@ function App() {
               <Route path="/manager/theaters" element={<TheaterList />} />
               <Route path="/manager/theaters/add" element={<AddTheater />} />
               <Route path="/manager/theaters/:id" element={<TheaterEdit />} />
-              <Route path="/manager/theaters/:theaterId/edit" element={<TheaterEdit />} />  {/* Add this line */}
+              <Route path="/manager/theaters/:theaterId/edit" element={<TheaterEdit />} />
               <Route path="/viewScreen" element={<TheaterSeatLayout/>}/>
               {/* New Theater Screen Routes */}
               <Route path="/manager/theaters/:theaterId/screens" element={<TheaterScreens />} />

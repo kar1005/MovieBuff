@@ -1,17 +1,34 @@
-import axios from 'axios';
+// src/services/authService.js
+import axiosInstance from './axiosConfig';
 
-const API_URL = 'http://localhost:8080/api/auth';
+const API_URL = '/auth';
 
-export const login = async (credentials) => {
-  const response = await axios.post(`${API_URL}/login`, credentials);
-  return response.data;
+export const authService = {
+  login: async (credentials) => {
+    const response = await axiosInstance.post(`${API_URL}/login`, credentials);
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+    }
+    return response.data;
+  },
+
+  register: async (userData) => {
+    return await axiosInstance.post(`${API_URL}/register`, userData);
+  },
+
+  registerTManager: async (userData) => {
+    return await axiosInstance.post(`${API_URL}/registertmanager`, userData);
+  },
+
+  logout: async () => {
+    localStorage.removeItem('token');
+    return await axiosInstance.post(`${API_URL}/logout`);
+  },
+
+  getCurrentUser: async () => {
+    return await axiosInstance.get(`${API_URL}/me`);
+  }
 };
 
-export const register = async (userData) => {
-  return await axios.post(`${API_URL}/register`, userData);
-};
-
-
-export const registerTManager = async (userData) => {
-  return await axios.post(`${API_URL}/registertmanager`, userData);
-};
+export const { login, register, registerTManager, logout } = authService;
+export default authService;

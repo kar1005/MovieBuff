@@ -1,10 +1,12 @@
-.register-page {
+.login-page {
     min-height: 100vh;
     background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+    display: flex;
+    align-items: center;
     padding: 2rem 0;
   }
   
-  .register-card {
+  .login-card {
     border: none;
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
@@ -12,9 +14,9 @@
     background: #ffffff;
   }
   
-  .register-title {
+  .login-title {
     color: #2c3e50;
-    font-size: 2rem;
+    font-size: 2.25rem;
     font-weight: 600;
     margin-bottom: 1rem;
   }
@@ -50,20 +52,10 @@
     font-size: 0.9rem;
   }
   
-  .section-container {
-    margin-bottom: 2rem;
-    padding: 1.5rem;
+  .login-form-container {
+    padding: 1rem;
     background-color: #f8f9fa;
     border-radius: 10px;
-  }
-  
-  .section-title {
-    color: #2c3e50;
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid #e9ecef;
   }
   
   .form-label {
@@ -82,9 +74,10 @@
   .form-control:focus {
     border-color: #4a90e2;
     box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.1);
+    transform: translateY(-2px);
   }
   
-  .register-button {
+  .login-button {
     background-color: #4a90e2;
     border: none;
     border-radius: 8px;
@@ -93,12 +86,18 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     transition: all 0.3s ease;
+    margin-top: 1rem;
   }
   
-  .register-button:hover {
+  .login-button:hover:not(:disabled) {
     background-color: #357abd;
     transform: translateY(-1px);
     box-shadow: 0 4px 15px rgba(74, 144, 226, 0.2);
+  }
+  
+  .login-button:disabled {
+    background-color: #a0a0a0;
+    cursor: not-allowed;
   }
   
   .alert {
@@ -106,40 +105,42 @@
     font-size: 0.9rem;
   }
   
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    .register-card {
-      margin: 1rem;
-    }
-  
-    .section-container {
-      padding: 1rem;
-    }
-  
-    .register-title {
-      font-size: 1.75rem;
-    }
-  }
-  
-  /* Animation for form elements */
-  .form-control {
-    transform: translateY(0);
-    opacity: 1;
-    transition: all 0.3s ease;
-  }
-  
-  .form-control:focus {
-    transform: translateY(-2px);
-  }
-  
   /* Custom styling for Google button container */
-  #googleRegisterButton {
+  #googleButton {
     min-height: 40px;
     margin: 1rem 0;
   }
   
-  /* Hover effects for sections */
-  .section-container:hover {
-    background-color: #f9fafb;
-    transition: background-color 0.3s ease;
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .login-card {
+      margin: 1rem;
+    }
+  
+    .login-title {
+      font-size: 2rem;
+    }
+  }
+  
+  /* Animation for form elements */
+  .form-control, .login-button {
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Custom styles for error messages */
+  .invalid-feedback {
+    font-size: 0.85rem;
+    color: #dc3545;
+    margin-top: 0.25rem;
   }

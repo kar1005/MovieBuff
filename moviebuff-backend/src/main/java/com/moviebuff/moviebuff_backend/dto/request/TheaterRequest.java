@@ -24,12 +24,12 @@ public class TheaterRequest {
     @Pattern(regexp = "^\\+?[0-9]{10,12}$", message = "Invalid phone number")
     private String phoneNumber;
     
-    @Min(value = 1, message = "Theater must have at least one screen")
+    @Min(value = 0, message = "Theater must have at least one screen")
     private Integer totalScreens;
     
     @NotNull(message = "Location details are required")
     private LocationDTO location;
     
-    @NotNull(message = "At least one screen configuration is required")
+    // @NotNull(message = "At least one screen configuration is required")
     private List<ScreenDTO> screens;
 }
