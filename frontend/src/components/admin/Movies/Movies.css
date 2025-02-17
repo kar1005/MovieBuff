@@ -1,0 +1,142 @@
+.movies-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.movies-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px;
+}
+
+/* If you want to adjust the button specifically */
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 600px;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+/* 
+.add-movie-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.add-movie-btn:hover {
+    background-color: #0056b3;
+} */
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    font-size: 1.2em;
+    color: #666;
+}
+
+.error-container {
+    text-align: center;
+    padding: 20px;
+}
+
+.error-message {
+    color: #dc3545;
+    margin-bottom: 10px;
+}
+
+.retry-btn {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.no-movies {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+.action-buttons {
+    white-space: nowrap;
+}
+
+.action-buttons button {
+    margin-right: 8px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.table th,
+.table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.thead-dark th {
+    background-color: #343a40;
+    color: white;
+}
+
+.btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.table td img {
+    transition: transform 0.3s ease;
+}
+
+.table td img:hover {
+    transform: scale(1.5);
+    cursor: pointer;
+}
+
+/* Add this if you want images to appear above other content when scaled */
+.table td {
+    position: relative;
+}
+
+.table td img:hover {
+    position: relative;
+    z-index: 1;
+}

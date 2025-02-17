@@ -58,13 +58,6 @@ public class UserController {
         
         User savedUser = userRepository.save(user);
         
-        // Send email if the role is THEATER_MANAGER
-        if (user.getRole() == User.UserRole.THEATER_MANAGER) {
-            String subject = "Your Account Credentials";
-            String text = "Your account has been created.\nUsername: " + user.getUsername() + "\nPassword: " + rawPassword;
-            emailService.sendMail(user.getEmail(), subject, text);
-        }
-        
         return ResponseEntity.ok(savedUser);
     }
 

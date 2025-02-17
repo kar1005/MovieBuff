@@ -5,7 +5,7 @@ import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap'
 import { toast } from 'react-toastify';
 import './AddTheatreManager.css';
 
-const AddTheatreManager = () => {
+const AddTheatreManager = ({handleClick}) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: '',
@@ -123,8 +123,8 @@ const AddTheatreManager = () => {
       const registrationData = { ...formData };
       delete registrationData.confirmPassword;
       await registerTManager(registrationData);
-      toast.success('Theater manager registered successfully!');
-      navigate('/login');
+      toast.success('Theater manager registered successfully! Credentials have been sent via email.');
+      handleClick('theatremngr');
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Registration failed';
       setError(errorMessage);

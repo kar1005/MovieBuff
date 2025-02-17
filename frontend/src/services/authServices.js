@@ -1,5 +1,6 @@
 // src/services/authService.js
 import axiosInstance from './axiosConfig';
+import { toast } from 'react-toastify';
 
 const API_URL = '/auth';
 
@@ -17,7 +18,17 @@ export const authService = {
   },
 
   registerTManager: async (userData) => {
-    return await axiosInstance.post(`${API_URL}/registertmanager`, userData);
+    try {
+      const response = await axiosInstance.post(`${API_URL}/registertmanager`, userData);
+      if (response.data) {
+        toast.success('Theater manager registered successfully! Credentials have been sent via email.');
+      }
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data || 'Registration failed';
+      toast.error(errorMessage);
+      throw error;
+    }
   },
 
   logout: async () => {

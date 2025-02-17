@@ -24,6 +24,7 @@ public class Movie {
     private List<String> languages;
     private List<String> genres;
     private List<String> experience;//2D,3D,4D,MAX Etc....
+    private List<String> cast;
     private String description;
     private Integer duration;
     private String grade;

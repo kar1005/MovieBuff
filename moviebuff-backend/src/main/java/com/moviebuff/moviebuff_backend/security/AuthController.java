@@ -16,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import com.moviebuff.moviebuff_backend.repository.interfaces.user.IUserRepository;
+import com.moviebuff.moviebuff_backend.service.Email.EmailService;
 
 import jakarta.validation.Valid;
 
@@ -38,6 +39,9 @@ public class AuthController {
     
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private EmailService emailService;
 
     private final GoogleAuthService googleAuthService;
 
@@ -136,6 +140,8 @@ public class AuthController {
                 .body("Error: Email is already in use!");
         }
 
+        String originalPassword = user.getPassword();
+        
         // Set default role if not specified
         if (user.getRole() == null) {
             user.setRole(User.UserRole.THEATER_MANAGER);
@@ -148,6 +154,17 @@ public class AuthController {
 
         // Save user
         User registeredUser = userRepository.save(user);
+
+        try {
+            emailService.sendCredentialsMail(
+                registeredUser.getEmail(),
+                registeredUser.getUsername(),
+                originalPassword
+            );
+        } catch (Exception e) {
+            // Log the error but don't fail the registration
+            System.err.println("Failed to send email: " + e.getMessage());
+        }
 
         return ResponseEntity.ok(registeredUser);
     }

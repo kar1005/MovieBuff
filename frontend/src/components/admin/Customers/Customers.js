@@ -59,19 +59,21 @@ function Customers({ handleClick }) {
                     </tr>
                 </thead>
                 <tbody>
-                    {customers.map((c) => (
-                        <tr key={c.id}>
-                            <td>{c.username}</td>
-                            <td>{c.phoneNumber}</td>
-                            <td>{c.email}</td>
-                            <td>
-                                <button className="btn btn-primary" onClick={() => handleClick('updatecustomer',c.id)}>Update</button>
-                            </td>
-                            <td>
-                                <button className="btn btn-danger" onClick={() => onDeleteClick(c.id)}>Delete</button>
-                            </td>
-                        </tr>
-                    ))}
+                    {customers.map((c) => {
+                        return (
+                            <tr key={c.id}>
+                                <td>{c.username}</td>
+                                <td>{c.phoneNumber}</td>
+                                <td>{c.email}</td>
+                                {/*<td>
+                                    <button className="btn btn-primary" onClick={() => handleClick('updatecustomer', c.id)}>Update</button>
+                                </td>
+                                <td>
+                                    <button className="btn btn-danger" onClick={() => onDeleteClick(c.id)}>Delete</button>
+                                </td>*/}
+                            </tr>
+                        );
+                    })}
                 </tbody>
             </table>
         </div>
