@@ -1,73 +1,98 @@
-// src/Customers/Customers.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import './Customers.css'; 
 
 function Movies({ handleClick }) {
-    const [customers, setCustomers] = useState([]);
-    const navigate = useNavigate();
+    const [movies, setMovies] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        fetchCustomerData();
+        fetchMovieData();
     }, []);
 
-    const fetchCustomerData = async () => {
+    const fetchMovieData = async () => {
         try {
-            const response = await fetch(`http://localhost:8080/api/movies/`, {
+            setLoading(true);
+            setError(null);
+            const response = await fetch('http://localhost:8080/api/movies', {
                 method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             });
-            if (response.ok) {
-                const data = await response.json();
-                setCustomers(data);
-            } else {
-                console.error('Failed to fetch customers:', response.status);
-            }
-        } catch (err) {
-            console.error('Error:', err);
-        }
-    };
 
-    const onDeleteClick = async (id) => {
-        try {
-            const response = await fetch(`http://localhost:8080/api/movies/${id}`, {
-                method: "DELETE",
-            });
-            if (response.ok) {
-                alert("Customer deleted successfully");
-                fetchCustomerData(); // Refresh the list of customers
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+
+            const data = await response.json();
+            setMovies(data);
         } catch (err) {
-            console.error('Error deleting customer:', err);
+            console.error('Error fetching movies:', err);
+            setError('Failed to load movies. Please try again later.');
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="customers-container">
-            <div className="customers-header">
-                <h2>Customers</h2>
-                <button className="add-customer-btn" onClick={() =>handleClick('createcustomer')}>+ Add Customer</button>
+        <div className="movies-container">
+            <div className="movies-header">
+                <h2>Movies</h2>
+                <button 
+                    className="btn btn-primary"  // Changed from add-movie-btn to btn btn-primary
+                    onClick={() => handleClick('addmovie')}
+                    style={{ marginLeft: 'auto' }}  // This will push the button to the right
+                >
+                    + Add Movie
+                </button>
             </div>
-            <table className="table">
-                <thead className="thead-black">
-                    <tr>
-                        <th scope="col">Title</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {customers.map((c) => (
-                        <tr key={c.id}>
-                            <td>{c.title}</td>
-                            <td>
-                                <button className="btn btn-primary" onClick={() => handleClick('updatecustomer',c.id)}>Update</button>
-                            </td>
-                            <td>
-                                <button className="btn btn-danger" onClick={() => onDeleteClick(c.id)}>Delete</button>
-                            </td>
+            
+            {movies.length === 0 ? (
+                <div className="no-movies">
+                    No movies available. Add some movies to get started.
+                </div>
+            ) : (
+                <table className="table">
+                    <thead className="thead-dark">
+                        <tr>
+                            <th scope="col">Title</th>
+                            <th scope="col">Languages</th>
+                            <th scope="col">Cast</th>
+                            <th scope="col">Poster</th>
+                            <th scope="col">Duration(minutes)</th>
+                            <th scope='col'>Release Date</th>
+                            <th scope='col'>Description</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {movies.map((movie) => (
+                            <tr key={movie.id}>
+                                <td>{movie.title}</td>
+                                <td>{Array.isArray(movie.languages) ? movie.languages.join(', ') : movie.languages}</td>
+                                <td>{Array.isArray(movie.cast) ? movie.cast.join(', ') : movie.cast}</td>
+                                <td>
+                                    {movie.posterUrl && (
+                                        <img 
+                                            src={movie.posterUrl}
+                                            alt={`${movie.title} poster`}
+                                            style={{
+                                                width: '100px',
+                                                height: '150px',
+                                                objectFit: 'cover',
+                                                borderRadius: '4px'
+                                            }}
+                                        />
+                                    )}
+                                </td>
+                                <td>{movie.duration}</td>
+                                <td>{movie.releaseDate}</td>
+                                <td>{movie.description}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
         </div>
     );
 }

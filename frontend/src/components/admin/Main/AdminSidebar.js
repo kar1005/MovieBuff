@@ -7,6 +7,9 @@ import TheatreManagers from './../TheatreManager/TheatreManagers';
 import AddCustomer from './../Customers/AddCustomer'
 import UpdateCustomer from '../Customers/UpdateCustomer';
 import AddTheatreManager from './../TheatreManager/AddTheatreManager'
+import Movies from './../Movies/Movies'
+import AddMovie from '../Movies/AddMovie'
+import UpdateMovie from './../Movies/UpdateMovies'
 
 function AdminSidebar() {
     const [selectedOption, setSelectedOption] = useState('dashboard');
@@ -22,7 +25,7 @@ function AdminSidebar() {
             <div className="admin-sidebar">
                 <ul>
                     <li onClick={() => handleOptionClick('dashboard')}>Dashboard</li> 
-                    <li onClick={() => handleOptionClick('menus')}>Movies</li>
+                    <li onClick={() => handleOptionClick('movies')}>Movies</li>
                     <li onClick={() => handleOptionClick('customers')}>Customers</li>
                     <li onClick={() => handleOptionClick('theatremngr')}>Theatre Manager</li>
                 </ul>
@@ -39,6 +42,9 @@ function AdminSidebar() {
                 {selectedOption === 'theatremngr' && <TheatreManagers handleClick={handleOptionClick} />}
                 {selectedOption === 'addtmanager' && <AddTheatreManager handleClick={handleOptionClick} />}
                 {selectedOption === 'updatetmanager' && <UpdateCustomer handleClick={handleOptionClick} customerId={selectedCustomerId} />}
+                {selectedOption === 'movies' && <Movies handleClick={handleOptionClick} />}
+                {selectedOption === 'addmovie' && <AddMovie handleClick={handleOptionClick} />}
+                {selectedOption === 'updatemovie' && <UpdateMovie handleClick={handleOptionClick} customerId={selectedCustomerId} />}
               </>
             </Row>
             </div>

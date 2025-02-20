@@ -8,7 +8,7 @@ import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap'
 import { toast } from 'react-toastify';
 import './AddTheatreManager.css';
 
-const AddTheatreManager = () => {
+const AddTheatreManager = ({handleClick}) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: '',
@@ -117,23 +117,55 @@ const AddTheatreManager = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      toast.error('Passwords do not match');
-      return;
-    }
-  
+    
+    // Input validation
     try {
+      if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
+        throw new Error('Please fill in all required fields');
+      }
+  
+      if (!formData.phoneNumber || !formData.address?.street || !formData.address?.city || 
+          !formData.address?.state || !formData.address?.zipCode) {
+        throw new Error('Please provide complete contact and address information');
+      }
+  
+      if (formData.password !== formData.confirmPassword) {
+        throw new Error('Passwords do not match');
+      }
+  
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        throw new Error('Please enter a valid email address');
+      }
+  
+      // Phone validation (basic)
+      const phoneRegex = /^\+?[0-9]{10,12}$/;
+      if (!phoneRegex.test(formData.phoneNumber)) {
+        throw new Error('Please enter a valid phone number');
+      }
+  
       setLoading(true);
+      setError(null);
+  
+      // Step 1: Register Theater Manager
       const registrationData = { ...formData };
       delete registrationData.confirmPassword;
-      const createdManager = await registerTManager(registrationData);
-      console.log('Theater manager registered successfully!', createdManager.data.id);
+      
+      let managerId;
+      try {
+        const managerResponse = await registerTManager(registrationData);
+        managerId = managerResponse.id;
+        console.log('Theater manager registered successfully!', managerId);
+      } catch (managerError) {
+        const errorMsg = managerError.response?.data?.message || 'Failed to register theater manager';
+        throw new Error(errorMsg);
+      }
   
-      // Create theater request object
+      // Step 2: Create Theater
       const theaterRequest = {
-        name: `${formData.username}'s Theater`, // Default name based on username
-        managerId: createdManager.data.id,
+        name: `${formData.username}'s Theater`,
+        managerId: managerId,
         amenities: [],
         description: '',
         emailAddress: formData.email,
@@ -149,21 +181,23 @@ const AddTheatreManager = () => {
         }
       };
   
-      // Create theater using redux
       try {
         await dispatch(createTheater(theaterRequest)).unwrap();
-        toast.success('Theater manager and theater created successfully!');
+        toast.success('Registration successful! Please check your email for credentials.');
         navigate('/login');
-      } catch (theatreError) {
-        toast.error('Manager created but failed to create theater: ' + theatreError.message);
-        // Still navigate to login since the manager was created
+      } catch (theaterError) {
+        // If theater creation fails, we should log this and notify the admin
+        console.error('Theater creation failed:', theaterError);
+        
+        // Still allow the user to proceed since their account was created
+        toast.warning('Account created successfully, but theater setup needs attention. Our team will contact you shortly.');
         navigate('/login');
       }
   
-    } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Registration failed';
-      setError(errorMessage);
-      toast.error(errorMessage);
+    } catch (error) {
+      setError(error.message);
+      toast.error(error.message);
+      console.error('Registration error:', error);
     } finally {
       setLoading(false);
     }
