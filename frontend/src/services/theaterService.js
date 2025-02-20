@@ -34,6 +34,8 @@ export const theaterService = {
 
   updateTheater: async (id, data) => {
     try {
+      console.log("theaterService : ",JSON.stringify(data.location));
+
       const response = await axiosInstance.put(`${BASE_URL}/${id}`, data);
       return response.data;
     } catch (error) {
@@ -50,18 +52,18 @@ export const theaterService = {
     }
   },
 
+  // Theater Manager Operations
   getTheatersByManagerId: async (managerId) => {
     try {
-        const response = await axiosInstance.get(`${BASE_URL}/manager/${managerId}`);
-        return response.data;
+      const response = await axiosInstance.get(`${BASE_URL}/manager/${managerId}`);
+      return response.data;
     } catch (error) {
-        console.error('Error fetching theaters by manager ID:', error);
-        throw error;
+      throw error.response?.data || 'Failed to fetch theaters by manager ID';
     }
-},
+  },
 
   // Screen Management
-  getTheaterScreens: async (theaterId) => {
+  getAllScreens: async (theaterId) => {
     try {
       const response = await axiosInstance.get(`${BASE_URL}/${theaterId}/screens`);
       return response.data;
@@ -70,9 +72,20 @@ export const theaterService = {
     }
   },
 
+  getScreenByNumber: async (theaterId, screenNumber) => {
+    try {
+      const response = await axiosInstance.get(
+        `${BASE_URL}/${theaterId}/screens/${screenNumber}`
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || 'Failed to fetch screen details';
+    }
+  },
+
   addScreen: async (theaterId, screenData) => {
     try {
-      const response = await axiosInstance.post(
+      const response = await axiosInstance.put(
         `${BASE_URL}/${theaterId}/screens`,
         screenData
       );
@@ -103,30 +116,6 @@ export const theaterService = {
     }
   },
 
-  getScreenByNumber: async (theaterId, screenNumber) => {
-    try {
-      const response = await axiosInstance.get(
-        `${BASE_URL}/${theaterId}/screens/${screenNumber}`
-      );
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || 'Failed to fetch screen details';
-    }
-  },
-
-  // Screen Layout Management
-  updateScreenLayout: async (theaterId, screenNumber, layoutData) => {
-    try {
-      const response = await axiosInstance.post(
-        `${BASE_URL}/${theaterId}/screens/${screenNumber}/layout`,
-        layoutData
-      );
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || 'Failed to update screen layout';
-    }
-  },
-
   // Theater Statistics and Analytics
   getTheaterStats: async (theaterId) => {
     try {
@@ -137,9 +126,8 @@ export const theaterService = {
     }
   },
 
-  getTheaterAnalytics: async (theaterId, params) => {
+  getAnalytics: async (theaterId, startDate, endDate, screenNumber = null) => {
     try {
-      const { startDate, endDate, screenNumber } = params;
       const queryParams = new URLSearchParams({
         startDate,
         endDate,
@@ -155,9 +143,8 @@ export const theaterService = {
   },
 
   // Theater Search and Filtering
-  searchTheaters: async (params) => {
+  searchTheaters: async (query = null, amenities = null, city = null) => {
     try {
-      const { query, amenities, city } = params;
       const queryParams = new URLSearchParams();
       if (query) queryParams.append('query', query);
       if (city) queryParams.append('city', city);
@@ -195,58 +182,15 @@ export const theaterService = {
   },
 
   // Theater Status Management
-  updateTheaterStatus: async (theaterId, status) => {
+  updateTheaterStatus: async (id, status) => {
     try {
       const response = await axiosInstance.patch(
-        `${BASE_URL}/${theaterId}/status`,
+        `${BASE_URL}/${id}/status`,
         { status }
       );
       return response.data;
     } catch (error) {
       throw error.response?.data || 'Failed to update theater status';
-    }
-  },
-
-  // Show Management
-  getTheaterShows: async (theaterId) => {
-    try {
-      const response = await axiosInstance.get(`${BASE_URL}/${theaterId}/shows`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || 'Failed to fetch theater shows';
-    }
-  },
-
-  addShow: async (theaterId, showData) => {
-    try {
-      const response = await axiosInstance.post(
-        `${BASE_URL}/${theaterId}/shows`,
-        showData
-      );
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || 'Failed to add show';
-    }
-  },
-
-  updateShow: async (theaterId, showId, showData) => {
-    try {
-      const response = await axiosInstance.put(
-        `${BASE_URL}/${theaterId}/shows/${showId}`,
-        showData
-      );
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || 'Failed to update show';
-    }
-  },
-
-  deleteShow: async (theaterId, showId) => {
-    try {
-      await axiosInstance.delete(`${BASE_URL}/${theaterId}/shows/${showId}`);
-      return showId;
-    } catch (error) {
-      throw error.response?.data || 'Failed to delete show';
     }
   }
 };

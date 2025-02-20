@@ -14,4 +14,5 @@ public class SeatDTO {
     private String seatNumber;
     private String type;    // REGULAR, RECLINER, WHEELCHAIR, etc.
     private Boolean isActive;
+ 
 }

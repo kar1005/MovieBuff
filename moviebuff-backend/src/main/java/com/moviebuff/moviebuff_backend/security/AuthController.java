@@ -41,7 +41,7 @@ public class AuthController {
 
     private final GoogleAuthService googleAuthService;
 
-    @Autowired
+    // @Autowired
     public AuthController(GoogleAuthService googleAuthService) {
         this.googleAuthService = googleAuthService;
     }

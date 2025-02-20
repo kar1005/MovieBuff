@@ -1,4 +1,4 @@
-// SeatLayoutRequest.java
+// SeatLayoutDTO.java
 package com.moviebuff.moviebuff_backend.dto.request;
 
 import jakarta.validation.constraints.*;
@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data 
-public class SeatLayoutRequest {
+public class SeatLayoutDTO {
     @NotNull
     private Integer totalRows;
     @NotNull  
@@ -25,8 +25,10 @@ public class SeatLayoutRequest {
         private String categoryType;    // PREMIUM, GOLD, SILVER
         @NotNull
         private Double basePrice;
-        private List<SeatDTO> seats;
         private String color;
+        private Integer totalSeats;
+        private List<SeatDTO> seats;
+
     }
 
     @Data

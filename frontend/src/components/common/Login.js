@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch , useSelector } from 'react-redux';
 import { loginStart, loginSuccess, loginFailure } from '../../redux/slices/authSlice';
 import { toast } from 'react-toastify';
 import { login } from './../../services/authServices';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
 import './Login.css';
-
+import { fetchManagerTheaters } from '../../redux/slices/theaterSlice';
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -72,7 +72,9 @@ const Login = () => {
   
       const data = await res.json();
   
-      localStorage.setItem('token', data.token);
+      localStorage.setItem('token', data.token);      
+      localStorage.setItem('userId', data.user.id);
+      localStorage.setItem('userEmail', data.user.email);
       dispatch(loginSuccess({
         email: data.user.email,
         token: data.token,
@@ -81,6 +83,7 @@ const Login = () => {
       }));
       
       toast.success('Login successful!');
+
       navigateByRole(data.role);
     } catch (error) {
       console.log(error.message);
@@ -98,6 +101,8 @@ const Login = () => {
       setLoading(true);
       const data = await login(credentials);
       localStorage.setItem('token', data.token);
+      localStorage.setItem('userId', data.id);
+      localStorage.setItem('userEmail', data.email);
       dispatch(loginSuccess({
         email: data.email, 
         token: data.token,
@@ -105,6 +110,13 @@ const Login = () => {
         id: data.id
       }));
       toast.success('Login successful!');
+      if(data.role == 'THEATER_MANAGER'){
+        dispatch(fetchManagerTheaters(data.id));
+        console.log("Login Here : ", data.id , "theater Fetched successfully");
+        
+        
+
+      }
       navigateByRole(data.role);
     } catch (error) {
       setError(error.message);
@@ -124,6 +136,7 @@ const Login = () => {
         navigate('/admin');
         break;
       case "THEATER_MANAGER":
+        
         navigate('/manager');
         break;
       default:

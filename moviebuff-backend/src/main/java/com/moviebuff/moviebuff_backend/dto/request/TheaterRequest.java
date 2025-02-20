@@ -13,6 +13,9 @@ import java.util.*;
 public class TheaterRequest {
     @NotBlank(message = "Theater name is required")
     private String name;
+
+    @NotNull(message = "ManagerId is required")
+    private String managerId;
     
     private List<String> amenities;
     
@@ -24,12 +27,10 @@ public class TheaterRequest {
     @Pattern(regexp = "^\\+?[0-9]{10,12}$", message = "Invalid phone number")
     private String phoneNumber;
     
-    @Min(value = 0, message = "Theater must have at least one screen")
     private Integer totalScreens;
     
     @NotNull(message = "Location details are required")
     private LocationDTO location;
     
-    // @NotNull(message = "At least one screen configuration is required")
     private List<ScreenDTO> screens;
 }

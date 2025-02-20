@@ -48,7 +48,7 @@ public class Theater {
         private String city;
         private String state;
         private String zipCode;
-        private String GoogleLink;
+        private String googleLink;
     }
 
     @Data
@@ -61,8 +61,10 @@ public class Theater {
         private List<String> supportedExperiences;
         private ScreenLayout layout;
         private ScreenFeatures screenFeatures;
-
         private Integer totalSeats;
+        private Boolean isActive;
+        private Integer availableSeats;
+
     }
 
 @Data
@@ -139,11 +141,12 @@ public enum SeatType {
 @NoArgsConstructor
 @AllArgsConstructor
 public static class Seat {
+    private String seatNumber;     // e.g., "A1", "B2"
     private Integer row;
     private Integer column;
-    private String seatNumber;     // e.g., "A1", "B2"
     private String type;           // REGULAR, RECLINER, WHEELCHAIR, etc.
     private Boolean isActive;      // To handle gaps/inactive seats
+
 }
 
     @Data

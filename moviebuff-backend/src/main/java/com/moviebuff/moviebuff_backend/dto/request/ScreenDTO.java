@@ -16,9 +16,22 @@ public class ScreenDTO {
     
     private List<String> supportedExperiences;
     
-    private SeatLayoutRequest layout;  // Changed from Map to SeatLayoutRequest
+    private SeatLayoutDTO layout;  // Changed from Map to SeatLayoutRequest
     
-    private ScreenRequest.ScreenFeatures features;  // Changed to proper type
+    private ScreenFeatures features;    // Changed to proper type
     
     private Integer totalSeats;
+
+    private Boolean isActive;
+    private Integer availableSeats;
+
+
+    @Data
+    public static class ScreenFeatures {
+        private Double screenWidth;
+        private Double screenHeight;
+        private String projectorType;
+        private String soundSystem;
+    }
 }
+

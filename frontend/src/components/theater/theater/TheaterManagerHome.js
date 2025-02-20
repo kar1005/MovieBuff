@@ -22,8 +22,8 @@ import {
   selectTheaterStats,
   selectLoading,
   selectError
-} from '../../redux/slices/theaterSlice';
-import { selectUser } from '../../redux/slices/authSlice';
+} from '../../../redux/slices/theaterSlice';
+import { selectUser } from '../../../redux/slices/authSlice';
 import './TheaterManagerHome.css';
 
 const TheaterManagerHome = () => {

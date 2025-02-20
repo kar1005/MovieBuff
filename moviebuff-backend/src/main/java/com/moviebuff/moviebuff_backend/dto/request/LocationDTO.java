@@ -20,4 +20,7 @@ public class LocationDTO {
     private String zipCode;
     
     private List<Double> coordinates;
+
+    private String googleLink;
+
 }

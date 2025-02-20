@@ -10,9 +10,9 @@ const AddTheater = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   
-  // Get managerId from URL query parameters
-  const queryParams = new URLSearchParams(location.search);
-  const managerId = queryParams.get('managerId');
+  // Get managerId and email from location state
+  const { managerId, email } = location.state || {};
+  console.log("In AddTheater managerID : " + email);
   
   const [validated, setValidated] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -20,9 +20,9 @@ const AddTheater = () => {
   
   const [formData, setFormData] = useState({
     name: '',
-    managerId: managerId, // Initialize with managerId from URL
+    managerId: managerId || '',
     description: '',
-    emailAddress: '',
+    emailAddress: email || '', // Initialize with email from state
     phoneNumber: '',
     amenities: [],
     location: {
@@ -33,18 +33,18 @@ const AddTheater = () => {
       zipCode: ''
     },
     status: 'ACTIVE',
-    totalScreens: 0  // Initialize totalScreens to 0
+    totalScreens: 0
   });
 
   // Redirect if no managerId is provided
-  useEffect(() => {
-    if (!managerId) {
-      setError('Manager ID is required');
-      setTimeout(() => {
-        navigate('/manager/theaters');
-      }, 2000);
-    }
-  }, [managerId, navigate]);
+  // useEffect(() => {
+  //   if (!managerId) {
+  //     setError('Manager ID is required');
+  //     setTimeout(() => {
+  //       navigate('/manager/theaters');
+  //     }, 2000);
+  //   }
+  // }, [managerId, navigate]);
 
   const amenitiesList = [
     'Parking',
@@ -95,14 +95,16 @@ const AddTheater = () => {
       return;
     }
 
-    // Ensure managerId and totalScreens are included in the submission
+    // Include managerId in the submission
     const theaterData = {
       ...formData,
-      managerId: managerId, // Explicitly set managerId
-      totalScreens: 0 // Explicitly set totalScreens
+      managerId,
+      totalScreens: 0
     };
 
     try {
+      console.log("theaterData : "+JSON.stringify(theaterData));
+      
       const response = await axios.post('http://localhost:8080/api/theaters', theaterData);
       dispatch(createTheater(response.data));
       setShowSuccess(true);
@@ -167,16 +169,12 @@ const AddTheater = () => {
                 <Form.Group className="mb-3">
                   <Form.Label>Email Address</Form.Label>
                   <Form.Control
-                    required
                     type="email"
                     name="emailAddress"
                     value={formData.emailAddress}
-                    onChange={handleChange}
-                    placeholder="Enter email address"
+                    disabled
+                    readOnly
                   />
-                  <Form.Control.Feedback type="invalid">
-                    Please enter a valid email address
-                  </Form.Control.Feedback>
                 </Form.Group>
 
                 <Form.Group className="mb-3">

@@ -21,17 +21,7 @@ export const createTheater = createAsyncThunk(
     return response;
   }
 );
-export const deleteScreen = createAsyncThunk(
-  'theater/deleteScreen',
-  async ({ theaterId, screenNumber }, { rejectWithValue }) => {
-    try {
-      await theaterService.deleteScreen(theaterId, screenNumber);
-      return { theaterId, screenNumber };
-    } catch (error) {
-      return rejectWithValue(error.response?.data || 'Failed to delete screen');
-    }
-  }
-);
+
 export const fetchTheaters = createAsyncThunk(
   'theater/fetchTheaters',
   async () => {
@@ -43,7 +33,9 @@ export const fetchTheaters = createAsyncThunk(
 export const updateTheaterAsync = createAsyncThunk(
   'theater/updateTheater',
   async ({ id, data }) => {
+    console.log("theaterSlice : ",JSON.stringify(data.location));
     const response = await theaterService.updateTheater(id, data);
+
     return response;
   }
 );
@@ -67,26 +59,28 @@ export const fetchTheaterById = createAsyncThunk(
 export const fetchManagerTheaters = createAsyncThunk(
   'theaters/fetchByManager',
   async (managerId) => {
-      const response = await theaterService.getTheatersByManagerId(managerId);
-      return response;
+      const response = await theaterService.getTheatersByManagerId(managerId);      
+      return response[0];
   }
 );
 
-export const fetchTheaterScreens = createAsyncThunk(
-  'theater/fetchTheaterScreens',
+export const fetchTheaterStats = createAsyncThunk(
+  'theater/fetchTheaterStats',
   async (theaterId, { rejectWithValue }) => {
     try {
-      const response = await theaterService.getTheaterScreens(theaterId);
-      return { theaterId, screens: response };
+      console.log("Fetching the stat called");
+      
+      const response = await theaterService.getTheaterStats(theaterId);
+      console.log(JSON.stringify(response) , theaterId);
+      
+      return response;
     } catch (error) {
-      return rejectWithValue(error.response?.data || 'Failed to fetch screens');
+      return rejectWithValue(error.response?.data || 'Failed to fetch theater stats');
     }
   }
 );
 
 
-
-// Add these with your other thunk definitions in theaterSlice.js
 
 export const addScreen = createAsyncThunk(
   'theater/addScreen',
@@ -112,23 +106,41 @@ export const updateScreen = createAsyncThunk(
   }
 );
 
-
-
-
-
-
-// New Thunks for Theater Stats
-export const fetchTheaterStats = createAsyncThunk(
-  'theater/fetchTheaterStats',
-  async (theaterId, { rejectWithValue }) => {
+export const deleteScreen = createAsyncThunk(
+  'theater/deleteScreen',
+  async ({ theaterId, screenNumber }, { rejectWithValue }) => {
     try {
-      const response = await theaterService.getTheaterStats(theaterId);
-      return response;
+      await theaterService.deleteScreen(theaterId, screenNumber);
+      return { theaterId, screenNumber };
     } catch (error) {
-      return rejectWithValue(error.response?.data || 'Failed to fetch theater stats');
+      return rejectWithValue(error.response?.data || 'Failed to delete screen');
     }
   }
 );
+
+export const fetchTheaterScreens = createAsyncThunk(
+  'theater/fetchTheaterScreens',
+  async (theaterId, { rejectWithValue }) => {
+    try {
+      const response = await theaterService.getAllScreens(theaterId);
+      return { theaterId, screens: response };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || 'Failed to fetch screens');
+    }
+  }
+);
+
+
+
+
+
+
+
+
+
+
+
+
 
 const theaterSlice = createSlice({
   name: 'theater',
@@ -190,7 +202,7 @@ const theaterSlice = createSlice({
     })
     .addCase(fetchManagerTheaters.fulfilled, (state, action) => {
         state.loading = false;
-        state.managerTheaters = action.payload;
+        state.currentTheater = action.payload;
     })
     .addCase(fetchManagerTheaters.rejected, (state, action) => {
         state.loading = false;

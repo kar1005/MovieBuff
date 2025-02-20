@@ -10,7 +10,8 @@ const ShowList = () => {
   const dispatch = useDispatch();
   const shows = useSelector(state => state.theater.shows);
   const theaters = useSelector(state => state.theater.theaters);
-
+  const theaterId = localStorage.getItem('theaterId');
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
     theater: '',

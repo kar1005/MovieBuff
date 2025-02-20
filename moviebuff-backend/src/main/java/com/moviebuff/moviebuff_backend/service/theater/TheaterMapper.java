@@ -1,374 +1,461 @@
 package com.moviebuff.moviebuff_backend.service.theater;
 
-import java.util.*;
-import java.util.stream.Collectors;
-import com.moviebuff.moviebuff_backend.dto.request.LocationDTO;
-import com.moviebuff.moviebuff_backend.dto.request.ScreenDTO;
-import com.moviebuff.moviebuff_backend.dto.request.ScreenRequest;
-import com.moviebuff.moviebuff_backend.dto.request.SeatDTO;
-import com.moviebuff.moviebuff_backend.dto.request.SeatLayoutRequest;
-import com.moviebuff.moviebuff_backend.dto.request.TheaterRequest;
-import com.moviebuff.moviebuff_backend.dto.response.LocationResponseDTO;
-import com.moviebuff.moviebuff_backend.dto.response.ScreenLayoutResponseDTO;
-import com.moviebuff.moviebuff_backend.dto.response.ScreenResponseDTO;
-import com.moviebuff.moviebuff_backend.dto.response.SeatInfo;
+import com.moviebuff.moviebuff_backend.dto.request.*;
 import com.moviebuff.moviebuff_backend.dto.response.TheaterResponse;
 import com.moviebuff.moviebuff_backend.model.theater.Theater;
+import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Component
 public class TheaterMapper {
-    // Mapping methods for Request to Entity
-    public Theater mapRequestToEntity(TheaterRequest request) {
-        Theater theater = new Theater();
-        theater.setName(request.getName());
-        theater.setPhoneNumber(request.getPhoneNumber());
-        theater.setEmailAddress(request.getEmailAddress());
-        theater.setAmenities(request.getAmenities());
-        theater.setDescription(request.getDescription());
-        theater.setLocation(mapLocationRequestToEntity(request.getLocation()));
-        theater.setScreens(mapScreenRequestsToEntities(request.getScreens()));
-        theater.setStatus(Theater.TheaterStatus.ACTIVE);
-        theater.setTotalScreens(request.getTotalScreens());
-        return theater;
-    }
 
-    public Theater.TheaterLocation mapLocationRequestToEntity(LocationDTO locationDTO) {
-        Theater.TheaterLocation location = new Theater.TheaterLocation();
-        location.setAddress(locationDTO.getAddress());
-        location.setCity(locationDTO.getCity());
-        location.setState(locationDTO.getState());
-        location.setZipCode(locationDTO.getZipCode());
-        location.setCoordinates(new double[] {
-                locationDTO.getCoordinates().get(0),
-                locationDTO.getCoordinates().get(1)
-        });
-        return location;
-    }
+    // Convert Theater Entity to TheaterResponse DTO
+    public TheaterResponse toTheaterResponse(Theater theater) {
 
-    public List<Theater.Screen> mapScreenRequestsToEntities(List<ScreenDTO> screenDTOs) {
-        if (screenDTOs == null)
-            return new ArrayList<>();
-        return screenDTOs.stream()
-                .map(this::mapScreenRequestToEntity)
-                .collect(Collectors.toList());
-    }
-
-    public Theater.Screen mapScreenRequestToEntity(ScreenDTO screenDTO) {
-        Theater.Screen screen = new Theater.Screen();
-        screen.setScreenNumber(screenDTO.getScreenNumber());
-        screen.setScreenName(screenDTO.getScreenName());
-        screen.setSupportedExperiences(screenDTO.getSupportedExperiences());
-        // Fix: Changed to handle SeatLayoutRequest instead of Map
-        screen.setLayout(mapScreenLayoutToEntity((SeatLayoutRequest)screenDTO.getLayout()));
-        // Fix: Changed to handle ScreenRequest.ScreenFeatures
-        screen.setScreenFeatures(mapScreenFeaturesToEntity((ScreenRequest.ScreenFeatures)screenDTO.getFeatures()));
-        screen.setTotalSeats(calculateTotalSeats(screen.getLayout()));
-        return screen;
-    }
-
-    private Integer calculateTotalSeats(Theater.ScreenLayout layout) {
-        if (layout == null || layout.getSections() == null) return 0;
-        
-        return layout.getSections().stream()
-            .flatMap(section -> section.getSeats().stream())
-            .filter(seat -> seat.getIsActive())
-            .collect(Collectors.toList())
-            .size();
-    }
-
-   public Theater.ScreenLayout mapScreenLayoutToEntity(SeatLayoutRequest layoutRequest) {
-    if (layoutRequest == null) return null;
-
-    Theater.ScreenLayout layout = new Theater.ScreenLayout();
-    layout.setTotalRows(layoutRequest.getTotalRows());
-    layout.setTotalColumns(layoutRequest.getTotalColumns());
-    layout.setSections(mapSectionsToEntity(layoutRequest.getSections()));
-    layout.setAisles(mapAislesToEntity(layoutRequest.getAisles()));
-    layout.setStairs(mapStairsToEntity(layoutRequest.getStairs()));
-    layout.setExits(mapExitsToEntity(layoutRequest.getExits()));
-    return layout;
-}
-
-
-// Add mapping method for Sections
-public List<Theater.Section> mapSectionsToEntity(List<SeatLayoutRequest.Section> sections) {
-    if (sections == null) return new ArrayList<>();
-    return sections.stream()
-        .map(section -> {
-            Theater.Section s = new Theater.Section();
-            s.setCategoryName(section.getCategoryName());
-            s.setCategoryType(section.getCategoryType());
-            s.setBasePrice(section.getBasePrice());
-            s.setColor(section.getColor());
-            s.setSeats(mapSeatsToEntity(section.getSeats()));
-            return s;
-        })
-        .collect(Collectors.toList());
-}
-
-// Add mapping method for Aisles
-public List<Theater.Aisle> mapAislesToEntity(List<SeatLayoutRequest.Aisle> aisles) {
-    if (aisles == null) return new ArrayList<>();
-    return aisles.stream()
-        .map(aisle -> {
-            Theater.Aisle a = new Theater.Aisle();
-            a.setType(aisle.getType());
-            a.setPosition(aisle.getPosition());
-            a.setStartPosition(aisle.getStartPosition());
-            a.setEndPosition(aisle.getEndPosition());
-            a.setWidth(aisle.getWidth());
-            return a;
-        })
-        .collect(Collectors.toList());
-}
-
-// Add mapping method for Stairs
-public List<Theater.Stair> mapStairsToEntity(List<SeatLayoutRequest.Stairs> stairs) {
-    if (stairs == null) return new ArrayList<>();
-    return stairs.stream()
-        .map(stair -> {
-            Theater.Stair s = new Theater.Stair();
-            s.setType(stair.getType());
-            s.setLocation(new Theater.Location(stair.getRow(), stair.getColumn()));
-            s.setWidth(stair.getWidth());
-            s.setDirection(stair.getDirection());
-            return s;
-        })
-        .collect(Collectors.toList());
-}
-
-// Add mapping method for Exits
-public List<Theater.Exit> mapExitsToEntity(List<SeatLayoutRequest.Exit> exits) {
-    if (exits == null) return new ArrayList<>();
-    return exits.stream()
-        .map(exit -> {
-            Theater.Exit e = new Theater.Exit();
-            e.setGateNumber(exit.getGateNumber());
-            e.setLocation(new Theater.Location(exit.getRow(), exit.getColumn()));
-            e.setType(exit.getType());
-            e.setWidth(exit.getWidth());
-            return e;
-        })
-        .collect(Collectors.toList());
-}
-
-// Helper method for mapping seats
-private List<Theater.Seat> mapSeatsToEntity(List<SeatDTO> seats) {
-    if (seats == null) return new ArrayList<>();
-    return seats.stream()
-        .map(seat -> {
-            Theater.Seat s = new Theater.Seat();
-            s.setRow(seat.getRow());
-            s.setColumn(seat.getColumn());
-            s.setSeatNumber(seat.getSeatNumber());
-            s.setType(seat.getType());
-            s.setIsActive(seat.getIsActive());
-            return s;
-        })
-        .collect(Collectors.toList());
-}
-
-
-
-// Add method to map screen features
-public Theater.ScreenFeatures mapScreenFeaturesToEntity(ScreenRequest.ScreenFeatures features) {
-    if (features == null) return null;
-    
-    Theater.ScreenFeatures screenFeatures = new Theater.ScreenFeatures();
-    screenFeatures.setScreenWidth(features.getScreenWidth());
-    screenFeatures.setScreenHeight(features.getScreenHeight());
-    screenFeatures.setProjectorType(features.getProjectorType());
-    screenFeatures.setSoundSystem(features.getSoundSystem());
-    return screenFeatures;
-}
-
-    public List<Theater.Aisle> mapAislesFromMap(List<Map<String, Object>> aisles) {
-        if (aisles == null)
-            return new ArrayList<>();
-        return aisles.stream().map(aisle -> {
-            Theater.Aisle a = new Theater.Aisle();
-            a.setType((String) aisle.get("type"));
-            a.setPosition((Integer) aisle.get("position"));
-            a.setStartPosition((Integer) aisle.get("startPosition"));
-            a.setEndPosition((Integer) aisle.get("endPosition"));
-            a.setWidth((Integer) aisle.get("width"));
-            return a;
-        }).collect(Collectors.toList());
-    }
-
-    @SuppressWarnings("unchecked")
-    public List<Theater.Stair> mapStairsFromMap(List<Map<String, Object>> stairs) {
-        if (stairs == null)
-            return new ArrayList<>();
-        return stairs.stream().map(stair -> {
-            Theater.Stair s = new Theater.Stair();
-            s.setType((String) stair.get("type"));
-            s.setLocation(mapLocation((Map<String, Object>) stair.get("location")));
-            s.setWidth((Integer) stair.get("width"));
-            s.setDirection((String) stair.get("direction"));
-            return s;
-        }).collect(Collectors.toList());
-    }
-
-    @SuppressWarnings("unchecked")
-
-    public List<Theater.Exit> mapExitsFromMap(List<Map<String, Object>> exits) {
-        if (exits == null)
-            return new ArrayList<>();
-        return exits.stream().map(exit -> {
-            Theater.Exit e = new Theater.Exit();
-            e.setGateNumber((String) exit.get("gateNumber"));
-            e.setLocation(mapLocation((Map<String, Object>) exit.get("location")));
-            e.setType((String) exit.get("type"));
-            e.setWidth((Integer) exit.get("width"));
-            return e;
-        }).collect(Collectors.toList());
-    }
-
-    public Theater.Location mapLocation(Map<String, Object> locationMap) {
-        if (locationMap == null)
-            return null;
-        Theater.Location location = new Theater.Location();
-        location.setRow((Integer) locationMap.get("row"));
-        location.setColumn((Integer) locationMap.get("column"));
-        return location;
-    }
-
-    public List<Theater.SeatGap> mapSeatGapsFromMap(List<Map<String, Object>> seatGaps) {
-        if (seatGaps == null)
-            return new ArrayList<>();
-        return seatGaps.stream().map(gap -> {
-            Theater.SeatGap g = new Theater.SeatGap();
-            g.setRow((Integer) gap.get("row"));
-            g.setColumn((Integer) gap.get("column"));
-            g.setWidth((Integer) gap.get("width"));
-            return g;
-        }).collect(Collectors.toList());
-    }
-
-    public List<Theater.UnavailableSeat> mapUnavailableSeatsFromMap(List<Map<String, Object>> unavailableSeats) {
-        if (unavailableSeats == null)
-            return new ArrayList<>();
-        return unavailableSeats.stream().map(seat -> {
-            Theater.UnavailableSeat u = new Theater.UnavailableSeat();
-            u.setRow((Integer) seat.get("row"));
-            u.setColumn((Integer) seat.get("column"));
-            u.setReason((String) seat.get("reason"));
-            return u;
-        }).collect(Collectors.toList());
-    }
-
-    @SuppressWarnings("unchecked")
-
-    // Layout component mapping methods
-    public List<Theater.Section> mapSectionsFromMap(List<Map<String, Object>> sections) {
-        if (sections == null) return new ArrayList<>();
-        return sections.stream().map(section -> {
-            Theater.Section s = new Theater.Section();
-            s.setCategoryName((String) section.get("categoryName"));
-            s.setCategoryType((String) section.get("categoryType"));
-            s.setBasePrice((Double) section.get("basePrice"));
-            s.setColor((String) section.get("color"));
-            s.setSeats(mapSeatsFromMap((List<Map<String, Object>>) section.get("seats")));
-            return s;
-        }).collect(Collectors.toList());
-    }
-
-    public List<Theater.Seat> mapSeatsFromMap(List<Map<String, Object>> seats) {
-        if (seats == null) return new ArrayList<>();
-        return seats.stream().map(seat -> {
-            Theater.Seat s = new Theater.Seat();
-            s.setRow((Integer) seat.get("row"));
-            s.setColumn((Integer) seat.get("column"));
-            s.setSeatNumber((String) seat.get("seatNumber"));
-            s.setType((String) seat.get("type"));
-            s.setIsActive((Boolean) seat.get("isActive"));
-            return s;
-        }).collect(Collectors.toList());
-    }
-
-    // Entity to Response mapping methods
-    public TheaterResponse mapEntityToResponse(Theater theater) {
         TheaterResponse response = new TheaterResponse();
         response.setId(theater.getId());
         response.setName(theater.getName());
-        response.setDescription(theater.getDescription());
-        response.setLocation(mapLocationToResponse(theater.getLocation()));
-        response.setScreens(mapScreensToResponse(theater.getScreens()));
-        response.setStatus(theater.getStatus().toString());
-        response.setTotalScreens(theater.getTotalScreens());
-        response.setPhoneNumber(theater.getPhoneNumber());
-        response.setEmailAddress(theater.getEmailAddress());
         response.setAmenities(theater.getAmenities());
+        response.setDescription(theater.getDescription());
+        response.setEmailAddress(theater.getEmailAddress());
+        response.setPhoneNumber(theater.getPhoneNumber());
+        response.setTotalScreens(theater.getTotalScreens());
+        response.setStatus(theater.getStatus().toString());
+
+        // Map Location
+        if (theater.getLocation() != null) {
+            LocationDTO locationDTO = new LocationDTO();
+            locationDTO.setAddress(theater.getLocation().getAddress());
+            locationDTO.setCity(theater.getLocation().getCity());
+            locationDTO.setState(theater.getLocation().getState());
+            locationDTO.setZipCode(theater.getLocation().getZipCode());
+            if (theater.getLocation().getCoordinates() != null) {
+                locationDTO.setCoordinates(List.of(
+                        theater.getLocation().getCoordinates()[0],
+                        theater.getLocation().getCoordinates()[1]));
+                locationDTO.setGoogleLink(theater.getLocation().getGoogleLink());
+                response.setLocation(locationDTO);
+            }
+
+            // Map Screens
+            if (theater.getScreens() != null) {
+                response.setScreens(theater.getScreens().stream()
+                        .map(this::toScreenDTO)
+                        .collect(Collectors.toList()));
+            }
+
+            // Calculate and set theater stats
+            TheaterResponse.TheaterStats stats = calculateTheaterStats(theater);
+            response.setStats(stats);
+
+        }
         return response;
     }
 
-    public LocationResponseDTO mapLocationToResponse(Theater.TheaterLocation location) {
-        LocationResponseDTO responseDTO = new LocationResponseDTO();
-        responseDTO.setAddress(location.getAddress());
-        responseDTO.setCity(location.getCity());
-        responseDTO.setState(location.getState());
-        responseDTO.setZipCode(location.getZipCode());
-        responseDTO.setCoordinates(Arrays.asList(location.getCoordinates()[0], location.getCoordinates()[1]));
-        return responseDTO;
+    // Convert TheaterRequest DTO to Theater Entity
+    public Theater toTheater(TheaterRequest request) {
+        if (request == null)
+            return null;
+
+        return Theater.builder()
+                .name(request.getName())
+                .managerId(request.getManagerId())
+                .amenities(request.getAmenities())
+                .description(request.getDescription())
+                .emailAddress(request.getEmailAddress())
+                .phoneNumber(request.getPhoneNumber())
+                .totalScreens(request.getTotalScreens())
+                .location(toTheaterLocation(request.getLocation()))
+                .screens(request.getScreens() != null ? request.getScreens().stream()
+                        .map(this::toScreen)
+                        .collect(Collectors.toList()) : new ArrayList<>())
+                .status(Theater.TheaterStatus.ACTIVE)
+                .build();
     }
 
-    public List<ScreenResponseDTO> mapScreensToResponse(List<Theater.Screen> screens) {
-        if (screens == null)
-            return new ArrayList<>();
-        return screens.stream()
-                .map(this::mapScreenToResponse)
-                .collect(Collectors.toList());
+    // Helper method to calculate theater statistics
+    private TheaterResponse.TheaterStats calculateTheaterStats(Theater theater) {
+
+        int totalSeats = 0;
+        int availableSeats = 0;
+        int activeScreens = 0;
+
+        if (theater.getScreens() != null) {
+
+            for (Theater.Screen screen : theater.getScreens()) {
+
+                // if (Boolean.TRUE.equals(screen.getIsActive())) {
+
+                activeScreens++;
+                if (screen.getTotalSeats() != null) {
+
+                    totalSeats += screen.getTotalSeats();
+                }
+                if (screen.getAvailableSeats() != null) {
+                    availableSeats += screen.getAvailableSeats();
+                }
+                // }
+            }
+        }
+
+        double occupancyRate = totalSeats > 0 ? ((double) (totalSeats - availableSeats) / totalSeats) * 100 : 0.0;
+
+        return new TheaterResponse.TheaterStats(
+                totalSeats,
+                availableSeats,
+                activeScreens,
+                0, // totalShowsToday will be set by service layer
+                occupancyRate);
     }
 
-    public ScreenResponseDTO mapScreenToResponse(Theater.Screen screen) {
-        ScreenResponseDTO responseDTO = new ScreenResponseDTO();
-        responseDTO.setScreenNumber(screen.getScreenNumber());
-        responseDTO.setScreenName(screen.getScreenName());
-        responseDTO.setSupportedExperiences(screen.getSupportedExperiences());
-        responseDTO.setLayout(mapLayoutToResponse(screen.getLayout()));
-        responseDTO.setFeatures(mapScreenFeaturesToResponse(screen.getScreenFeatures()));
-        responseDTO.setTotalSeats(screen.getTotalSeats());
-        responseDTO.setIsActive(true); // Default to true for new screens
-        responseDTO.setStatus("OPERATIONAL"); // Default status
-        return responseDTO;
+    // Convert LocationDTO to TheaterLocation
+    private Theater.TheaterLocation toTheaterLocation(LocationDTO locationDTO) {
+        if (locationDTO == null)
+            return null;
+
+        return Theater.TheaterLocation.builder()
+                .coordinates(locationDTO.getCoordinates() != null && locationDTO.getCoordinates().size() == 2
+                        ? new double[] { locationDTO.getCoordinates().get(0), locationDTO.getCoordinates().get(1) }
+                        : new double[] { 0.0, 0.0 })
+                .address(locationDTO.getAddress())
+                .city(locationDTO.getCity())
+                .state(locationDTO.getState())
+                .zipCode(locationDTO.getZipCode())
+                .googleLink(locationDTO.getGoogleLink())
+                .build();
     }
 
-    public ScreenResponseDTO.ScreenFeaturesResponse mapScreenFeaturesToResponse(Theater.ScreenFeatures features) {
-        if (features == null) return null;
-        
-        ScreenResponseDTO.ScreenFeaturesResponse response = new ScreenResponseDTO.ScreenFeaturesResponse();
-        response.setScreenWidth(features.getScreenWidth());
-        response.setScreenHeight(features.getScreenHeight());
-        response.setProjectorType(features.getProjectorType());
-        response.setSoundSystem(features.getSoundSystem());
-        return response;
-    }
-    
-public ScreenLayoutResponseDTO mapLayoutToResponse(Theater.ScreenLayout layout) {
-    if (layout == null) return null;
+    // Convert Screen to ScreenDTO
+    ScreenDTO toScreenDTO(Theater.Screen screen) {
+        if (screen == null)
+            return null;
 
-    ScreenLayoutResponseDTO responseDTO = new ScreenLayoutResponseDTO();
-    responseDTO.setTotalRows(layout.getTotalRows());
-    responseDTO.setTotalColumns(layout.getTotalColumns());
-    
-    // Map seats for client display
-    List<SeatInfo> seatInfoList = layout.getSections().stream()
-        .flatMap(section -> section.getSeats().stream()
-            .map(seat -> new SeatInfo(
-                seat.getSeatNumber(),
-                seat.getRow(),
-                seat.getColumn(),
-                section.getCategoryName(),
-                section.getCategoryType(),
-                section.getBasePrice(),
-                seat.getType(),
-                seat.getIsActive(),
-                true, // isAvailable (for initial layout)
-                null  // unavailableReason
-            )))
-        .collect(Collectors.toList());
-    
-    responseDTO.setSeats(seatInfoList);
-    return responseDTO;
-}
+        ScreenDTO dto = new ScreenDTO();
+        dto.setScreenNumber(screen.getScreenNumber());
+        dto.setScreenName(screen.getScreenName());
+        dto.setSupportedExperiences(screen.getSupportedExperiences());
+        dto.setTotalSeats(screen.getTotalSeats());
+        dto.setIsActive(screen.getIsActive());
+        dto.setAvailableSeats(screen.getAvailableSeats());
+
+        // Map screen features
+        if (screen.getScreenFeatures() != null) {
+            ScreenDTO.ScreenFeatures features = new ScreenDTO.ScreenFeatures();
+            features.setScreenWidth(screen.getScreenFeatures().getScreenWidth());
+            features.setScreenHeight(screen.getScreenFeatures().getScreenHeight());
+            features.setProjectorType(screen.getScreenFeatures().getProjectorType());
+            features.setSoundSystem(screen.getScreenFeatures().getSoundSystem());
+            dto.setFeatures(features);
+        }
+
+        // Map layout
+        if (screen.getLayout() != null) {
+            dto.setLayout(toSeatLayoutDTO(screen.getLayout()));
+        }
+
+        return dto;
+    }
+
+    // Convert ScreenDTO to Screen
+    Theater.Screen toScreen(ScreenDTO dto) {
+        if (dto == null)
+            return null;
+
+        return Theater.Screen.builder()
+                .screenNumber(dto.getScreenNumber())
+                .screenName(dto.getScreenName())
+                .supportedExperiences(dto.getSupportedExperiences())
+                .layout(toScreenLayout(dto.getLayout()))
+                .screenFeatures(toScreenFeatures(dto.getFeatures()))
+                .totalSeats(dto.getTotalSeats())
+                .isActive(dto.getIsActive())
+                .availableSeats(dto.getAvailableSeats())
+                .build();
+    }
+
+    // Convert ScreenFeatures DTO to ScreenFeatures
+    private Theater.ScreenFeatures toScreenFeatures(ScreenDTO.ScreenFeatures features) {
+        if (features == null)
+            return null;
+
+        return Theater.ScreenFeatures.builder()
+                .screenWidth(features.getScreenWidth())
+                .screenHeight(features.getScreenHeight())
+                .projectorType(features.getProjectorType())
+                .soundSystem(features.getSoundSystem())
+                .build();
+    }
+
+    // Convert SeatLayoutDTO to ScreenLayout
+    private Theater.ScreenLayout toScreenLayout(SeatLayoutDTO dto) {
+        if (dto == null)
+            return null;
+
+        return Theater.ScreenLayout.builder()
+                .totalRows(dto.getTotalRows())
+                .totalColumns(dto.getTotalColumns())
+                .sections(dto.getSections() != null ? dto.getSections().stream()
+                        .map(this::toSection)
+                        .collect(Collectors.toList()) : new ArrayList<>())
+                .aisles(dto.getAisles() != null ? dto.getAisles().stream()
+                        .map(this::toAisle)
+                        .collect(Collectors.toList()) : new ArrayList<>())
+                .stairs(dto.getStairs() != null ? dto.getStairs().stream()
+                        .map(this::toStair)
+                        .collect(Collectors.toList()) : new ArrayList<>())
+                .exits(dto.getExits() != null ? dto.getExits().stream()
+                        .map(this::toExit)
+                        .collect(Collectors.toList()) : new ArrayList<>())
+                .seatGaps(dto.getSeatGaps() != null ? dto.getSeatGaps().stream()
+                        .map(this::toSeatGap)
+                        .collect(Collectors.toList()) : new ArrayList<>())
+                .unavailableSeats(dto.getUnavailableSeats() != null ? dto.getUnavailableSeats().stream()
+                        .map(this::toUnavailableSeat)
+                        .collect(Collectors.toList()) : new ArrayList<>())
+                .build();
+    }
+
+    // Convert ScreenLayout to SeatLayoutDTO
+    private SeatLayoutDTO toSeatLayoutDTO(Theater.ScreenLayout layout) {
+        if (layout == null)
+            return null;
+
+        SeatLayoutDTO dto = new SeatLayoutDTO();
+        dto.setTotalRows(layout.getTotalRows());
+        dto.setTotalColumns(layout.getTotalColumns());
+
+        if (layout.getSections() != null) {
+            dto.setSections(layout.getSections().stream()
+                    .map(this::toSectionDTO)
+                    .collect(Collectors.toList()));
+        }
+
+        if (layout.getAisles() != null) {
+            dto.setAisles(layout.getAisles().stream()
+                    .map(this::toAisleDTO)
+                    .collect(Collectors.toList()));
+        }
+
+        if (layout.getStairs() != null) {
+            dto.setStairs(layout.getStairs().stream()
+                    .map(this::toStairsDTO)
+                    .collect(Collectors.toList()));
+        }
+
+        if (layout.getExits() != null) {
+            dto.setExits(layout.getExits().stream()
+                    .map(this::toExitDTO)
+                    .collect(Collectors.toList()));
+        }
+
+        if (layout.getSeatGaps() != null) {
+            dto.setSeatGaps(layout.getSeatGaps().stream()
+                    .map(this::toSeatGapDTO)
+                    .collect(Collectors.toList()));
+        }
+
+        if (layout.getUnavailableSeats() != null) {
+            dto.setUnavailableSeats(layout.getUnavailableSeats().stream()
+                    .map(this::toUnavailableSeatDTO)
+                    .collect(Collectors.toList()));
+        }
+
+        return dto;
+    }
+
+    // Helper methods for converting individual components
+    private Theater.Section toSection(SeatLayoutDTO.Section dto) {
+        if (dto == null)
+            return null;
+
+        return Theater.Section.builder()
+                .categoryName(dto.getCategoryName())
+                .categoryType(dto.getCategoryType())
+                .basePrice(dto.getBasePrice())
+                .color(dto.getColor())
+                .seats(dto.getSeats() != null ? dto.getSeats().stream()
+                        .map(this::toSeat)
+                        .collect(Collectors.toList()) : new ArrayList<>())
+                .build();
+    }
+
+    private SeatLayoutDTO.Section toSectionDTO(Theater.Section section) {
+        if (section == null)
+            return null;
+
+        SeatLayoutDTO.Section dto = new SeatLayoutDTO.Section();
+        dto.setCategoryName(section.getCategoryName());
+        dto.setCategoryType(section.getCategoryType());
+        dto.setBasePrice(section.getBasePrice());
+        dto.setColor(section.getColor());
+
+        if (section.getSeats() != null) {
+            dto.setSeats(section.getSeats().stream()
+                    .map(this::toSeatDTO)
+                    .collect(Collectors.toList()));
+            dto.setTotalSeats(section.getSeats().size());
+        }
+
+        return dto;
+    }
+
+    private Theater.Seat toSeat(SeatDTO dto) {
+        if (dto == null)
+            return null;
+
+        return Theater.Seat.builder()
+                .seatNumber(dto.getSeatNumber())
+                .row(dto.getRow())
+                .column(dto.getColumn())
+                .type(dto.getType())
+                .isActive(dto.getIsActive())
+                .build();
+    }
+
+    private SeatDTO toSeatDTO(Theater.Seat seat) {
+        if (seat == null)
+            return null;
+
+        SeatDTO dto = new SeatDTO();
+        dto.setSeatNumber(seat.getSeatNumber());
+        dto.setRow(seat.getRow());
+        dto.setColumn(seat.getColumn());
+        dto.setType(seat.getType());
+        dto.setIsActive(seat.getIsActive());
+        return dto;
+    }
+
+    // Mapping methods for Aisle, Stairs, Exit, SeatGap, and UnavailableSeat
+    private Theater.Aisle toAisle(SeatLayoutDTO.Aisle dto) {
+        if (dto == null)
+            return null;
+
+        return Theater.Aisle.builder()
+                .type(dto.getType())
+                .position(dto.getPosition())
+                .startPosition(dto.getStartPosition())
+                .endPosition(dto.getEndPosition())
+                .width(dto.getWidth())
+                .build();
+    }
+
+    private SeatLayoutDTO.Aisle toAisleDTO(Theater.Aisle aisle) {
+        if (aisle == null)
+            return null;
+
+        SeatLayoutDTO.Aisle dto = new SeatLayoutDTO.Aisle();
+        dto.setType(aisle.getType());
+        dto.setPosition(aisle.getPosition());
+        dto.setStartPosition(aisle.getStartPosition());
+        dto.setEndPosition(aisle.getEndPosition());
+        dto.setWidth(aisle.getWidth());
+        return dto;
+    }
+
+    private Theater.Stair toStair(SeatLayoutDTO.Stairs dto) {
+        if (dto == null)
+            return null;
+
+        return Theater.Stair.builder()
+                .type(dto.getType())
+                .location(Theater.Location.builder()
+                        .row(dto.getRow())
+                        .column(dto.getColumn())
+                        .build())
+                .width(dto.getWidth())
+                .direction(dto.getDirection())
+                .build();
+    }
+
+    private SeatLayoutDTO.Stairs toStairsDTO(Theater.Stair stair) {
+        if (stair == null)
+            return null;
+
+        SeatLayoutDTO.Stairs dto = new SeatLayoutDTO.Stairs();
+        dto.setType(stair.getType());
+        if (stair.getLocation() != null) {
+            dto.setRow(stair.getLocation().getRow());
+            dto.setColumn(stair.getLocation().getColumn());
+        }
+        dto.setWidth(stair.getWidth());
+        dto.setDirection(stair.getDirection());
+        return dto;
+    }
+
+    private Theater.Exit toExit(SeatLayoutDTO.Exit dto) {
+        if (dto == null)
+            return null;
+
+        return Theater.Exit.builder()
+                .gateNumber(dto.getGateNumber())
+                .location(Theater.Location.builder()
+                        .row(dto.getRow())
+                        .column(dto.getColumn())
+                        .build())
+                .type(dto.getType())
+                .width(dto.getWidth())
+                .build();
+    }
+
+    private SeatLayoutDTO.Exit toExitDTO(Theater.Exit exit) {
+        if (exit == null)
+            return null;
+
+        SeatLayoutDTO.Exit dto = new SeatLayoutDTO.Exit();
+        dto.setGateNumber(exit.getGateNumber());
+        if (exit.getLocation() != null) {
+            dto.setRow(exit.getLocation().getRow());
+            dto.setColumn(exit.getLocation().getColumn());
+        }
+        dto.setType(exit.getType());
+        dto.setWidth(exit.getWidth());
+        return dto;
+    }
+
+    private Theater.SeatGap toSeatGap(SeatLayoutDTO.SeatGap dto) {
+        if (dto == null)
+            return null;
+
+        return Theater.SeatGap.builder()
+                .row(dto.getRow())
+                .column(dto.getColumn())
+                .width(dto.getWidth())
+                .build();
+    }
+
+    private SeatLayoutDTO.SeatGap toSeatGapDTO(Theater.SeatGap seatGap) {
+        if (seatGap == null)
+            return null;
+
+        SeatLayoutDTO.SeatGap dto = new SeatLayoutDTO.SeatGap();
+        dto.setRow(seatGap.getRow());
+        dto.setColumn(seatGap.getColumn());
+        dto.setWidth(seatGap.getWidth());
+        return dto;
+    }
+
+    private Theater.UnavailableSeat toUnavailableSeat(SeatLayoutDTO.UnavailableSeat dto) {
+        if (dto == null)
+            return null;
+
+        return Theater.UnavailableSeat.builder()
+                .row(dto.getRow())
+                .column(dto.getColumn())
+                .reason(dto.getReason())
+                .build();
+    }
+
+    private SeatLayoutDTO.UnavailableSeat toUnavailableSeatDTO(Theater.UnavailableSeat unavailableSeat) {
+        if (unavailableSeat == null)
+            return null;
+
+        SeatLayoutDTO.UnavailableSeat dto = new SeatLayoutDTO.UnavailableSeat();
+        dto.setRow(unavailableSeat.getRow());
+        dto.setColumn(unavailableSeat.getColumn());
+        dto.setReason(unavailableSeat.getReason());
+        return dto;
+    }
 }

@@ -3,6 +3,10 @@ package com.moviebuff.moviebuff_backend.dto.response;
 
 import lombok.Data;
 import java.util.*;
+
+import com.moviebuff.moviebuff_backend.dto.request.LocationDTO;
+import com.moviebuff.moviebuff_backend.dto.request.ScreenDTO;
+
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
@@ -16,8 +20,8 @@ public class TheaterResponse {
     private String emailAddress;
     private String phoneNumber;
     private Integer totalScreens;
-    private LocationResponseDTO location;
-    private List<ScreenResponseDTO> screens;
+    private LocationDTO location;
+    private List<ScreenDTO> screens;
     private String status;
     private TheaterStats stats;        // New field for theater statistics
 

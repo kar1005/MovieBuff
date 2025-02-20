@@ -4,12 +4,14 @@ import theaterSlice from './slices/theaterSlice';
 import authSlice from './slices/authSlice';
 import adminSlice from './slices/adminSlice';
 import customerSlice from './slices/customerSlice';
+import subscriptionReducer from './slices/subscriptionSlice';
 
 const store = configureStore({
   reducer: {
     theater: theaterSlice,
     auth: authSlice,
     admin: adminSlice,
+    subscription: subscriptionReducer,
     customer: customerSlice,
   },
   middleware: (getDefaultMiddleware) =>

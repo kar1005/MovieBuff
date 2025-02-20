@@ -1,89 +1,249 @@
+/* src/styles/ScreenSetup.css */
+
+/* Theater Grid Container */
 .theater-grid-container {
+  margin: 2rem 0;
   overflow-x: auto;
 }
 
+/* Theater Screen */
 .theater-screen {
-  background-color: #e2e8f0;
-  padding: 10px;
+  background: #e2e8f0;
+  padding: 1rem;
   text-align: center;
-  border-radius: 4px;
-}
-
-.legend-box {
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
+  border-radius: 8px;
+  margin-bottom: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  gap: 0.5rem;
+  color: #64748b;
+  font-weight: 500;
 }
 
-.rotate-180 {
-  transform: rotate(180deg);
-}
-
-.cell-aisle { background-color: #e2e8f0; }
-.cell-stairs { background-color: #fde68a; }
-.cell-exit { background-color: #ef4444; color: white; }
-.cell-gap { background-color: #f3f4f6; }
-
-.category-premium { background-color: #9333ea; color: white; }
-.category-gold { background-color: #fbbf24; color: black; }
-.category-silver { background-color: #9ca3af; color: white; }
-
-.seat-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-size: 10px;
-}
-
-.seat-type-indicator {
-  font-size: 12px;
-  margin-top: 2px;
-}
-
-.grid-cell {
+/* Theater Grid */
+.theater-grid {
   position: relative;
-}
-
-.grid-cell.seat {
-  padding: 2px;
-}
-
-.legend-box {
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  border: 1px solid #dee2e6;
-}
-
-.is-drawing {
-  cursor: pointer;
-}
-
-.theater-grid-container {
   overflow-x: auto;
-}
-
-.theater-screen {
-  background-color: #e2e8f0;
-  padding: 10px;
-  text-align: center;
-  border-radius: 4px;
-  margin-bottom: 20px;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
 }
 
 .grid-content {
   min-width: fit-content;
+  padding: 20px;
 }
 
-.cell-aisle { background-color: #e2e8f0; }
-.cell-stairs { background-color: #fde68a; }
-.cell-exit { background-color: #ef4444; color: white; }
-.cell-gap { background-color: #f3f4f6; }
+/* Grid Cell Base Styles */
+.grid-cell {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #dee2e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin: 1px;
+  position: relative;
+  user-select: none;
+}
+
+/* Grid Cell Hover Effects */
+.grid-cell:hover {
+  opacity: 0.8;
+}
+
+/* Seat Categories */
+.grid-cell[data-category="premium"] {
+  background-color: #9333ea;
+  color: white;
+}
+
+.grid-cell[data-category="gold"] {
+  background-color: #fbbf24;
+  color: black;
+}
+
+.grid-cell[data-category="silver"] {
+  background-color: #9ca3af;
+  color: white;
+}
+
+/* Cell Types */
+.grid-cell[data-type="AISLE"] {
+  background-color: #e2e8f0;
+}
+
+.grid-cell[data-type="STAIRS"] {
+  background-color: #fde68a;
+}
+
+.grid-cell[data-type="EXIT"] {
+  background-color: #ef4444;
+  color: white;
+}
+
+.grid-cell[data-type="GAP"] {
+  background-color: #f3f4f6;
+}
+
+.grid-cell[data-type="EMPTY"] {
+  background-color: #ffffff;
+}
+
+/* Seat Content */
+.seat-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  width: 100%;
+  height: 100%;
+}
+
+.seat-number {
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.seat-type-indicator {
+  font-size: 14px;
+  position: absolute;
+  top: -8px;
+  right: -8px;
+}
+
+/* Legend Box */
+.legend-box {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+/* Category Buttons */
+.category-premium {
+  background-color: #9333ea;
+  border-color: #9333ea;
+  color: white;
+}
+
+.category-gold {
+  background-color: #fbbf24;
+  border-color: #fbbf24;
+  color: black;
+}
+
+.category-silver {
+  background-color: #9ca3af;
+  border-color: #9ca3af;
+  color: white;
+}
+
+/* Drawing Mode */
+.theater-grid.is-drawing .grid-cell:hover {
+  opacity: 0.7;
+}
+
+/* Utility Classes */
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+/* Row and Column Labels */
+.row-label,
+.column-label {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  color: #64748b;
+}
+
+/* Grid Headers */
+.grid-headers {
+  display: flex;
+  margin-left: 40px; /* Space for row labels */
+}
+
+.column-header {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  color: #64748b;
+}
+
+/* Animation for unsaved changes */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.badge-warning {
+  animation: pulse 2s infinite;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .theater-grid-container {
+    margin: 1rem 0;
+  }
+
+  .grid-cell {
+    width: 32px;
+    height: 32px;
+    font-size: 10px;
+  }
+
+  .row-label,
+  .column-label,
+  .column-header {
+    width: 32px;
+    height: 32px;
+    font-size: 10px;
+  }
+
+  .seat-type-indicator {
+    font-size: 12px;
+    top: -6px;
+    right: -6px;
+  }
+
+  .legend-box {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Print styles */
+@media print {
+  .theater-grid-container {
+    margin: 0;
+    overflow: visible;
+  }
+
+  .grid-cell {
+    border: 1px solid #000;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .seat-type-indicator {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { registerTManager } from '../../../services/authServices';
+import { createTheater } from '../../../redux/slices/theaterSlice';
+import { useDispatch } from 'react-redux';
+
 import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import './AddTheatreManager.css';
@@ -110,6 +113,8 @@ const AddTheatreManager = () => {
     }
   }, []);
 
+  const dispatch = useDispatch();  // Add this at the top of your component
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
@@ -117,14 +122,44 @@ const AddTheatreManager = () => {
       toast.error('Passwords do not match');
       return;
     }
-
+  
     try {
       setLoading(true);
       const registrationData = { ...formData };
       delete registrationData.confirmPassword;
-      await registerTManager(registrationData);
-      toast.success('Theater manager registered successfully!');
-      navigate('/login');
+      const createdManager = await registerTManager(registrationData);
+      console.log('Theater manager registered successfully!', createdManager.data.id);
+  
+      // Create theater request object
+      const theaterRequest = {
+        name: `${formData.username}'s Theater`, // Default name based on username
+        managerId: createdManager.data.id,
+        amenities: [],
+        description: '',
+        emailAddress: formData.email,
+        phoneNumber: formData.phoneNumber,
+        totalScreens: 0,
+        location: {
+          address: formData.address.street,
+          city: formData.address.city,
+          state: formData.address.state,
+          zipCode: formData.address.zipCode,
+          coordinates: formData.address.coordinates || [0, 0],
+          GoogleLink: ''
+        }
+      };
+  
+      // Create theater using redux
+      try {
+        await dispatch(createTheater(theaterRequest)).unwrap();
+        toast.success('Theater manager and theater created successfully!');
+        navigate('/login');
+      } catch (theatreError) {
+        toast.error('Manager created but failed to create theater: ' + theatreError.message);
+        // Still navigate to login since the manager was created
+        navigate('/login');
+      }
+  
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Registration failed';
       setError(errorMessage);
