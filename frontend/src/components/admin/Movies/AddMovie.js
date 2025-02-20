@@ -176,7 +176,9 @@ const AddMovie = ({handleClick}) => {
   };
 
   return (
-    <div className="min-h-screen">
+    // <div className="min-h-screen">
+    <div className="add-movie-container">
+
       <div className="card">
         <div className="card-body">
           <h2 className="page-title">Add New Movie</h2>

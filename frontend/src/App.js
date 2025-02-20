@@ -16,15 +16,15 @@ import Authenticate from "./components/common/Authenticate/Authenticate";
 
 // Theater Manager Components
 import TheaterManagerHome from "./components/theater/TheaterManagerHome";
-import TheaterList from "./components/theater/TheaterList";
-import AddTheater from "./components/theater/AddTheater";
+// import TheaterList from "./components/theater/TheaterList";
+// import AddTheater from "./components/theater/AddTheater";
 import TheaterEdit from "./components/theater/TheaterEdit";
 import ScreenSetup from "./components/theater/ScreenSetup";
 import ShowList from "./components/theater/ShowList";
 import ShowSchedule from "./components/theater/ShowSchedule";
 import Analytics from "./components/theater/Analytics";
 import TheaterScreens from "./components/theater/TheaterScreens";
-import Login from "./../src/components/common/Login";
+// import Login from "./../src/components/common/Login";
 import Register from "./../src/components/common/Register/Register";
 import AdminSidebar from "./../src/components/admin/Main/AdminSidebar";
 

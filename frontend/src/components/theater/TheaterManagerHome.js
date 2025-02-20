@@ -81,7 +81,7 @@ const TheaterManagerHome = () => {
       title: 'Analytics',
       description: 'View theater performance and revenue analytics',
       icon: BarChart3,
-      link: `/manager/theaters/${currentTheater?.id}/analytics`,
+      link: `/manager/analytics`,
       color: 'warning'
     }
   ];

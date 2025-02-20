@@ -46,8 +46,7 @@ const TheaterEdit = () => {
     'Dolby Sound',
     'IMAX',
     '4K Projection',
-    'VIP Lounge',
-    'Online Booking'
+    'VIP Lounge'
   ];
 
   useEffect(() => {
