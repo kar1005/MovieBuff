@@ -1,81 +1,157 @@
-// src/Customers/Customers.js
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
-import './../Customers/Customers.css'; 
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { 
+  fetchTheaterManagers, 
+  deleteTheaterManager, 
+  selectTheaterManagers, 
+  selectUserLoading, 
+  selectUserError 
+} from '../../../redux/slices/userSlice';
+import { 
+  Container, 
+  Row, 
+  Col, 
+  Card, 
+  Button, 
+  Table, 
+  Spinner, 
+  Alert,
+  Modal 
+} from 'react-bootstrap';
+import { Trash2, Plus, UserPlus } from 'lucide-react';
+import './TheatreManagers.css';
 
-function TheatreManagers({ handleClick }) {
-    const [customers, setCustomers] = useState([]);
-    const navigate = useNavigate();
+const TheatreManagers = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  
+  const theaterManagers = useSelector(selectTheaterManagers);
+  const loading = useSelector(selectUserLoading);
+  const error = useSelector(selectUserError);
 
-    useEffect(() => {
-        fetchCustomerData();
-    }, []);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [managerToDelete, setManagerToDelete] = useState(null);
 
-    const fetchCustomerData = async () => {
-        try {
-            const response = await fetch(`http://localhost:8080/api/users/theatremanager`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setCustomers(data);
-            } else {
-                console.error('Failed to fetch customers:', response.status);
-            }
-        } catch (err) {
-            console.error('Error:', err);
-        }
-    };
+  useEffect(() => {
+    dispatch(fetchTheaterManagers());
+  }, [dispatch]);
 
-    const onDeleteClick = async (id) => {
-        try {
-            const response = await fetch(`http://localhost:8080/api/users/${id}`, {
-                method: "DELETE",
-            });
-            if (response.ok) {
-                alert("Customer deleted successfully");
-                fetchCustomerData(); // Refresh the list of customers
-            }
-        } catch (err) {
-            console.error('Error deleting customer:', err);
-        }
-    };
+  const handleAddTheaterManager = () => {
+    navigate('/admin/theater-add');
+  };
 
+  const confirmDeleteManager = (manager) => {
+    setManagerToDelete(manager);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteManager = () => {
+    if (managerToDelete) {
+      dispatch(deleteTheaterManager(managerToDelete.id));
+      setShowDeleteModal(false);
+      setManagerToDelete(null);
+    }
+  };
+
+  if (loading) {
     return (
-        <div className="customers-container">
-            <div className="customers-header">
-                <h2>Customers</h2>
-                <button className="add-customer-btn" onClick={() =>handleClick('addtmanager')}>+ Add TheatreManager</button>
-            </div>
-            <table className="table">
-                <thead className="thead-black">
-                    <tr>
-                        <th scope="col">Name</th>
-                        <th scope="col">Phone Number</th>
-                        <th scope="col">Email</th>
-                        <th scope="col">Update</th>
-                        <th scope="col">Delete</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {customers.map((c) => (
-                        <tr key={c.id}>
-                            <td>{c.username}</td>
-                            <td>{c.phoneNumber}</td>
-                            <td>{c.email}</td>
-                            <td>
-                                <button className="btn btn-primary" onClick={() => handleClick('updatecustomer',c.id)}>Update</button>
-                            </td>
-                            <td>
-                                <button className="btn btn-danger" onClick={() => onDeleteClick(c.id)}>Delete</button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
+      <Container className="text-center py-5">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </Container>
     );
-}
+  }
+
+  if (error) {
+    return (
+      <Container className="py-5">
+        <Alert variant="danger">{error}</Alert>
+      </Container>
+    );
+  }
+
+  return (
+    <Container fluid className="theater-managers-container">
+      <Row className="mb-4 align-items-center">
+        <Col>
+          <h2 className="page-title">Theater Managers</h2>
+        </Col>
+        <Col className="text-end">
+          <Button 
+            variant="primary" 
+            onClick={handleAddTheaterManager}
+            className="add-manager-btn"
+          >
+            <UserPlus size={20} className="me-2" />
+            Add Theater Manager
+          </Button>
+        </Col>
+      </Row>
+
+      <Card>
+        <Card.Body>
+          <Table responsive hover className="theater-managers-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Phone Number</th>
+                <th>Email</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {theaterManagers.map((manager) => (
+                <tr key={manager.id}>
+                  <td>{manager.username}</td>
+                  <td>{manager.phoneNumber}</td>
+                  <td>{manager.email}</td>
+                  <td>
+                    <Button 
+                      variant="outline-danger" 
+                      size="sm" 
+                      onClick={() => confirmDeleteManager(manager)}
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+          {theaterManagers.length === 0 && (
+            <div className="text-center text-muted py-4">
+              No theater managers found
+            </div>
+          )}
+        </Card.Body>
+      </Card>
+
+      {/* Delete Confirmation Modal */}
+      <Modal 
+        show={showDeleteModal} 
+        onHide={() => setShowDeleteModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Deletion</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete the theater manager 
+          <strong> {managerToDelete?.username}</strong>?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleDeleteManager}>
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </Container>
+  );
+};
 
 export default TheatreManagers;

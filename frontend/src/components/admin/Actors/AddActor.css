@@ -1,0 +1,207 @@
+/* AddActor.css */
+
+.page-title {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0;
+  }
+  
+  /* Image Upload Styles */
+  .image-upload-card {
+    height: 100%;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .image-upload-container {
+    position: relative;
+    width: 100%;
+    min-height: 300px;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .image-upload-container:hover {
+    border-color: #0d6efd;
+  }
+  
+  .upload-placeholder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #6c757d;
+  }
+  
+  .upload-placeholder p {
+    margin: 10px 0 0;
+    font-size: 0.9rem;
+  }
+  
+  .upload-placeholder small {
+    display: block;
+    margin-top: 5px;
+  }
+  
+  .file-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+  
+  .image-preview {
+    position: relative;
+    width: 100%;
+    height: 300px;
+  }
+  
+  .image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+  
+  .remove-image {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    padding: 4px;
+    color: #dc3545;
+    line-height: 1;
+  }
+  
+  .remove-image:hover {
+    background: #fff;
+    color: #dc3545;
+  }
+  
+  /* Form Styles */
+  .form-label {
+    font-weight: 500;
+    color: #2c3e50;
+  }
+  
+  .form-control:focus,
+  .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  }
+  
+  /* Awards Section */
+  .awards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .award-checkbox {
+    margin: 5px 0;
+  }
+  
+  .custom-award-input {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .custom-award-input .form-control {
+    flex: 1;
+  }
+  
+  .custom-award-input .btn {
+    padding: 0.375rem 0.75rem;
+  }
+  
+  .selected-awards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  
+  .award-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    font-size: 0.875rem;
+  }
+  
+  .award-badge .btn-close {
+    width: 0.5em;
+    height: 0.5em;
+    margin-left: 8px;
+    opacity: 0.7;
+  }
+  
+  .award-badge .btn-close:hover {
+    opacity: 1;
+  }
+  
+  /* Card Styles */
+  .card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Responsive Styles */
+  @media (max-width: 768px) {
+    .image-upload-container {
+      min-height: 200px;
+    }
+  
+    .image-preview {
+      height: 200px;
+    }
+  
+    .awards-container {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+  
+    .custom-award-input {
+      flex-direction: column;
+    }
+  }
+  
+  /* Loading States */
+  .loading-spinner {
+    margin-right: 8px;
+  }
+  
+  /* Error States */
+  .invalid-feedback {
+    font-size: 0.875em;
+  }
+  
+  /* Button States */
+  .btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+  
+  /* Tooltip Styles */
+  .form-text {
+    font-size: 0.75rem;
+    color: #6c757d;
+  }
+  
+  /* Multi-select Styles */
+  select[multiple] {
+    height: auto;
+    min-height: 100px;
+  }
+  
+  /* Date Input Styles */
+  input[type="date"] {
+    min-height: 38px;
+  }

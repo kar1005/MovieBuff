@@ -142,10 +142,17 @@
 
         <!--Razorpay-->
         <dependency>
-    <groupId>com.razorpay</groupId>
-    <artifactId>razorpay-java</artifactId>
-    <version>1.4.3</version>
-</dependency>
+            <groupId>com.razorpay</groupId>
+            <artifactId>razorpay-java</artifactId>
+            <version>1.4.3</version>
+        </dependency>
+
+        <!--Cloudinary-->
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http44</artifactId>
+            <version>1.32.2</version>
+        </dependency>
     </dependencies>
 
     <build>

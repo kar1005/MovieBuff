@@ -9,8 +9,8 @@ const initialState = {
   screenLayout: null,
   loading: false,
   error: null,
-  screens: {},  // Will store screens by theaterId
-  stats: null,  // Added for theater statistics
+  screens: {},  
+  stats: null, 
 };
 
 // Existing Thunks

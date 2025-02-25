@@ -1,0 +1,190 @@
+/* ActorHome.css */
+
+/* Table styles */
+.actor-table {
+    margin-top: 1rem;
+  }
+  
+  .actor-table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    color: #495057;
+    font-weight: 600;
+  }
+  
+  .actor-table td {
+    vertical-align: middle;
+  }
+  
+  /* Actor image styles */
+  .actor-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px;
+    border: 1px solid #dee2e6;
+  }
+  
+  /* Badge styles */
+  .language-badge {
+    margin-right: 0.5rem;
+    margin-bottom: 0.25rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+  
+  /* Search form styles */
+  .search-form {
+    max-width: 100%;
+  }
+  
+  .search-input {
+    border-right: none;
+  }
+  
+  .search-input:focus {
+    box-shadow: none;
+    border-color: #ced4da;
+  }
+  
+  .search-button {
+    border-left: none;
+    background-color: white;
+  }
+  
+  .search-button:hover {
+    background-color: #f8f9fa;
+  }
+  
+  /* Filter select styles */
+  .filter-select {
+    height: auto;
+    min-height: 38px;
+  }
+  
+  /* Action buttons styles */
+  .action-buttons {
+    white-space: nowrap;
+  }
+  
+  .action-buttons .btn {
+    padding: 0.25rem 0.5rem;
+    margin-right: 0.5rem;
+  }
+  
+  .action-buttons .btn:last-child {
+    margin-right: 0;
+  }
+  
+  /* Stats display styles */
+  .stats-display {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #6c757d;
+  }
+  
+  .stats-display svg {
+    color: #0d6efd;
+  }
+  
+  /* Pagination styles */
+  .pagination-container {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .pagination .page-link {
+    color: #0d6efd;
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .pagination .page-item.active .page-link {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+  }
+  
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .action-buttons {
+      display: flex;
+      margin-top: 0.5rem;
+    }
+  
+    .action-buttons .btn {
+      flex: 1;
+    }
+  
+    .stats-display {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .filter-select {
+      margin-top: 1rem;
+    }
+  }
+  
+  /* Loading spinner styles */
+  .loading-spinner-container {
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Alert styles */
+  .alert-container {
+    margin-top: 2rem;
+  }
+  
+  /* Modal styles */
+  .delete-modal .modal-header {
+    background-color: #dc3545;
+    color: white;
+  }
+  
+  .delete-modal .modal-footer {
+    border-top: none;
+    padding-top: 0;
+  }
+  
+  /* Header section styles */
+  .header-section {
+    margin-bottom: 2rem;
+  }
+  
+  .add-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  /* Card styles */
+  .filter-card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: none;
+    margin-bottom: 2rem;
+  }
+  
+  .data-card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: none;
+  }
+  
+  /* Status badge styles */
+  .status-badge {
+    padding: 0.5em 0.75em;
+    font-weight: 500;
+  }
+  
+  .status-badge.complete {
+    background-color: #198754;
+  }
+  
+  .status-badge.basic {
+    background-color: #ffc107;
+    color: #000;
+  }

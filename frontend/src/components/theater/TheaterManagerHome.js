@@ -51,16 +51,15 @@ const TheaterManagerHome = () => {
       }
     }, [currentTheater, dispatch]);
   
-    // Get stats after fetching
     const stats = useSelector(selectTheaterStats);
 
     const handleLogout = () => {
       // Clear local storage
       localStorage.removeItem('userId');
       localStorage.removeItem('token');
-      // Navigate to login page
       navigate('/login');
     };
+    
   // Features configuration
   const features = [
     {

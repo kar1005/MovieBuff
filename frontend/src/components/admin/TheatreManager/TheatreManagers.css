@@ -1,0 +1,57 @@
+/* TheatreManagers.css */
+.theater-managers-container {
+    padding: 2rem;
+  }
+  
+  .page-title {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0;
+  }
+  
+  .add-manager-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+  }
+  
+  .add-manager-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .theater-managers-table {
+    margin-bottom: 0;
+  }
+  
+  .theater-managers-table thead {
+    background-color: #f8f9fa;
+    color: #495057;
+  }
+  
+  .theater-managers-table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #dee2e6;
+  }
+  
+  .theater-managers-table tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+  }
+  
+  .theater-managers-table td {
+    vertical-align: middle;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .theater-managers-container {
+      padding: 1rem;
+    }
+  
+    .page-title {
+      font-size: 1.5rem;
+    }
+  }

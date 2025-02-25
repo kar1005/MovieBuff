@@ -1,53 +1,113 @@
-/* src/Customers/Customers.css */
-.customers-container {
-    padding: 20px; /* General padding for the container */
-}
+/* src/pages/admin/Customers.css */
 
-.customers-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px; /* Spacing below the header */
-}
-
-.customers-header h2 {
-    margin: 0; /* Remove default margin */
-}
-
-.add-customer-btn {
-    background-color: #007bff; /* Primary color */
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    border-radius: 5px; /* Rounded corners */
-    transition: background-color 0.3s ease;
-}
-
-.add-customer-btn:hover {
-    background-color: #0056b3; /* Darken on hover */
-}
-
-.table {
+.customers-page .page-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.25rem;
+  }
+  
+  /* Table styles */
+  .customer-table {
     width: 100%;
-    border-collapse: collapse;
-}
-
-.table th, .table td {
-    padding: 12px;
-    text-align: left;
-}
-
-.table th {
-    background-color: #343a40; /* Header background */
-    color: white; /* Header text color */
-}
-
-.table tr:nth-child(even) {
-    background-color: #f2f2f2; /* Alternate row colors */
-}
-
-.table tr:hover {
-    background-color: #ddd; /* Row highlight on hover */
-}
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  
+  .customer-table th {
+    font-weight: 600;
+    color: #495057;
+  }
+  
+  .customer-table th, 
+  .customer-table td {
+    padding: 1rem 1.25rem;
+  }
+  
+  .customer-table tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.03);
+  }
+  
+  /* Make clickable elements pointer on hover */
+  .cursor-pointer {
+    cursor: pointer;
+  }
+  
+  .customer-table th.cursor-pointer:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+  
+  /* Status badge styles */
+  .badge {
+    font-weight: 500;
+    padding: 0.4em 0.75em;
+  }
+  
+  /* Action buttons */
+  .action-btn {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+  }
+  
+  .action-btn:hover {
+    background-color: #f8f9fa;
+  }
+  
+  /* Truncate long text in cells */
+  .text-truncate {
+    max-width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* Card shadows and borders */
+  .card {
+    overflow: hidden;
+    border: none;
+    border-radius: 0.5rem;
+  }
+  
+  .card .card-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.075);
+  }
+  
+  .card .card-footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.075);
+  }
+  
+  /* Style focus states */
+  .form-control:focus,
+  .btn:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+  
+  /* Info alert styling */
+  .alert-info {
+    background-color: #e8f4fd;
+    border-color: #c6e2fc;
+    color: #0d6efd;
+  }
+  
+  .alert-info .alert-heading {
+    color: #0b5ed7;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .customer-table th, 
+    .customer-table td {
+      padding: 0.75rem 1rem;
+    }
+    
+    .action-btn {
+      width: 32px;
+      height: 32px;
+    }
+  }

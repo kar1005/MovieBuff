@@ -34,7 +34,9 @@ import "./styles/main.css";
 import TheaterSeatLayout from "./components/theater/TheaterSeatLayout";
 import SubscriptionPlans from "./components/subscription/SubscriptionPlans";
 import SubscriptionStatus from "./components/subscription/SubscriptionStatus";
-import ManageSubscriptionPlans from "./components/admin/ManageSubscriptionPlans";
+import ManageSubscriptionPlans from "./components/admin/Subscription/ManageSubscriptionPlans";
+import AdminLayout from "./components/admin/Main/AdminLayout";
+import AdminApp from "./components/admin/Main/AdminApp";
 
 function App() {
   return (
@@ -71,7 +73,7 @@ function App() {
 
           <Route path="/login" element={<Authenticate />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/admin" element={<AdminSidebar />} />
+          {/* <Route path="/admin" element={<AdminSidebar />} /> */}
           <Route
             path="/admin/subscription-plans"
             element={<ManageSubscriptionPlans />}
@@ -85,6 +87,7 @@ function App() {
             path="/manager/subscription/status"
             element={<SubscriptionStatus />}
           />
+          <Route path="/admin/*" element={<AdminApp />} />
 
           {/* Default redirect */}
           <Route path="/" element={<Index />} />

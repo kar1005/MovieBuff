@@ -1,142 +1,256 @@
+/* Movies.css */
 .movies-container {
     padding: 20px;
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
 }
 
 .movies-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
-    padding: 10px;
+    margin-bottom: 30px;
 }
 
-/* If you want to adjust the button specifically */
-.btn-primary {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-left: 600px;
+.movies-header h1 {
+    font-size: 32px;
+    color: #333;
+    margin: 0;
 }
 
-.btn-primary:hover {
-    background-color: #0056b3;
-}
-/* 
 .add-movie-btn {
-    background-color: #007bff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #0066ff;
     color: white;
     border: none;
-    padding: 8px 16px;
+    padding: 10px 20px;
     border-radius: 4px;
     cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s ease;
 }
 
 .add-movie-btn:hover {
-    background-color: #0056b3;
-} */
-
-.loading {
-    text-align: center;
-    padding: 20px;
-    font-size: 1.2em;
-    color: #666;
+    background-color: #0052cc;
+    transform: translateY(-1px);
 }
 
-.error-container {
-    text-align: center;
-    padding: 20px;
+.movies-table-container {
+    background: white;
+    border-radius: 8px;
+    overflow-x: auto;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.movies-table {
+    width: 100%;
+    border-collapse: collapse;
+    white-space: nowrap;
+}
+
+.movies-table th {
+    background: #f8f9fa;
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.movies-table td {
+    padding: 16px;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: middle;
+}
+
+.movies-table tr:last-child td {
+    border-bottom: none;
+}
+
+.poster-cell {
+    width: 80px;
+    padding: 8px !important;
+}
+
+.movie-poster {
+    width: 50px;
+    height: 75px;
+    object-fit: cover;
+    border-radius: 4px;
+    transition: transform 0.3s ease;
+}
+
+.movie-poster:hover {
+    transform: scale(3);
+    transform-origin: center;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.status-badge.upcoming {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.now-showing {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-badge.ended {
+    background-color: #e2e3e5;
+    color: #383d41;
+}
+
+.edit-btn {
+    background-color: transparent;
+    color: #0066ff;
+    border: 1px solid #0066ff;
+    padding: 6px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.edit-btn:hover {
+    background-color: #0066ff;
+    color: white;
+}
+
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
 }
 
 .error-message {
     color: #dc3545;
-    margin-bottom: 10px;
-}
-
-.retry-btn {
-    background-color: #6c757d;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.no-movies {
-    text-align: center;
     padding: 20px;
-    color: #666;
-}
-
-.action-buttons {
-    white-space: nowrap;
-}
-
-.action-buttons button {
-    margin-right: 8px;
-}
-
-.table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-.table th,
-.table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.thead-dark th {
-    background-color: #343a40;
-    color: white;
-}
-
-.btn {
-    padding: 6px 12px;
+    text-align: center;
+    background: #f8d7da;
     border-radius: 4px;
-    cursor: pointer;
-    border: none;
+    margin: 20px 0;
 }
 
-.btn-primary {
-    background-color: #007bff;
-    color: white;
+/* Custom scrollbar for table container */
+.movies-table-container::-webkit-scrollbar {
+    height: 8px;
 }
 
-.btn-danger {
-    background-color: #dc3545;
-    color: white;
+.movies-table-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
 }
 
-.btn-primary:hover {
-    background-color: #0056b3;
+.movies-table-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
 }
 
-.btn-danger:hover {
-    background-color: #c82333;
+.movies-table-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }
 
-.table td img {
-    transition: transform 0.3s ease;
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .movies-table td, .movies-table th {
+        padding: 12px;
+    }
+
+    .movie-poster:hover {
+        transform: scale(2);
+    }
 }
 
-.table td img:hover {
-    transform: scale(1.5);
-    cursor: pointer;
+@media (max-width: 768px) {
+    .movies-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+
+    .movies-header h1 {
+        text-align: center;
+    }
+
+    .add-movie-btn {
+        justify-content: center;
+    }
+
+    .movies-table {
+        font-size: 14px;
+    }
 }
 
-/* Add this if you want images to appear above other content when scaled */
-.table td {
+
+
+/* Add these styles to your existing Movies.css */
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.search-container {
     position: relative;
+    display: flex;
+    align-items: center;
 }
 
-.table td img:hover {
-    position: relative;
-    z-index: 1;
+.search-icon {
+    position: absolute;
+    left: 12px;
+    color: #6b7280;
+}
+
+.search-input {
+    width: 300px;
+    padding: 10px 12px 10px 40px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.search-input:focus {
+    border-color: #0066ff;
+    box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.1);
+}
+
+.search-input::placeholder {
+    color: #9ca3af;
+}
+
+.no-results {
+    text-align: center;
+    padding: 40px !important;
+    color: #6b7280;
+    font-style: italic;
+}
+
+/* Update existing media query */
+@media (max-width: 768px) {
+    .header-actions {
+        flex-direction: column;
+        width: 100%;
+        gap: 12px;
+    }
+
+    .search-container {
+        width: 100%;
+    }
+
+    .search-input {
+        width: 100%;
+    }
 }

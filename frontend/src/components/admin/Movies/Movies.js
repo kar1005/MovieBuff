@@ -1,98 +1,166 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { Spinner } from 'react-bootstrap';
+import { Plus, Search } from 'lucide-react';
+import { fetchMovies, selectMovies, setCurrentMovie } from '../../../redux/slices/adminSlice';
+import './Movies.css';
 
-function Movies({ handleClick }) {
-    const [movies, setMovies] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+function Movies() {
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const { data: movies, loading, error } = useSelector(selectMovies);
+    const [filteredMovies, setFilteredMovies] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
-        fetchMovieData();
-    }, []);
+        dispatch(fetchMovies());
+    }, [dispatch]);
 
-    const fetchMovieData = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            const response = await fetch('http://localhost:8080/api/movies', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+    useEffect(() => {
+        handleSearch(searchTerm);
+    }, [searchTerm, movies]);
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+    const handleSearch = (value) => {
+        const searchValue = value.toLowerCase();
+        const filtered = movies.filter(movie => 
+            movie.title?.toLowerCase().includes(searchValue) ||
+            movie.languages?.some(lang => lang.toLowerCase().includes(searchValue)) ||
+            movie.cast?.some(actor => actor.name.toLowerCase().includes(searchValue))
+        );
+        setFilteredMovies(filtered);
+    };
 
-            const data = await response.json();
-            setMovies(data);
-        } catch (err) {
-            console.error('Error fetching movies:', err);
-            setError('Failed to load movies. Please try again later.');
-        } finally {
-            setLoading(false);
+    const handleClick = (action, movieId = null) => {
+        switch (action) {
+            case 'addmovie':
+                navigate('/admin/movies/add');
+                break;
+            case 'editmovie':
+                // Find the movie and set it in the state before navigating
+                const movieToEdit = movies.find(movie => movie.id === movieId);
+                if (movieToEdit) {
+                    dispatch(setCurrentMovie(movieToEdit));
+                    navigate(`/admin/movies/edit/${movieId}`);
+                }
+                break;
+            default:
+                break;
         }
     };
+
+    const renderCast = (cast) => {
+        if (!cast || cast.length === 0) return 'No cast information';
+        return cast.map(actor => actor.name).join(', ');
+    };
+
+    const renderStatus = (status) => {
+        const statusColors = {
+            UPCOMING: 'upcoming',
+            NOW_SHOWING: 'now-showing',
+            ENDED: 'ended'
+        };
+        return (
+            <span className={`status-badge ${statusColors[status] || ''}`}>
+                {status?.replace('_', ' ')}
+            </span>
+        );
+    };
+
+    if (loading) {
+        return (
+            <div className="loading-container">
+                <Spinner animation="border" role="status" />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="error-message">
+                {error}
+            </div>
+        );
+    }
 
     return (
         <div className="movies-container">
             <div className="movies-header">
-                <h2>Movies</h2>
-                <button 
-                    className="btn btn-primary"  // Changed from add-movie-btn to btn btn-primary
-                    onClick={() => handleClick('addmovie')}
-                    style={{ marginLeft: 'auto' }}  // This will push the button to the right
-                >
-                    + Add Movie
-                </button>
-            </div>
-            
-            {movies.length === 0 ? (
-                <div className="no-movies">
-                    No movies available. Add some movies to get started.
+                <h1>Movies</h1>
+                <div className="header-actions">
+                    <div className="search-container">
+                        <Search className="search-icon" size={20} />
+                        <input
+                            type="text"
+                            placeholder="Search movies..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="search-input"
+                        />
+                    </div>
+                    <button 
+                        className="add-movie-btn"
+                        onClick={() => handleClick('addmovie')}
+                    >
+                        <Plus size={20} />
+                        Add Movie
+                    </button>
                 </div>
-            ) : (
-                <table className="table">
-                    <thead className="thead-dark">
+            </div>
+
+            <div className="movies-table-container">
+                <table className="movies-table">
+                    <thead>
                         <tr>
-                            <th scope="col">Title</th>
-                            <th scope="col">Languages</th>
-                            <th scope="col">Cast</th>
-                            <th scope="col">Poster</th>
-                            <th scope="col">Duration(minutes)</th>
-                            <th scope='col'>Release Date</th>
-                            <th scope='col'>Description</th>
+                            <th>Title</th>
+                            <th>Poster</th>
+                            <th>Languages</th>
+                            <th>Cast</th>
+                            <th>Duration</th>
+                            <th>Release Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {movies.map((movie) => (
-                            <tr key={movie.id}>
-                                <td>{movie.title}</td>
-                                <td>{Array.isArray(movie.languages) ? movie.languages.join(', ') : movie.languages}</td>
-                                <td>{Array.isArray(movie.cast) ? movie.cast.join(', ') : movie.cast}</td>
-                                <td>
-                                    {movie.posterUrl && (
-                                        <img 
-                                            src={movie.posterUrl}
-                                            alt={`${movie.title} poster`}
-                                            style={{
-                                                width: '100px',
-                                                height: '150px',
-                                                objectFit: 'cover',
-                                                borderRadius: '4px'
-                                            }}
-                                        />
-                                    )}
+                        {filteredMovies.length === 0 ? (
+                            <tr>
+                                <td colSpan="8" className="no-results">
+                                    No movies found matching your search.
                                 </td>
-                                <td>{movie.duration}</td>
-                                <td>{movie.releaseDate}</td>
-                                <td>{movie.description}</td>
                             </tr>
-                        ))}
+                        ) : (
+                            filteredMovies.map((movie) => (
+                                <tr key={movie.id}>
+                                    <td>{movie.title}</td>
+                                    <td className="poster-cell">
+                                        {movie.posterUrl && (
+                                            <img 
+                                                src={movie.posterUrl}
+                                                alt={`${movie.title} poster`}
+                                                className="movie-poster"
+                                            />
+                                        )}
+                                    </td>
+                                    <td>{movie.languages?.join(', ')}</td>
+                                    <td>{renderCast(movie.cast)}</td>
+                                    <td>{movie.duration} mins</td>
+                                    <td>{new Date(movie.releaseDate).toLocaleDateString()}</td>
+                                    <td>{renderStatus(movie.status)}</td>
+                                    <td>
+                                        <button 
+                                            className="edit-btn"
+                                            onClick={() => handleClick('editmovie', movie.id)}
+                                        >
+                                            Edit
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
-            )}
+            </div>
         </div>
     );
 }

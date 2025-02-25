@@ -8,7 +8,7 @@ import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap'
 import { toast } from 'react-toastify';
 import './AddTheatreManager.css';
 
-const AddTheatreManager = ({handleClick}) => {
+const AddTheatreManager = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: '',
