@@ -11,6 +11,7 @@ import {
   UserPlus2,
   ChartLine,
   Menu,
+  Images,
   CalendarPlus2,
   X
 } from 'lucide-react';
@@ -31,7 +32,7 @@ const AdminLayout = ({ children }) => {
     { id: 'theater-managers', label: 'Theater Managers', icon: Building2, path: '/admin/theater-managers' },
     { id: 'stats', label: 'Statistics', icon: ChartLine , path: '/admin/stats' },
     { id: 'subscription', label: 'Subscription', icon: CalendarPlus2 , path: '/admin/subscription' },
-
+    { id: 'subscription', label: 'Slider', icon: Images , path: '/admin/slider' },
 
   ];
 

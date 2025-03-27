@@ -37,10 +37,14 @@ import SubscriptionStatus from "./components/subscription/SubscriptionStatus";
 import ManageSubscriptionPlans from "./components/admin/Subscription/ManageSubscriptionPlans";
 import AdminLayout from "./components/admin/Main/AdminLayout";
 import AdminApp from "./components/admin/Main/AdminApp";
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from "react-toastify";
 
 function App() {
   return (
     <Provider store={store}>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"></link>
+      <ToastContainer position="top-right" autoClose={3000} />
       <Router>
         <Routes>
           {/* Theater Manager Routes */}
