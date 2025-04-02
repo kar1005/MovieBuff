@@ -2,24 +2,31 @@
 import { configureStore } from "@reduxjs/toolkit";
 import adminSlice from "./slices/adminSlice";
 import authSlice from "./slices/authSlice";
-// import bookingSlice from "./slices/bookingSlice";
+import bookingSlice from "./slices/bookingSlice";
 import customerSlice from "./slices/customerSlice";
-// import movieSlice from "./slices/movieSlice";
+import movieSlice from "./slices/movieSlice";
 import theaterSlice from "./slices/theaterSlice";
-import subscriptionReducer from "./slices/subscriptionSlice";
-import actorReducer from "./slices/actorSlice";
-import userReducer from "./slices/userSlice";
+import subscriptionSlice from "./slices/subscriptionSlice";
+import actorSlice from "./slices/actorSlice";
+import userSlice from "./slices/userSlice";
+import showSlice from "./slices/showSlice";
+import couponSlice from "./slices/couponSlice";
+import reviewSlice from "./slices/reviewSlice";
+
 const store = configureStore({
   reducer: {
-    theater: theaterSlice,
-    auth: authSlice,
     admin: adminSlice,
-    subscription: subscriptionReducer,
+    auth: authSlice,
+    booking: bookingSlice,
     customer: customerSlice,
-    actors: actorReducer,
-    users: userReducer
-    // booking: bookingSlice,
-    // movie: movieSlice,
+    movies: movieSlice,
+    theater: theaterSlice,
+    subscription: subscriptionSlice,
+    actors: actorSlice,
+    users: userSlice,
+    shows: showSlice,
+    coupons: couponSlice,
+    reviews: reviewSlice
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

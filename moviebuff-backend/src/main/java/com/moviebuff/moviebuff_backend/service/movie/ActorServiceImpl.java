@@ -3,7 +3,7 @@ package com.moviebuff.moviebuff_backend.service.movie;
 import com.moviebuff.moviebuff_backend.dto.request.ActorRequest;
 import com.moviebuff.moviebuff_backend.dto.response.ActorResponse;
 import com.moviebuff.moviebuff_backend.model.movie.actors;
-import com.moviebuff.moviebuff_backend.repository.ActorRepository;
+import com.moviebuff.moviebuff_backend.repository.interfaces.movie.ActorRepository;
 import com.moviebuff.moviebuff_backend.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

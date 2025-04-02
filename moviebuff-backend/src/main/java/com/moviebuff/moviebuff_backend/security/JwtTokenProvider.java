@@ -35,22 +35,12 @@ public class JwtTokenProvider {
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .claim("role", userPrincipal.getRole())
-                .signWith(getSigningKey())  // Updated signing method
+                .signWith(getSigningKey())
                 .compact();
     }
 
     public String getEmailFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()  // Updated parser
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-
-        return claims.getSubject();
-    }
-
-    public String getUsernameFromJWT(String token) {
-        Claims claims = Jwts.parserBuilder()  // Updated parser
+        Claims claims = Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token)
@@ -61,7 +51,7 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()  // Updated parser
+            Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token);

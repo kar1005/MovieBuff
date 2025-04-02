@@ -20,7 +20,7 @@ import com.moviebuff.moviebuff_backend.model.subscription.Subscription;
 import com.moviebuff.moviebuff_backend.model.subscription.Subscription.PaymentMethod;
 import com.moviebuff.moviebuff_backend.model.subscription.Subscription.PaymentStatus;
 import com.moviebuff.moviebuff_backend.model.subscription.Subscription.SubscriptionStatus;
-import com.moviebuff.moviebuff_backend.repository.SubscriptionRepository;
+import com.moviebuff.moviebuff_backend.repository.interfaces.subscription.SubscriptionRepository;
 import com.razorpay.Order;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
@@ -33,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SubscriptionServiceImpl implements ISubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
-    private final SubscriptionPlanService planService;
+    private final ISubscriptionPlanService planService;
     @Value("${razorpay.key.id}")
     private String razorpayKeyId;
 

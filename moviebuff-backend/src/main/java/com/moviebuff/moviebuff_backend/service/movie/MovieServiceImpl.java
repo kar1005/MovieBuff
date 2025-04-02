@@ -4,7 +4,8 @@ import com.moviebuff.moviebuff_backend.dto.request.MovieRequest;
 import com.moviebuff.moviebuff_backend.dto.response.MovieResponse;
 import com.moviebuff.moviebuff_backend.exception.ResourceNotFoundException;
 import com.moviebuff.moviebuff_backend.model.movie.Movie;
-import com.moviebuff.moviebuff_backend.repository.MovieRepository;
+import com.moviebuff.moviebuff_backend.repository.interfaces.movie.MovieRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;

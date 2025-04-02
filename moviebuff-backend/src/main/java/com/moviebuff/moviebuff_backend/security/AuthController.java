@@ -45,7 +45,6 @@ public class AuthController {
 
     private final GoogleAuthService googleAuthService;
 
-    // @Autowired
     public AuthController(GoogleAuthService googleAuthService) {
         this.googleAuthService = googleAuthService;
     }
@@ -91,12 +90,9 @@ public class AuthController {
             String jwt = tokenProvider.generateToken(authentication);
             
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-            System.out.println("Email from userDetails: " + userDetails.getEmail());
             
             User user = userRepository.findByEmail(userDetails.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + userDetails.getEmail()));
-            
-            System.out.println("Found user: " + user);
             
             return ResponseEntity.ok(new JwtResponse(jwt, user));
         } catch (Exception e) {
@@ -104,7 +100,6 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Login failed: " + e.getMessage());
         }
     }
-
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody User user) {

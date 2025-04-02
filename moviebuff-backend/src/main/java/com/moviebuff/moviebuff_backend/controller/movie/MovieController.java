@@ -3,7 +3,7 @@ package com.moviebuff.moviebuff_backend.controller.movie;
 
 import com.moviebuff.moviebuff_backend.dto.request.MovieRequest;
 import com.moviebuff.moviebuff_backend.dto.response.MovieResponse;
-import com.moviebuff.moviebuff_backend.exception.ResourceNotFoundException;
+// import com.moviebuff.moviebuff_backend.exception.ResourceNotFoundException;
 import com.moviebuff.moviebuff_backend.model.movie.Movie;
 import com.moviebuff.moviebuff_backend.service.movie.IMovieService;
 import jakarta.validation.Valid;
@@ -15,7 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
+// import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 

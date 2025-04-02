@@ -1,7 +1,7 @@
 package com.moviebuff.moviebuff_backend.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Past;
+// import jakarta.validation.constraints.Past;
 import lombok.Data;
 import java.time.LocalDate;
 import java.util.List;

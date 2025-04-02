@@ -8,13 +8,13 @@ import org.springframework.stereotype.Service;
 import com.moviebuff.moviebuff_backend.dto.request.SubscriptionPlanRequest;
 import com.moviebuff.moviebuff_backend.dto.response.SubscriptionPlanResponse;
 import com.moviebuff.moviebuff_backend.model.subscription.SubscriptionPlan;
-import com.moviebuff.moviebuff_backend.repository.SubscriptionPlanRepository;
+import com.moviebuff.moviebuff_backend.repository.interfaces.subscription.SubscriptionPlanRepository;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
+public class SubscriptionPlanServiceImpl implements ISubscriptionPlanService {
     private final SubscriptionPlanRepository planRepository;
     
     @Override

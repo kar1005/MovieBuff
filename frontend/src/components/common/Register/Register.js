@@ -4,6 +4,7 @@ import { register } from '../../../services/authServices';
 import { Card, Container, Row, Col, Form, Button, Alert } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import './Register.css';
+import { GOOGLE_CLIENT_ID } from '../../../config/googleAuth';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -45,42 +46,62 @@ const Register = () => {
 
   const initializeGoogleButton = () => {
     if (window.google?.accounts?.id) {
-      window.google.accounts.id.initialize({
-        client_id: "615283018778-mm2l8s4p01f5lkgvv3gmu792sdssi2g8.apps.googleusercontent.com",
-        callback: handleGoogleSuccess,
-        auto_select: false,
-        cancel_on_tap_outside: true
-      });
-
-      window.google.accounts.id.renderButton(
-        document.getElementById('googleRegisterButton'),
-        { 
-          theme: 'outline', 
-          size: 'large',
-          width: 280
+      console.log("Initializing Google button");
+      try {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,  // Import from config file
+          callback: handleGoogleSuccess,
+          auto_select: false,
+          cancel_on_tap_outside: true
+        });
+  
+        const buttonElement = document.getElementById('googleRegisterButton');
+        if (buttonElement) {
+          window.google.accounts.id.renderButton(
+            buttonElement,
+            { 
+              theme: 'outline', 
+              size: 'large',
+              width: buttonElement.offsetWidth || 280
+            }
+          );
+        } else {
+          console.error("Google button element not found");
         }
-      );
+      } catch (error) {
+        console.error("Error initializing Google button:", error);
+      }
+    } else {
+      console.error("Google API not available");
     }
   };
 
   const handleGoogleSuccess = async (response) => {
     try {
+      console.log("Google auth response received:", response);
+      
       const result = await fetch('http://localhost:8080/api/auth/google', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',  // Include credentials for CORS
         body: JSON.stringify({
           idToken: response.credential
         })
       });
-
+  
+      console.log("API response status:", result.status);
+      
       if (!result.ok) {
-        const errorData = await result.text();
-        throw new Error(errorData);
+        const errorText = await result.text();
+        console.error("API error response:", errorText);
+        throw new Error(errorText || `Error: ${result.status}`);
       }
-
+  
       const data = await result.json();
+      console.log("Success response:", data);
+      
       navigate('/login');
       toast.success('Google registration successful! Please log in.');
     } catch (err) {

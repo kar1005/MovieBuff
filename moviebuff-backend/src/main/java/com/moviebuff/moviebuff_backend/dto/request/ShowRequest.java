@@ -1,66 +1,78 @@
-// src/main/java/com/moviebuff/moviebuff_backend/dto/request/ShowRequest.java
 package com.moviebuff.moviebuff_backend.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class ShowRequest {
-    @NotNull(message = "Movie ID is required")
+    
+    @NotBlank(message = "Movie ID is required")
     private String movieId;
-
-    @NotNull(message = "Theater ID is required")
+    
+    @NotBlank(message = "Theater ID is required")
     private String theaterId;
-
+    
     @NotNull(message = "Screen number is required")
-    @Min(value = 1, message = "Screen number must be at least 1")
     private Integer screenNumber;
-
+    
     @NotNull(message = "Show time is required")
     @Future(message = "Show time must be in the future")
     private LocalDateTime showTime;
-
-    @NotNull(message = "Language is required")
+    
+    @NotBlank(message = "Language is required")
     private String language;
-
-    @NotNull(message = "Experience type is required")
+    
+    @NotBlank(message = "Experience type is required")
     private String experience;
-
-    @NotNull(message = "Duration is required")
-    @Min(value = 30, message = "Duration must be at least 30 minutes")
+    
+    @NotNull(message = "Movie duration is required")
+    @Min(value = 1, message = "Duration must be at least 1 minute")
     private Integer duration;
-
+    
     @NotNull(message = "Pricing information is required")
-    private Map<String, PricingInfo> pricing;
-
-    @NotNull(message = "Seat layout is required")
-    private Map<String, Integer> seatLayout;
+    private Map<String, PricingRequest> pricing;
+    
+    @NotNull(message = "Seat layout information is required")
+    private Map<String, Integer> seatLayout; // Category to count mapping
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class PricingInfo {
+    public static class PricingRequest {
+        
+        @NotNull(message = "Base price is required")
+        @Min(value = 0, message = "Base price cannot be negative")
         private Double basePrice;
-        private List<AdditionalCharge> additionalCharges;
+        
+        private List<AdditionalChargeRequest> additionalCharges;
+        
+        @NotNull(message = "Final price is required")
+        @Min(value = 0, message = "Final price cannot be negative")
         private Double finalPrice;
     }
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class AdditionalCharge {
+    public static class AdditionalChargeRequest {
+        
+        @NotBlank(message = "Charge type is required")
         private String type;
+        
+        @NotNull(message = "Charge amount is required")
         private Double amount;
+        
+        private Boolean isPercentage = false;
     }
 }

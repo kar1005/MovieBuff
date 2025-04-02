@@ -1,4 +1,3 @@
-// src/main/java/com/moviebuff/moviebuff_backend/dto/response/ShowResponse.java
 package com.moviebuff.moviebuff_backend.dto.response;
 
 import lombok.AllArgsConstructor;
@@ -13,6 +12,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ShowResponse {
+    
     private String id;
     private String movieId;
     private String theaterId;
@@ -20,13 +20,19 @@ public class ShowResponse {
     private LocalDateTime showTime;
     private String language;
     private String experience;
-    private Map<String, PricingInfo> pricing;
-    private Map<String, Boolean[]> seatAvailability;
     private String status;
+    private Integer totalSeats;
+    private Integer availableSeats;
+    private Integer bookedSeats;
+    private Double popularityScore;
+    
+    private Map<String, PricingInfo> pricing;
+    private List<SeatInfo> seats;
+    
     private MovieInfo movie;
     private TheaterInfo theater;
     private ScreenInfo screen;
-
+    
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
@@ -35,15 +41,27 @@ public class ShowResponse {
         private List<AdditionalCharge> additionalCharges;
         private Double finalPrice;
     }
-
+    
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class AdditionalCharge {
         private String type;
         private Double amount;
+        private Boolean isPercentage;
     }
-
+    
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SeatInfo {
+        private String seatId;
+        private Integer row;
+        private Integer column;
+        private String category;
+        private String status;
+    }
+    
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
@@ -52,17 +70,18 @@ public class ShowResponse {
         private String posterUrl;
         private Integer duration;
         private String grade;
+        private Double rating;
     }
-
+    
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class TheaterInfo {
         private String name;
-        private String location;
+        private String address;
         private String city;
     }
-
+    
     @Data
     @NoArgsConstructor
     @AllArgsConstructor

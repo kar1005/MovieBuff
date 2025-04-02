@@ -2,7 +2,7 @@ package com.moviebuff.moviebuff_backend.controller.subscription;
 
 import com.moviebuff.moviebuff_backend.dto.request.SubscriptionPlanRequest;
 import com.moviebuff.moviebuff_backend.dto.response.SubscriptionPlanResponse;
-import com.moviebuff.moviebuff_backend.service.subscription.SubscriptionPlanService;
+import com.moviebuff.moviebuff_backend.service.subscription.ISubscriptionPlanService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,7 +15,7 @@ import java.util.List;
 @RequestMapping("/api/subscription-plans")
 @RequiredArgsConstructor
 public class SubscriptionPlanController {
-    private final SubscriptionPlanService planService;
+    private final ISubscriptionPlanService planService;
     
     @PostMapping
     public ResponseEntity<SubscriptionPlanResponse> createPlan(@Valid @RequestBody SubscriptionPlanRequest request) {

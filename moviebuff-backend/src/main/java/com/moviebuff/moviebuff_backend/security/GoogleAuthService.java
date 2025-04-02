@@ -28,35 +28,48 @@ public class GoogleAuthService {
     }
 
     public User verifyGoogleToken(String idTokenString) throws Exception {
-        GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
-            new NetHttpTransport(), new GsonFactory())
-            .setAudience(Collections.singletonList(googleClientId))
-            .build();
-
-        GoogleIdToken idToken = verifier.verify(idTokenString);
-        if (idToken == null) {
-            throw new Exception("Invalid Google ID token");
+        try {
+            System.out.println("Starting Google token verification with client ID: " + googleClientId);
+            
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
+                new NetHttpTransport(), new GsonFactory())
+                .setAudience(Collections.singletonList(googleClientId))
+                .build();
+    
+            GoogleIdToken idToken = verifier.verify(idTokenString);
+            if (idToken == null) {
+                System.out.println("Failed to verify token: null token returned");
+                throw new Exception("Invalid Google ID token");
+            }
+    
+            Payload payload = idToken.getPayload();
+            String email = payload.getEmail();
+            String username = (String) payload.get("name");
+            String googleId = payload.getSubject(); // Use Google's unique ID
+    
+            System.out.println("Successfully verified token for email: " + email);
+    
+            // Try to find existing user by email or create new
+            Optional<User> existingUser = userRepository.findByEmail(email);
+            if (existingUser.isPresent()) {
+                System.out.println("User already exists with email: " + email);
+                return existingUser.get();
+            }
+    
+            // Create new user if not exists
+            System.out.println("Creating new user with email: " + email);
+            User newUser = User.builder()
+                .email(email)
+                .username(username)
+                .password(passwordEncoder.encode(googleId)) // Secure random password
+                .role(User.UserRole.CUSTOMER)
+                .build();
+    
+            return userRepository.save(newUser);
+        } catch (Exception e) {
+            System.err.println("Error verifying Google token: " + e.getMessage());
+            e.printStackTrace();
+            throw new Exception("Error processing Google authentication: " + e.getMessage());
         }
-
-        Payload payload = idToken.getPayload();
-        String email = payload.getEmail();
-        String username = (String) payload.get("name");
-        String googleId = payload.getSubject(); // Use Google's unique ID
-
-        // Try to find existing user by email or create new
-        Optional<User> existingUser = userRepository.findByEmail(email);
-        if (existingUser.isPresent()) {
-            return existingUser.get();
-        }
-
-        // Create new user if not exists
-        User newUser = User.builder()
-            .email(email)
-            .username(username)
-            .password(passwordEncoder.encode(googleId)) // Secure random password
-            .role(User.UserRole.CUSTOMER)
-            .build();
-
-        return userRepository.save(newUser);
     }
 }

@@ -17,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+// import org.springframework.security.web.header.HeaderWriterFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -65,6 +66,13 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
                 .anyRequest().permitAll()
+            )
+            .headers(headers -> headers
+                // Include the headers from CustomHeaderFilter
+                .addHeaderWriter((request, response) -> {
+                    response.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+                    response.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+                })
             )
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

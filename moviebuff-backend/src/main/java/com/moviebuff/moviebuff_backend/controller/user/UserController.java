@@ -3,7 +3,7 @@ package com.moviebuff.moviebuff_backend.controller.user;
 
 import com.moviebuff.moviebuff_backend.model.user.User;
 import com.moviebuff.moviebuff_backend.repository.interfaces.user.IUserRepository;
-import com.moviebuff.moviebuff_backend.service.Email.EmailService;
+// import com.moviebuff.moviebuff_backend.service.Email.EmailService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,8 +18,8 @@ public class UserController {
     @Autowired
     private IUserRepository userRepository;
 
-    @Autowired
-    private EmailService emailService;
+    // @Autowired
+    // private EmailService emailService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;

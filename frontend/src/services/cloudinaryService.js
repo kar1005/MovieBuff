@@ -15,7 +15,7 @@ import axios from 'axios';
                 }
     
                 const response = await axios.post(
-                    'http://localhost:8080/api/cloudinary/upload',  // Use your backend endpoint
+                    'http://localhost:8080/api/cloudinary/upload', 
                     formData
                 );
     

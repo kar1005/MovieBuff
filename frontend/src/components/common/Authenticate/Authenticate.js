@@ -1,6 +1,6 @@
 import React from 'react'
-import Layout from '../../Layout/Layout'
-import Login from './../Login'
+import Layout from '../../customer/Layout/Layout'
+import Login from './../Login/Login'
 
 function Authenticate() {
   return (
