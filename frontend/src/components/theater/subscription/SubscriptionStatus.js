@@ -1,38 +1,52 @@
-// src/components/subscription/SubscriptionStatus.js
 import React, { useEffect, useState } from 'react';
 import { Card, Button, Alert, Badge, Spinner, Modal, Table } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { 
     fetchManagerSubscription,
     fetchSubscriptionHistory,
+    checkSubscriptionStatus,
     selectCurrentSubscription,
     selectSubscriptionHistory,
     selectSubscriptionLoading,
-    selectSubscriptionError
+    selectSubscriptionError,
+    selectIsSubscriptionActive,
+    resetState
 } from '../../../redux/slices/subscriptionSlice';
-import { format } from 'date-fns';
-import { Clock, AlertTriangle, CheckCircle, Calendar, DollarSign, IndianRupee } from 'lucide-react';
+import { format, differenceInDays } from 'date-fns';
+import { Clock, AlertTriangle, CheckCircle, Calendar, IndianRupee } from 'lucide-react';
 
 const SubscriptionStatus = () => {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
+    
     const currentSubscription = useSelector(selectCurrentSubscription);
     const subscriptionHistory = useSelector(selectSubscriptionHistory);
     const loading = useSelector(selectSubscriptionLoading);
     const error = useSelector(selectSubscriptionError);
-    const managerId = localStorage.getItem('userId');
+    const isActive = useSelector(selectIsSubscriptionActive);
     
     const [showHistory, setShowHistory] = useState(false);
+    const managerId = localStorage.getItem('userId');
 
     useEffect(() => {
         if (managerId) {
-            dispatch(fetchManagerSubscription(managerId));
-            dispatch(fetchSubscriptionHistory(managerId));
+            dispatch(checkSubscriptionStatus(managerId));
+            
+            // Only fetch details if subscription is active
+            if (isActive) {
+                dispatch(fetchManagerSubscription(managerId));
+                dispatch(fetchSubscriptionHistory(managerId));
+            }
         }
-    }, [dispatch, managerId]);
+        
+        return () => {
+            dispatch(resetState());
+        };
+    }, [dispatch, managerId, isActive]);
 
     const handleRenewal = () => {
-        // Navigate to subscription plans page
-        window.location.href = '/manager/subscription/plans';
+        navigate('/manager/subscription/plans');
     };
 
     const getStatusBadgeVariant = (status) => {
@@ -41,7 +55,11 @@ const SubscriptionStatus = () => {
                 return 'success';
             case 'EXPIRED':
                 return 'danger';
+            case 'CANCELLED':
+                return 'danger';
             case 'PENDING':
+                return 'warning';
+            case 'PAYMENT_FAILED':
                 return 'warning';
             default:
                 return 'secondary';
@@ -58,17 +76,10 @@ const SubscriptionStatus = () => {
         );
     }
 
-    if (error) {
-        return (
-            <Alert variant="danger" className="m-4">
-                <AlertTriangle className="me-2" size={20} />
-                {error}
-            </Alert>
-        );
-    }
-
+    // Check if subscription is expiring within 7 days
     const isExpiringSoon = currentSubscription && 
-        new Date(currentSubscription.endDate) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        currentSubscription.status === 'ACTIVE' &&
+        differenceInDays(new Date(currentSubscription.endDate), new Date()) <= 7;
 
     return (
         <>
@@ -82,7 +93,13 @@ const SubscriptionStatus = () => {
                     )}
                 </Card.Header>
                 <Card.Body>
-                    {!currentSubscription ? (
+                    {error && (
+                        <Alert variant="danger" dismissible onClose={() => dispatch(resetState())}>
+                            {error}
+                        </Alert>
+                    )}
+                    
+                    {!isActive || !currentSubscription ? (
                         <div className="text-center py-4">
                             <AlertTriangle size={48} className="text-warning mb-3" />
                             <h5>No Active Subscription</h5>
@@ -127,7 +144,7 @@ const SubscriptionStatus = () => {
                                             <IndianRupee size={20} className="text-success me-2" />
                                             <strong>Amount Paid:</strong>
                                         </div>
-                                        <p className="ms-4 mb-0">₹{currentSubscription.amount}</p>
+                                        <p className="ms-4 mb-0">₹{currentSubscription.amount.toFixed(2)}</p>
                                     </div>
                                 </div>
                             </div>
@@ -135,23 +152,26 @@ const SubscriptionStatus = () => {
                             {isExpiringSoon && (
                                 <Alert variant="warning" className="d-flex align-items-center">
                                     <AlertTriangle size={20} className="me-2" />
-                                    Your subscription will expire soon. Please renew to continue accessing all features.
+                                    Your subscription will expire in {differenceInDays(new Date(currentSubscription.endDate), new Date())} days.
+                                    Please renew to continue accessing all features.
                                 </Alert>
                             )}
 
                             <div className="d-flex justify-content-between align-items-center">
+                                {subscriptionHistory && subscriptionHistory.length > 1 && (
+                                    <Button 
+                                        variant="outline-primary"
+                                        onClick={() => setShowHistory(true)}
+                                    >
+                                        View History
+                                    </Button>
+                                )}
                                 <Button 
-                                    variant="outline-primary"
-                                    onClick={() => setShowHistory(true)}
-                                >
-                                    View History
-                                </Button>
-                                <Button 
-                                    variant="primary"
+                                    variant={isExpiringSoon ? "primary" : "outline-secondary"}
                                     onClick={handleRenewal}
-                                    disabled={!isExpiringSoon}
+                                    className={subscriptionHistory && subscriptionHistory.length <= 1 ? "ms-auto" : ""}
                                 >
-                                    Renew Subscription
+                                    {isExpiringSoon ? "Renew Subscription" : "Change Plan"}
                                 </Button>
                             </div>
                         </>
@@ -169,7 +189,7 @@ const SubscriptionStatus = () => {
                     <Modal.Title>Subscription History</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    {subscriptionHistory.length === 0 ? (
+                    {!subscriptionHistory || subscriptionHistory.length === 0 ? (
                         <Alert variant="info">No subscription history found.</Alert>
                     ) : (
                         <Table responsive>
@@ -186,9 +206,17 @@ const SubscriptionStatus = () => {
                                 {subscriptionHistory.map((subscription, index) => (
                                     <tr key={index}>
                                         <td>{subscription.plan.name}</td>
-                                        <td>₹{subscription.amount}</td>
-                                        <td>{format(new Date(subscription.startDate), 'PP')}</td>
-                                        <td>{format(new Date(subscription.endDate), 'PP')}</td>
+                                        <td>₹{subscription.amount.toFixed(2)}</td>
+                                        <td>
+                                            {subscription.startDate 
+                                                ? format(new Date(subscription.startDate), 'PP')
+                                                : 'N/A'}
+                                        </td>
+                                        <td>
+                                            {subscription.endDate
+                                                ? format(new Date(subscription.endDate), 'PP')
+                                                : 'N/A'}
+                                        </td>
                                         <td>
                                             <Badge bg={getStatusBadgeVariant(subscription.status)}>
                                                 {subscription.status}

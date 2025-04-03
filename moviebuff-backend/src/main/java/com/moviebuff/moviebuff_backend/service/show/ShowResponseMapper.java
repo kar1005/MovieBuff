@@ -1,9 +1,7 @@
 package com.moviebuff.moviebuff_backend.service.show;
 
 import com.moviebuff.moviebuff_backend.dto.response.ShowResponse;
-// import com.moviebuff.moviebuff_backend.model.movie.Movie;
 import com.moviebuff.moviebuff_backend.model.show.Show;
-// import com.moviebuff.moviebuff_backend.model.theater.Theater;
 import com.moviebuff.moviebuff_backend.repository.interfaces.movie.MovieRepository;
 import com.moviebuff.moviebuff_backend.repository.interfaces.theater.ITheaterRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +33,7 @@ public class ShowResponseMapper {
         response.setTheaterId(show.getTheaterId());
         response.setScreenNumber(show.getScreenNumber());
         response.setShowTime(show.getShowTime());
+        response.setEndTime(show.getEndTime());
         response.setLanguage(show.getLanguage());
         response.setExperience(show.getExperience());
         response.setStatus(show.getStatus().name());
@@ -42,6 +41,10 @@ public class ShowResponseMapper {
         response.setAvailableSeats(show.getAvailableSeats() != null ? show.getAvailableSeats() : 0);
         response.setBookedSeats(show.getBookedSeats() != null ? show.getBookedSeats() : 0);
         response.setPopularityScore(show.getPopularityScore() != null ? show.getPopularityScore() : 0.0);
+        
+        // Include the duration components
+        response.setIntervalTime(show.getIntervalTime());
+        response.setCleanupTime(show.getCleanupTime());
 
         // Map pricing information
         if (show.getPricing() != null) {
@@ -93,6 +96,9 @@ public class ShowResponseMapper {
             movieInfo.setGrade(movie.getGrade());
             movieInfo.setRating(movie.getRating() != null ? movie.getRating().getAverage() : 0.0);
             response.setMovie(movieInfo);
+            
+            // Set the movie duration in the response
+            response.setMovieDuration(movie.getDuration());
         });
 
         // Fetch and map theater information

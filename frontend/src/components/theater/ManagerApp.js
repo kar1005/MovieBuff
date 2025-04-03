@@ -8,16 +8,17 @@ import TheaterManagerHome from './Home/TheaterManagerHome';
 import TheaterEdit from './Home/TheaterEdit';
 import ScreenSetup from './ScreenManagement/ScreenSetup';
 import ShowList from './Shows/ShowList';
-import ShowSchedule from './Shows/ShowSchedule';
 import Analytics from './Analytics/Analytics';
 import TheaterScreens from './ScreenManagement/TheaterScreens';
 import TheaterSeatLayout from './ScreenManagement/TheaterSeatLayout';
 import SubscriptionPlans from './subscription/SubscriptionPlans';
 import SubscriptionStatus from './subscription/SubscriptionStatus';
+import AddShow from './Shows/AddShow';
+import EditShow from './Shows/EditShow';
 
 const ManagerApp = () => {
   return (
-    <TheaterManagerLayout>
+    // <TheaterManagerLayout>
       <Routes>
         <Route path="/" element={<TheaterManagerHome />} />
 
@@ -34,7 +35,9 @@ const ManagerApp = () => {
         
         {/* Show Management */}
         <Route path="/shows" element={<ShowList />} />
-        <Route path="/shows/schedule" element={<ShowSchedule />} />
+        <Route path="/shows/add" element={<AddShow />} />
+        <Route path="/shows/edit/:showId" element={<EditShow />} />
+
         
         {/* Analytics */}
         <Route path="/analytics" element={<Analytics />} />
@@ -43,7 +46,7 @@ const ManagerApp = () => {
         <Route path="/subscription" element={<SubscriptionPlans />} />
         <Route path="/subscription/status" element={<SubscriptionStatus />} />
       </Routes>
-    </TheaterManagerLayout>
+    // </TheaterManagerLayout>
   );
 };
 

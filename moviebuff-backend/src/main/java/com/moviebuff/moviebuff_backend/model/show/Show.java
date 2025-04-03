@@ -35,6 +35,15 @@ public class Show {
     @Indexed
     private LocalDateTime showTime;
     
+    // New field for show end time
+    private LocalDateTime endTime;
+    
+    // Clean-up time in minutes (optional field for calculation)
+    private Integer cleanupTime;
+    
+    // Interval time in minutes (optional field for calculation)
+    private Integer intervalTime;
+    
     private String language;
     private String experience;
     private Map<String, PricingTier> pricing;
@@ -108,7 +117,7 @@ public class Show {
         OPEN,
         SOLDOUT,
         FILLINGFAST,  // When seats are getting filled quickly
-        FEWSEATSLEFT, // When less than 10% seats are available
+        FEWSEATSLEFT, // When less than 20% seats are available
         STARTED,      // Show has started
         FINISHED,     // Show has finished
         CANCELLED
@@ -152,4 +161,26 @@ public class Show {
                                (this.bookingAttempts * 0.3) + 
                                ((double)this.bookedSeats / this.totalSeats * 0.4) * 100;
     }
+    
+    // Method to calculate end time based on movie duration, cleanup time, and interval time
+    public void calculateEndTime(Integer movieDuration) {
+        if (showTime != null && movieDuration != null) {
+            int totalDuration = movieDuration;
+            
+            // Add interval time if present
+            if (intervalTime != null && intervalTime > 0) {
+                totalDuration += intervalTime;
+            }
+            
+            // Add cleanup time if present
+            if (cleanupTime != null && cleanupTime > 0) {
+                totalDuration += cleanupTime;
+            }
+            
+            // Calculate end time
+            this.endTime = showTime.plusMinutes(totalDuration);
+        }
+    }
+
+    
 }

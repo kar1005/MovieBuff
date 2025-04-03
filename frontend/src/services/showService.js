@@ -1,4 +1,4 @@
-// src/services/showService.js
+// src/services/showService.js - Updated with endTime handling
 import axiosInstance from './axiosConfig';
 
 const BASE_URL = '/shows';
@@ -7,6 +7,12 @@ const showService = {
   // Create a new show
   createShow: async (showData) => {
     try {
+      console.log('----------------------------------------------------------------');
+      console.log("showData: " + JSON.stringify(showData));
+      
+      console.log('----------------------------------------------------------------');
+
+      
       const response = await axiosInstance.post(BASE_URL, showData);
       return response.data;
     } catch (error) {

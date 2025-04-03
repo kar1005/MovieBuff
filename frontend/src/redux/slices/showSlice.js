@@ -1,4 +1,4 @@
-// src/redux/slices/showSlice.js
+// src/redux/slices/showSlice.js - Updated with endTime handling
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import showService from "../../services/showService";
 
@@ -465,6 +465,22 @@ const showSlice = createSlice({
       .addCase(getTrendingShows.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
+      })
+      .addCase('shows/getShowByIdSuccess', (state, action) => {
+        state.showDetail = action.payload;
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase('movies/getMovieByIdSuccess', (state, action) => {
+        const movieExists = state.movies.some(movie => movie.id === action.payload.id);
+        if (!movieExists) {
+          state.movies.push(action.payload);
+        }
+      })
+      .addCase('shows/filterByScreenAndDate', (state, action) => {
+        console.log('----------------------------------------------IM CALLED: ');
+        
+        state.showsByScreen = action.payload;
       });
   }
 });

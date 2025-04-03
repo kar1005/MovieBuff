@@ -132,8 +132,8 @@ const TheaterManagerLayout = ({ children }) => {
           <Nav.Item>
             <Nav.Link 
               as={Link} 
-              to="/manager/shows" 
-              className={`text-white ${isActive('/manager/shows') ? 'active' : ''}`}
+              to="/manager/shows/manage" 
+              className={`text-white ${isActive('/manager/shows/manage') ? 'active' : ''}`}
             >
               <Film className="me-2" /> Show Management
             </Nav.Link>

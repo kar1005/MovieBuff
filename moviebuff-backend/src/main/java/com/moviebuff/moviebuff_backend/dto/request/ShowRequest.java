@@ -1,16 +1,18 @@
 package com.moviebuff.moviebuff_backend.dto.request;
 
+import com.moviebuff.moviebuff_backend.model.show.Show;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.Min;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -27,52 +29,52 @@ public class ShowRequest {
     private Integer screenNumber;
     
     @NotNull(message = "Show time is required")
-    @Future(message = "Show time must be in the future")
     private LocalDateTime showTime;
+    
+    // Optional fields for calculating end time
+    private Integer cleanupTime;
+    private Integer intervalTime;
     
     @NotBlank(message = "Language is required")
     private String language;
     
-    @NotBlank(message = "Experience type is required")
+    @NotBlank(message = "Experience (e.g., 2D, 3D) is required")
     private String experience;
     
-    @NotNull(message = "Movie duration is required")
-    @Min(value = 1, message = "Duration must be at least 1 minute")
+    // Movie duration (in minutes) - can be fetched from movie service
     private Integer duration;
     
+    @Valid
     @NotNull(message = "Pricing information is required")
-    private Map<String, PricingRequest> pricing;
-    
-    @NotNull(message = "Seat layout information is required")
-    private Map<String, Integer> seatLayout; // Category to count mapping
+    private Map<String, PricingInfo> pricing;
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class PricingRequest {
-        
+    public static class PricingInfo {
         @NotNull(message = "Base price is required")
-        @Min(value = 0, message = "Base price cannot be negative")
+        @Positive(message = "Base price must be positive")
         private Double basePrice;
         
-        private List<AdditionalChargeRequest> additionalCharges;
+        private List<AdditionalChargeInfo> additionalCharges;
         
         @NotNull(message = "Final price is required")
-        @Min(value = 0, message = "Final price cannot be negative")
+        @Positive(message = "Final price must be positive")
         private Double finalPrice;
     }
-
+    
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class AdditionalChargeRequest {
-        
+    public static class AdditionalChargeInfo {
         @NotBlank(message = "Charge type is required")
         private String type;
         
-        @NotNull(message = "Charge amount is required")
+        @NotNull(message = "Amount is required")
+        @Positive(message = "Amount must be positive")
         private Double amount;
         
-        private Boolean isPercentage = false;
+        @NotNull(message = "IsPercentage flag is required")
+        private Boolean isPercentage;
     }
 }

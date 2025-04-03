@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useDispatch, useSelector } from 'react-redux';
 import { 
   Container, 
   Row, 
@@ -15,13 +15,24 @@ import {
   InputGroup
 } from 'react-bootstrap';
 import { Plus, Pencil, ToggleRight, ToggleLeft } from 'lucide-react';
+import {
+  fetchAllPlans,
+  createPlan,
+  updatePlan,
+  togglePlanStatus,
+  selectSubscriptionPlans,
+  selectSubscriptionLoading,
+  selectSubscriptionError,
+  resetState
+} from '../../../redux/slices/subscriptionSlice';
 
 const ManageSubscriptionPlans = () => {
-    const [plans, setPlans] = useState([]);
+    const dispatch = useDispatch();
+    const plans = useSelector(selectSubscriptionPlans);
+    const loading = useSelector(selectSubscriptionLoading);
+    const error = useSelector(selectSubscriptionError);
+    
     const [showModal, setShowModal] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [fetchLoading, setFetchLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [selectedPlan, setSelectedPlan] = useState(null);
     const [formData, setFormData] = useState({
         name: '',
@@ -33,31 +44,27 @@ const ManageSubscriptionPlans = () => {
     });
 
     // Fetch all plans
-    const fetchPlans = async () => {
-        setFetchLoading(true);
-        setError(null);
-        try {
-            const response = await axios.get('http://localhost:8080/api/subscription-plans');
-            setPlans(response.data);
-        } catch (error) {
-            console.error('Error fetching plans:', error);
-            setError('Failed to load subscription plans. Please try again later.');
-        } finally {
-            setFetchLoading(false);
-        }
-    };
-
     useEffect(() => {
-        fetchPlans();
-    }, []);
+        dispatch(fetchAllPlans());
+        
+        // Cleanup function to reset state when component unmounts
+        return () => {
+            dispatch(resetState());
+        };
+    }, [dispatch]);
 
     // Handle form input changes
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
+        const { name, value, checked } = e.target;
         if (name === 'features') {
             setFormData({
                 ...formData,
                 features: value.split('\n').filter(feature => feature.trim() !== '')
+            });
+        } else if (name === 'isActive') {
+            setFormData({
+                ...formData,
+                isActive: checked
             });
         } else {
             setFormData({
@@ -68,31 +75,22 @@ const ManageSubscriptionPlans = () => {
     };
 
     // Handle form submission
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        setLoading(true);
-        setError(null);
-        try {
-            const data = {
-                ...formData,
-                price: parseFloat(formData.price)
-            };
+        
+        const data = {
+            ...formData,
+            price: parseFloat(formData.price)
+        };
 
-            if (selectedPlan) {
-                await axios.put(`http://localhost:8080/api/subscription-plans/${selectedPlan.id}`, data);
-            } else {
-                await axios.post('http://localhost:8080/api/subscription-plans', data);
-            }
-            
-            setShowModal(false);
-            fetchPlans();
-            resetForm();
-        } catch (error) {
-            console.error('Error saving plan:', error);
-            setError('Failed to save plan. Please check your input and try again.');
-        } finally {
-            setLoading(false);
+        if (selectedPlan) {
+            dispatch(updatePlan({ id: selectedPlan.id, planData: data }));
+        } else {
+            dispatch(createPlan(data));
         }
+        
+        setShowModal(false);
+        resetForm();
     };
 
     // Handle plan edit
@@ -110,14 +108,8 @@ const ManageSubscriptionPlans = () => {
     };
 
     // Handle plan toggle status
-    const handleToggleStatus = async (id) => {
-        try {
-            await axios.patch(`http://localhost:8080/api/subscription-plans/${id}/toggle-status`);
-            fetchPlans();
-        } catch (error) {
-            console.error('Error toggling plan status:', error);
-            setError('Failed to update plan status. Please try again.');
-        }
+    const handleToggleStatus = (id) => {
+        dispatch(togglePlanStatus(id));
     };
 
     // Reset form
@@ -131,7 +123,6 @@ const ManageSubscriptionPlans = () => {
             features: [],
             isActive: true
         });
-        setError(null);
     };
 
     // Close modal and reset form
@@ -143,7 +134,7 @@ const ManageSubscriptionPlans = () => {
     return (
         <Container className="py-5">
             {error && (
-                <Alert variant="danger" dismissible onClose={() => setError(null)} className="mb-4">
+                <Alert variant="danger" dismissible onClose={() => dispatch(resetState())} className="mb-4">
                     {error}
                 </Alert>
             )}
@@ -161,7 +152,7 @@ const ManageSubscriptionPlans = () => {
                     </Button>
                 </Card.Header>
                 <Card.Body className="p-0">
-                    {fetchLoading ? (
+                    {loading ? (
                         <div className="text-center py-5">
                             <Spinner animation="border" variant="primary" />
                             <p className="mt-2 text-muted">Loading subscription plans...</p>
@@ -339,7 +330,7 @@ const ManageSubscriptionPlans = () => {
                                 id="plan-status"
                                 name="isActive"
                                 checked={formData.isActive}
-                                onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
+                                onChange={handleInputChange}
                                 label=""
                                 className="me-2"
                             />

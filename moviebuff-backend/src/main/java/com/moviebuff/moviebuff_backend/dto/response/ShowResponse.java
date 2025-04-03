@@ -12,12 +12,12 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ShowResponse {
-    
     private String id;
     private String movieId;
     private String theaterId;
     private Integer screenNumber;
     private LocalDateTime showTime;
+    private LocalDateTime endTime;
     private String language;
     private String experience;
     private String status;
@@ -26,12 +26,21 @@ public class ShowResponse {
     private Integer bookedSeats;
     private Double popularityScore;
     
-    private Map<String, PricingInfo> pricing;
-    private List<SeatInfo> seats;
+    // Show duration components (in minutes)
+    private Integer movieDuration;
+    private Integer intervalTime;
+    private Integer cleanupTime;
     
+    // Related entities
     private MovieInfo movie;
     private TheaterInfo theater;
     private ScreenInfo screen;
+    
+    // Pricing
+    private Map<String, PricingInfo> pricing;
+    
+    // Seat information
+    private List<SeatInfo> seats;
     
     @Data
     @NoArgsConstructor

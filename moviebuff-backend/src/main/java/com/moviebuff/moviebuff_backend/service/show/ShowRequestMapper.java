@@ -1,8 +1,10 @@
 package com.moviebuff.moviebuff_backend.service.show;
 
 import com.moviebuff.moviebuff_backend.dto.request.ShowRequest;
+import com.moviebuff.moviebuff_backend.model.movie.Movie;
 import com.moviebuff.moviebuff_backend.model.show.Show;
 import com.moviebuff.moviebuff_backend.model.theater.Theater;
+import com.moviebuff.moviebuff_backend.repository.interfaces.movie.MovieRepository;
 import com.moviebuff.moviebuff_backend.repository.interfaces.theater.ITheaterRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -15,10 +17,14 @@ import java.util.stream.Collectors;
 public class ShowRequestMapper {
 
     private final ITheaterRepository theaterRepository;
+    private final MovieRepository movieRepository;
 
     @Autowired
-    public ShowRequestMapper(ITheaterRepository theaterRepository) {
+    public ShowRequestMapper(
+        ITheaterRepository theaterRepository,
+        MovieRepository movieRepository) {
         this.theaterRepository = theaterRepository;
+        this.movieRepository = movieRepository;
     }
 
     public Show mapToEntity(ShowRequest request) {
@@ -31,6 +37,10 @@ public class ShowRequestMapper {
         show.setShowTime(request.getShowTime());
         show.setLanguage(request.getLanguage());
         show.setExperience(request.getExperience());
+        
+        // Set cleanup and interval times if provided
+        show.setCleanupTime(request.getCleanupTime());
+        show.setIntervalTime(request.getIntervalTime());
 
         // Map pricing information
         if (request.getPricing() != null) {
@@ -102,6 +112,12 @@ public class ShowRequestMapper {
         show.setStatus(Show.ShowStatus.OPEN);
         show.setCreatedAt(LocalDateTime.now());
         show.setUpdatedAt(LocalDateTime.now());
+        
+        // Calculate and set end time based on movie duration
+        Movie movie = movieRepository.findById(request.getMovieId()).orElse(null);
+        if (movie != null && movie.getDuration() != null) {
+            show.calculateEndTime(movie.getDuration());
+        }
 
         return show;
     }
@@ -113,6 +129,15 @@ public class ShowRequestMapper {
         show.setShowTime(request.getShowTime());
         show.setLanguage(request.getLanguage());
         show.setExperience(request.getExperience());
+        
+        // Update cleanup and interval times if provided
+        if (request.getCleanupTime() != null) {
+            show.setCleanupTime(request.getCleanupTime());
+        }
+        
+        if (request.getIntervalTime() != null) {
+            show.setIntervalTime(request.getIntervalTime());
+        }
 
         // Update pricing information
         if (request.getPricing() != null) {
@@ -143,5 +168,11 @@ public class ShowRequestMapper {
         
         // Update timestamp
         show.setUpdatedAt(LocalDateTime.now());
+        
+        // Recalculate end time if needed
+        Movie movie = movieRepository.findById(show.getMovieId()).orElse(null);
+        if (movie != null && movie.getDuration() != null) {
+            show.calculateEndTime(movie.getDuration());
+        }
     }
 }

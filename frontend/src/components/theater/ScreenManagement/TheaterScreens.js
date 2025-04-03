@@ -4,16 +4,20 @@ import { Container, Card, Table, Button, Badge, Row, Col, Spinner, Modal, Alert 
 import { useSelector, useDispatch } from 'react-redux';
 import { Edit, Plus, Monitor, Trash2 } from 'lucide-react';
 import { fetchTheaterById, fetchTheaterScreens, deleteScreen } from '../../../redux/slices/theaterSlice';
-import subscriptionService from '../../../services/subscriptionService';
+import { 
+  checkSubscriptionStatus, 
+  selectIsSubscriptionActive, 
+  selectSubscriptionLoading 
+} from '../../../redux/slices/subscriptionSlice';
 
 const TheaterScreens = () => {
   const { theaterId } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // Add subscription state
-  const [subscriptionActive, setSubscriptionActive] = useState(false);
-  const [checkingSubscription, setCheckingSubscription] = useState(true);
+  // Get subscription state from Redux
+  const subscriptionActive = useSelector(selectIsSubscriptionActive);
+  const subscriptionLoading = useSelector(selectSubscriptionLoading);
   
   // State for delete confirmation modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -27,21 +31,11 @@ const TheaterScreens = () => {
 
   // Check subscription status
   useEffect(() => {
-    const checkSubscription = async () => {
-      try {
-        const managerId = localStorage.getItem('userId');
-        const isActive = await subscriptionService.checkSubscriptionStatus(managerId);
-        setSubscriptionActive(isActive);
-      } catch (error) {
-        console.error('Failed to check subscription status:', error);
-        setSubscriptionActive(false);
-      } finally {
-        setCheckingSubscription(false);
-      }
-    };
-
-    checkSubscription();
-  }, []);
+    const managerId = localStorage.getItem('userId');
+    if (managerId) {
+      dispatch(checkSubscriptionStatus(managerId));
+    }
+  }, [dispatch]);
 
   useEffect(() => {
     if (theaterId) {
@@ -51,7 +45,6 @@ const TheaterScreens = () => {
   }, [dispatch, theaterId]);
 
   const handleDeleteClick = (screen) => {
-    if (!subscriptionActive) return;
     setScreenToDelete(screen);
     setShowDeleteModal(true);
   };
@@ -70,10 +63,10 @@ const TheaterScreens = () => {
   };
 
   const handleSubscribeClick = () => {
-    navigate('/manager/subscription');
+    navigate('/manager/subscription/plans');
   };
 
-  if (loading || checkingSubscription || !currentTheater) {
+  if (loading || subscriptionLoading || !currentTheater) {
     return (
       <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
         <Spinner animation="border" variant="primary" />
@@ -110,7 +103,7 @@ const TheaterScreens = () => {
             <Col>
               <h5 className="mb-0">{currentTheater?.name || 'Theater'}</h5>
               <small className="text-muted">
-                {currentTheater?.location.address}, {currentTheater?.location.city}, {currentTheater?.location.state}
+                {currentTheater?.location?.address}, {currentTheater?.location?.city}, {currentTheater?.location?.state}
               </small>
             </Col>
             <Col xs="auto">
@@ -193,6 +186,7 @@ const TheaterScreens = () => {
                           size="sm"
                           disabled={!subscriptionActive}
                           onClick={() => navigate(`/manager/theaters/${theaterId}/screens/${screen.screenNumber}/edit`)}
+                          title={!subscriptionActive ? "Subscription required" : "Edit screen"}
                         >
                           <Edit size={16} />
                         </Button>
@@ -201,6 +195,7 @@ const TheaterScreens = () => {
                           size="sm"
                           disabled={!subscriptionActive}
                           onClick={() => handleDeleteClick(screen)}
+                          title={!subscriptionActive ? "Subscription required" : "Delete screen"}
                         >
                           <Trash2 size={16} />
                         </Button>
@@ -212,6 +207,11 @@ const TheaterScreens = () => {
                 <tr>
                   <td colSpan="5" className="text-center py-4">
                     <div className="text-muted">No screens found for this theater</div>
+                    {!subscriptionActive && (
+                      <div className="mt-2">
+                        <small className="text-danger">Subscribe to add and manage screens</small>
+                      </div>
+                    )}
                   </td>
                 </tr>
               )}
@@ -227,12 +227,21 @@ const TheaterScreens = () => {
         </Modal.Header>
         <Modal.Body>
           Are you sure you want to delete Screen {screenToDelete?.screenNumber}? This action cannot be undone.
+          {!subscriptionActive && (
+            <Alert variant="danger" className="mt-3 mb-0">
+              You need an active subscription to delete screens.
+            </Alert>
+          )}
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
             Cancel
           </Button>
-          <Button variant="danger" onClick={handleConfirmDelete}>
+          <Button 
+            variant="danger" 
+            onClick={handleConfirmDelete}
+            disabled={!subscriptionActive}
+          >
             Delete Screen
           </Button>
         </Modal.Footer>

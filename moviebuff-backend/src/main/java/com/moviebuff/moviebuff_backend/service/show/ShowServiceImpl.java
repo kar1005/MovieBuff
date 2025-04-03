@@ -10,6 +10,8 @@ import com.moviebuff.moviebuff_backend.model.theater.Theater;
 import com.moviebuff.moviebuff_backend.repository.interfaces.movie.MovieRepository;
 import com.moviebuff.moviebuff_backend.repository.interfaces.show.IShowRepository;
 import com.moviebuff.moviebuff_backend.repository.interfaces.theater.ITheaterRepository;
+import com.moviebuff.moviebuff_backend.service.show.ShowRequestMapper;
+import com.moviebuff.moviebuff_backend.service.show.ShowResponseMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -19,7 +21,6 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-// import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,12 +49,24 @@ public class ShowServiceImpl implements IShowService {
     public ShowResponse createShow(ShowRequest request) {
         validateShowRequest(request);
         validateShowTimings(request);
-        
+        System.out.println("-----------------------------------------------");
+        System.out.println("Show Request : "+request);
+        System.out.println("-----------------------------------------------");
+
         Show show = requestMapper.mapToEntity(request);
+        
+        // Make sure end time is calculated
+        if (show.getEndTime() == null) {
+            Movie movie = movieRepository.findById(request.getMovieId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Movie not found with id: " + request.getMovieId()));
+            show.calculateEndTime(movie.getDuration());
+        }
+        
         Show savedShow = showRepository.save(show);
         
         return responseMapper.mapToResponse(savedShow);
     }
+    
 
     @Override
     @Transactional
@@ -73,6 +86,13 @@ public class ShowServiceImpl implements IShowService {
         
         // Update show
         requestMapper.updateEntityFromRequest(existingShow, request);
+        
+        // Recalculate end time
+        Movie movie = movieRepository.findById(existingShow.getMovieId())
+                .orElseThrow(() -> new ResourceNotFoundException("Movie not found with id: " + existingShow.getMovieId()));
+        
+        existingShow.calculateEndTime(movie.getDuration());
+        
         Show updatedShow = showRepository.save(existingShow);
         
         return responseMapper.mapToResponse(updatedShow);
@@ -424,6 +444,7 @@ public class ShowServiceImpl implements IShowService {
                     showInfo.put("movieId", show.getMovieId());
                     showInfo.put("theaterId", show.getTheaterId());
                     showInfo.put("showTime", show.getShowTime());
+                    showInfo.put("endTime", show.getEndTime());
                     showInfo.put("occupancyRate", show.getTotalSeats() > 0 ? 
                             (double) show.getBookedSeats() / show.getTotalSeats() * 100 : 0);
                     showInfo.put("popularityScore", show.getPopularityScore());
@@ -485,8 +506,21 @@ public class ShowServiceImpl implements IShowService {
     }
     
     private void validateShowTimings(ShowRequest request) {
+        // Get movie details to determine duration
+        Movie movie = movieRepository.findById(request.getMovieId())
+                .orElseThrow(() -> new ResourceNotFoundException("Movie not found with id: " + request.getMovieId()));
+        
+        // Calculate total duration including interval and cleanup
+        int totalDuration = movie.getDuration();
+        if (request.getIntervalTime() != null && request.getIntervalTime() > 0) {
+            totalDuration += request.getIntervalTime();
+        }
+        if (request.getCleanupTime() != null && request.getCleanupTime() > 0) {
+            totalDuration += request.getCleanupTime();
+        }
+        
         // Calculate show end time based on movie duration
-        LocalDateTime showEndTime = request.getShowTime().plusMinutes(request.getDuration());
+        LocalDateTime showEndTime = request.getShowTime().plusMinutes(totalDuration);
         
         // Add buffer time between shows (e.g., 30 minutes)
         LocalDateTime bufferStartTime = request.getShowTime().minusMinutes(30);
@@ -506,8 +540,21 @@ public class ShowServiceImpl implements IShowService {
     }
     
     private void validateShowTimingsForUpdate(ShowRequest request, Show existingShow) {
+        // Get movie details to determine duration
+        Movie movie = movieRepository.findById(request.getMovieId())
+                .orElseThrow(() -> new ResourceNotFoundException("Movie not found with id: " + request.getMovieId()));
+        
+        // Calculate total duration including interval and cleanup
+        int totalDuration = movie.getDuration();
+        if (request.getIntervalTime() != null && request.getIntervalTime() > 0) {
+            totalDuration += request.getIntervalTime();
+        }
+        if (request.getCleanupTime() != null && request.getCleanupTime() > 0) {
+            totalDuration += request.getCleanupTime();
+        }
+        
         // Calculate show end time based on movie duration
-        LocalDateTime showEndTime = request.getShowTime().plusMinutes(request.getDuration());
+        LocalDateTime showEndTime = request.getShowTime().plusMinutes(totalDuration);
         
         // Add buffer time between shows (e.g., 30 minutes)
         LocalDateTime bufferStartTime = request.getShowTime().minusMinutes(30);
@@ -527,4 +574,8 @@ public class ShowServiceImpl implements IShowService {
             throw new BadRequestException("Show timing conflicts with existing shows (including buffer time)");
         }
     }
+
+
+
+    
 }
