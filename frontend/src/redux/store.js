@@ -12,6 +12,7 @@ import userSlice from "./slices/userSlice";
 import showSlice from "./slices/showSlice";
 import couponSlice from "./slices/couponSlice";
 import reviewSlice from "./slices/reviewSlice";
+import locationReducer from "./slices/locationSlice";
 
 const store = configureStore({
   reducer: {
@@ -24,6 +25,7 @@ const store = configureStore({
     subscription: subscriptionSlice,
     actors: actorSlice,
     users: userSlice,
+    location: locationReducer,
     shows: showSlice,
     coupons: couponSlice,
     reviews: reviewSlice

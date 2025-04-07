@@ -1,23 +1,34 @@
 // src/main/java/com/moviebuff/controller/movie/MovieController.java
 package com.moviebuff.moviebuff_backend.controller.movie;
 
-import com.moviebuff.moviebuff_backend.dto.request.MovieRequest;
-import com.moviebuff.moviebuff_backend.dto.response.MovieResponse;
-// import com.moviebuff.moviebuff_backend.exception.ResourceNotFoundException;
-import com.moviebuff.moviebuff_backend.model.movie.Movie;
-import com.moviebuff.moviebuff_backend.service.movie.IMovieService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-// import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
+import com.moviebuff.moviebuff_backend.dto.request.MovieRequest;
+import com.moviebuff.moviebuff_backend.dto.response.MovieResponse;
+import com.moviebuff.moviebuff_backend.model.movie.Movie;
+import com.moviebuff.moviebuff_backend.service.movie.IMovieService;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 
 @RestController
@@ -28,8 +39,8 @@ import java.util.Map;
 public class MovieController {
     private static final Logger logger = LoggerFactory.getLogger(MovieController.class);
 
+    @Autowired
     private final IMovieService movieService;
-
 
      @GetMapping
     public ResponseEntity<Page<MovieResponse>> getAllMovies(
@@ -43,6 +54,23 @@ public class MovieController {
             return ResponseEntity.ok(movieService.getAllMovies(title, genres, languages, experience, status, minRating, pageable));
         } catch (Exception e) {
             logger.error("Error fetching movies with filters", e);
+            throw e;
+        }
+    }
+
+    @GetMapping("/statuses")
+    public Movie.MovieStatus[] getMovieStatus() {
+        return Movie.MovieStatus.values();
+    }
+
+    @GetMapping("/latest-released")
+    public ResponseEntity<?> getLatestReleasedMovies(@RequestParam(defaultValue = "5") int limit) {
+        try {
+            List<Movie> movies = movieService.getLatestReleasedMovies(limit);
+            return ResponseEntity.ok(movies);
+        } catch (Exception e) {
+            System.out.println("Error fetching latest movies"+ e);
+            logger.error("Error fetching latest released movies", e);
             throw e;
         }
     }

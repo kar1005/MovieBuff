@@ -60,8 +60,7 @@ public class Movie {
 
     public enum MovieStatus {
         UPCOMING,
-        NOW_SHOWING,
-        ENDED
+        RELEASED
     }
 
     @Data

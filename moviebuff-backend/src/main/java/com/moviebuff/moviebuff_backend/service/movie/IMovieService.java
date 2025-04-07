@@ -1,14 +1,15 @@
 package com.moviebuff.moviebuff_backend.service.movie;
 
 
-import com.moviebuff.moviebuff_backend.dto.request.MovieRequest;
-import com.moviebuff.moviebuff_backend.dto.response.MovieResponse;
-import com.moviebuff.moviebuff_backend.model.movie.Movie;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-import java.util.Map;
+import com.moviebuff.moviebuff_backend.dto.request.MovieRequest;
+import com.moviebuff.moviebuff_backend.dto.response.MovieResponse;
+import com.moviebuff.moviebuff_backend.model.movie.Movie;
 
 public interface IMovieService {
     MovieResponse createMovie(MovieRequest request);
@@ -26,4 +27,5 @@ public interface IMovieService {
     MovieResponse updateMovieRating(String id, Movie.MovieRating rating);
     Map<String, Object> getMovieStatistics(String id);
     List<MovieResponse> getMoviesByActor(String actorId);
+    public List<Movie> getLatestReleasedMovies(int limit);
 }
