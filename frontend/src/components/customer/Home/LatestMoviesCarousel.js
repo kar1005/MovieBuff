@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Star, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, Clock, Ticket } from 'lucide-react';
+import './LatestMovieCarousel.css'; 
 
-const LatestMoviesCarousel = () => {
+const LatestMoviesCarousel = ({ onBookMovie }) => {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const carouselRef = useRef(null);
   
-  // Calculate how many movies to show based on screen width
   const [itemsToShow, setItemsToShow] = useState(3);
-
   
   useEffect(() => {
     const handleResize = () => {
@@ -40,8 +38,20 @@ const LatestMoviesCarousel = () => {
         if (!response.ok) {
           throw new Error('Failed to fetch movies');
         }
-        const data = await response.json();
-        setMovies(data);
+        let data = await response.json();
+        
+        // Remove duplicate movies by ID
+        const uniqueMovies = [];
+        const movieIds = new Set();
+        
+        data.forEach(movie => {
+          if (!movieIds.has(movie.id)) {
+            movieIds.add(movie.id);
+            uniqueMovies.push(movie);
+          }
+        });
+        
+        setMovies(uniqueMovies);
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -53,15 +63,17 @@ const LatestMoviesCarousel = () => {
   }, []);
   
   const nextSlide = () => {
-    setCurrentIndex(prevIndex => 
-      prevIndex + itemsToShow >= movies.length ? 0 : prevIndex + 1
-    );
+    setCurrentIndex(prevIndex => {
+      const nextIndex = prevIndex + 1;
+      return nextIndex >= movies.length - itemsToShow + 1 ? 0 : nextIndex;
+    });
   };
   
   const prevSlide = () => {
-    setCurrentIndex(prevIndex => 
-      prevIndex === 0 ? Math.max(0, movies.length - itemsToShow) : prevIndex - 1
-    );
+    setCurrentIndex(prevIndex => {
+      if (prevIndex === 0) return Math.max(0, movies.length - itemsToShow);
+      return prevIndex - 1;
+    });
   };
   
   const formatDuration = (minutes) => {
@@ -69,98 +81,134 @@ const LatestMoviesCarousel = () => {
     const mins = minutes % 60;
     return `${hours}h ${mins}m`;
   };
+
+  const handleBookNow = (movieId) => {
+    if (onBookMovie) {
+      onBookMovie(movieId);
+    }
+  };
   
   if (loading) {
     return (
-      <div className="w-full flex justify-center items-center p-12">
-        <div className="text-xl">Loading latest movies...</div>
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
       </div>
     );
   }
   
   if (error) {
     return (
-      <div className="w-full flex justify-center items-center p-12">
-        <div className="text-xl text-red-500">Error: {error}</div>
+      <div className="error-container">
+        <p>Error: {error}</p>
       </div>
     );
   }
   
-  // Check if we should show navigation buttons
   const showNavigation = movies.length > itemsToShow;
   
+  const visibleMovies = [];
+  const visibleIds = new Set();
+  
+  let count = 0;
+  let index = currentIndex;
+  
+  while (count < itemsToShow && count < movies.length) {
+    const circularIndex = index % movies.length;
+    const movie = movies[circularIndex];
+    
+    if (!visibleIds.has(movie.id)) {
+      visibleIds.add(movie.id);
+      visibleMovies.push(movie);
+      count++;
+    }
+    
+    index++;
+    
+    // Safety check to prevent infinite loop if there aren't enough unique movies
+    if (index - currentIndex >= movies.length * 2) break;
+  }
+  
   return (
-    <div className="w-full py-8">
-      <div className="container mx-auto px-4">
-        <h2 className="text-2xl font-bold mb-6">Latest Releases</h2>
-        <div className="relative">
-          <div 
-            className="flex overflow-hidden"
-            ref={carouselRef}
-          >
-            <div 
-              className="flex transition-transform duration-300 ease-in-out"
-              style={{ transform: `translateX(-${currentIndex * (100 / itemsToShow)}%)` }}
-            >
-              {movies.map((movie) => (
-                <div 
-                  key={movie.id} 
-                  className="flex-none w-full sm:w-1/2 lg:w-1/3 px-2"
-                  style={{ width: `${100 / itemsToShow}%` }}
-                >
-                  <div className="bg-white rounded-lg shadow-lg overflow-hidden h-full">
-                    <div className="relative pb-2/3">
-                      <img 
-                        src={movie.posterUrl || '/api/placeholder/300/450'} 
-                        alt={movie.title}
-                        className="absolute h-full w-full object-cover"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="text-lg font-semibold">{movie.title}</h3>
-                      <div className="flex items-center mt-2">
-                        <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                        <span className="text-sm">
-                          {movie.rating?.average ? `${movie.rating.average.toFixed(1)}/10` : 'N/A'}
-                          {movie.rating?.count ? ` (${movie.rating.count})` : ''}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap mt-2">
-                        {movie.genres?.slice(0, 2).map((genre, idx) => (
-                          <span key={idx} className="text-xs bg-gray-100 rounded-full px-2 py-1 mr-1 mb-1">
-                            {genre}
-                          </span>
-                        ))}
-                      </div>
-                      <div className="flex items-center mt-2 text-sm text-gray-600">
-                        <Clock className="h-4 w-4 mr-1" />
-                        {movie.duration ? formatDuration(movie.duration) : 'N/A'}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+    <div className="movie-carousel-page">
+      <div className="carousel-section">
+        <div className="container">
+          <div className="section-header">
+            <h2 className="section-title">Latest Releases</h2>
+            <a href="/movies" className="view-all-link">
+              View All <ChevronRight className="h-4 w-4" />
+            </a>
           </div>
           
-          {showNavigation && (
-            <>
+          <div className="carousel-container">
+            {showNavigation && (
               <button 
                 onClick={prevSlide}
-                className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 rounded-full p-2 shadow-lg"
+                className="carousel-nav-button carousel-prev-button"
                 aria-label="Previous movies"
               >
                 <ChevronLeft className="h-6 w-6" />
               </button>
+            )}
+            
+            <div className="movie-grid">
+              {visibleMovies.map((movie) => (
+                <div key={movie.id} className="movie-card">
+                  <div className="movie-poster-container">
+                    <img 
+                      src={movie.posterUrl || '/api/placeholder/300/450'} 
+                      alt={movie.title}
+                      className="movie-poster"
+                    />
+                    {movie.rating?.average && (
+                      <div className="movie-rating-badge">
+                        <Star className="h-3 w-3" />
+                        <span>{movie.rating.average.toFixed(1)}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="movie-info">
+                    <h3 className="movie-title">{movie.title}</h3>
+                    <div className="movie-meta">
+                      <div className="movie-meta-item">
+                        <Clock className="h-3 w-3" />
+                        <span>{movie.duration ? formatDuration(movie.duration) : 'N/A'}</span>
+                      </div>
+                      {movie.releaseDate && (
+                        <>
+                          <span className="movie-meta-separator">•</span>
+                          <span>{new Date(movie.releaseDate).getFullYear()}</span>
+                        </>
+                      )}
+                    </div>
+                    <div className="movie-genres">
+                      {movie.genres?.slice(0, 2).map((genre, idx) => (
+                        <span key={idx} className="movie-genre-tag">
+                          {genre}
+                        </span>
+                      ))}
+                    </div>
+                    <button 
+                      onClick={() => handleBookNow(movie.id)}
+                      className="book-now-button"
+                    >
+                      <Ticket className="h-4 w-4" />
+                      Book Now
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {showNavigation && (
               <button 
                 onClick={nextSlide}
-                className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 rounded-full p-2 shadow-lg"
+                className="carousel-nav-button carousel-next-button"
                 aria-label="Next movies"
               >
                 <ChevronRight className="h-6 w-6" />
               </button>
-            </>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>
