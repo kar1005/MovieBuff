@@ -418,8 +418,7 @@ const AddMovie = () => {
                 {renderFormField("Trailer URL", "trailerUrl", "url")}
                 {renderFormField("Status", "status", "select", [
                   { value: "UPCOMING", label: "Upcoming" },
-                  { value: "NOW_SHOWING", label: "Now Showing" },
-                  { value: "ENDED", label: "Ended" },
+                  { value: "RELEASED", label: "Now Showing" },
                 ])}
                 {renderFormField("Description", "description", "textarea")}
               </div>

@@ -726,8 +726,7 @@ const EditMovie = () => {
                     className="form-select"
                   >
                     <option value="UPCOMING">Upcoming</option>
-                    <option value="NOW_SHOWING">Now Showing</option>
-                    <option value="ENDED">Ended</option>
+                    <option value="RELEASED">Released</option>
                   </select>
                 </div>
 

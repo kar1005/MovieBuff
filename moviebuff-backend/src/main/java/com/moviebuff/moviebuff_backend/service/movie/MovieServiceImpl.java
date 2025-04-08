@@ -1,5 +1,22 @@
 package com.moviebuff.moviebuff_backend.service.movie;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.stereotype.Service;
+
 import com.moviebuff.moviebuff_backend.dto.request.MovieRequest;
 import com.moviebuff.moviebuff_backend.dto.response.MovieResponse;
 import com.moviebuff.moviebuff_backend.exception.ResourceNotFoundException;
@@ -7,18 +24,6 @@ import com.moviebuff.moviebuff_backend.model.movie.Movie;
 import com.moviebuff.moviebuff_backend.repository.interfaces.movie.MovieRepository;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +51,16 @@ public class MovieServiceImpl implements IMovieService {
                 .build());
 
         return movieMapper.toMovieResponse(movieRepository.save(movie));
+    }
+
+    @Override
+    public List<Movie> getLatestReleasedMovies(int limit) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("status").is(Movie.MovieStatus.RELEASED));
+        query.with(Sort.by(Sort.Direction.DESC, "releaseDate"));
+        query.limit(limit);
+        
+        return mongoTemplate.find(query, Movie.class);
     }
 
     @Override
