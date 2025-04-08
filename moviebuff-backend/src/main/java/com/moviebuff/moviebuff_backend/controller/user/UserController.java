@@ -1,9 +1,12 @@
 // src/main/java/com/moviebuff/controller/user/UserController.java
 package com.moviebuff.moviebuff_backend.controller.user;
 
+import com.moviebuff.moviebuff_backend.dto.response.TheaterResponse;
+import com.moviebuff.moviebuff_backend.exception.ResourceNotFoundException;
 import com.moviebuff.moviebuff_backend.model.user.User;
 import com.moviebuff.moviebuff_backend.repository.interfaces.user.IUserRepository;
 // import com.moviebuff.moviebuff_backend.service.Email.EmailService;
+import com.moviebuff.moviebuff_backend.service.theater.ITheaterService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +18,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
+    @Autowired
+    private ITheaterService theaterService;
     @Autowired
     private IUserRepository userRepository;
 
@@ -63,14 +68,31 @@ public class UserController {
 
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable String id, @RequestBody User user) {
+        // Check if the user exists
         if (!userRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
+        
+        // Get the existing user to preserve data not in request
+        User existingUser = userRepository.findById(id).orElse(null);
+        if (existingUser == null) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        // Set the ID to ensure we're updating the right record
         user.setId(id);
         
-        // Hash the password if it is not empty
+        // Only update password if provided in request
         if (user.getPassword() != null && !user.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
+        } else {
+            // Preserve existing password if not provided
+            user.setPassword(existingUser.getPassword());
+        }
+        
+        // Ensure role is preserved if not provided
+        if (user.getRole() == null) {
+            user.setRole(existingUser.getRole());
         }
         
         User updatedUser = userRepository.save(user);
@@ -78,14 +100,25 @@ public class UserController {
     }
 
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
-        if (!userRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
+@DeleteMapping("/{id}")
+public ResponseEntity<Void> deleteUser(@PathVariable String id) {
+    // First check if user exists
+    User user = userRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+    
+    // If the user is a theater manager, delete their theaters first
+    if (user.getRole() == User.UserRole.THEATER_MANAGER) {
+        // Inject theaterService in the controller class
+        List<TheaterResponse> theaters = theaterService.getTheatersByManagerId(id);
+        for (TheaterResponse theater : theaters) {
+            theaterService.deleteTheater(theater.getId());
         }
-        userRepository.deleteById(id);
-        return ResponseEntity.ok().build();
     }
+    
+    // Then delete the user
+    userRepository.deleteById(id);
+    return ResponseEntity.ok().build();
+}
 
     @GetMapping("/search")
     public ResponseEntity<User> searchUserByUsername(@RequestParam String username) {

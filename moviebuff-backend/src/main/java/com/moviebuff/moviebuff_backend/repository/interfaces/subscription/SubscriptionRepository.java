@@ -23,6 +23,10 @@ public interface SubscriptionRepository extends MongoRepository<Subscription, St
     
     boolean existsByManagerIdAndStatusAndEndDateAfter(String managerId, SubscriptionStatus status, LocalDateTime date);
     
+    List<Subscription> findByStatusAndEndDateBefore(SubscriptionStatus status, LocalDateTime date);
+
     @Query("{'endDate': {'$lt': ?0}, 'status': 'ACTIVE'}")
     List<Subscription> findExpiredSubscriptions(LocalDateTime currentDate);
+
+    List<Subscription> findByManagerIdAndStatusAndEndDateBefore(String managerId, Subscription.SubscriptionStatus status, LocalDateTime date);
 }

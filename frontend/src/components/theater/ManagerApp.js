@@ -18,7 +18,7 @@ import EditShow from './Shows/EditShow';
 
 const ManagerApp = () => {
   return (
-    // <TheaterManagerLayout>
+    <TheaterManagerLayout>
       <Routes>
         <Route path="/" element={<TheaterManagerHome />} />
 
@@ -46,7 +46,7 @@ const ManagerApp = () => {
         <Route path="/subscription" element={<SubscriptionPlans />} />
         <Route path="/subscription/status" element={<SubscriptionStatus />} />
       </Routes>
-    // </TheaterManagerLayout>
+     </TheaterManagerLayout>
   );
 };
 

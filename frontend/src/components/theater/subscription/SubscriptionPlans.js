@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Container, Row, Col, Card, Button, Spinner, Alert } from 'react-bootstrap';
-import { Check } from 'lucide-react';
+import { Check, AlertCircle } from 'lucide-react';
 import {
     fetchActivePlans,
     initiateSubscription,
@@ -11,6 +11,7 @@ import {
     selectSubscriptionLoading,
     selectSubscriptionError,
     selectPaymentDetails,
+    selectCurrentSubscription,
     selectSubscriptionSuccess,
     selectSubscriptionMessage,
     resetState
@@ -22,10 +23,15 @@ const SubscriptionPlans = () => {
     const loading = useSelector(selectSubscriptionLoading);
     const error = useSelector(selectSubscriptionError);
     const paymentDetails = useSelector(selectPaymentDetails);
+    const currentSubscription = useSelector(selectCurrentSubscription);
     const success = useSelector(selectSubscriptionSuccess);
     const message = useSelector(selectSubscriptionMessage);
     
     const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+    const [paymentStatus, setPaymentStatus] = useState({
+        status: null, // 'success', 'error', 'processing'
+        message: ''
+    });
 
     useEffect(() => {
         dispatch(fetchActivePlans());
@@ -47,8 +53,23 @@ const SubscriptionPlans = () => {
         };
     }, [dispatch]);
 
+    // Reset payment status when subscription state changes
+    useEffect(() => {
+        if (currentSubscription?.status === "ACTIVE") {
+            setPaymentStatus({
+                status: 'success',
+                message: 'Your subscription has been successfully activated!'
+            });
+        }
+    }, [currentSubscription]);
+
     const handleSubscribe = async (planId) => {
         try {
+            setPaymentStatus({
+                status: 'processing',
+                message: 'Processing your subscription request...'
+            });
+            
             const managerId = localStorage.getItem('userId');
             
             // 1. Initiate subscription
@@ -65,7 +86,10 @@ const SubscriptionPlans = () => {
             })).unwrap();
             
             if (!razorpayLoaded) {
-                alert('Payment gateway is loading. Please try again in a moment.');
+                setPaymentStatus({
+                    status: 'error',
+                    message: 'Payment gateway is not ready. Please refresh the page and try again.'
+                });
                 return;
             }
             
@@ -76,13 +100,31 @@ const SubscriptionPlans = () => {
                 currency: 'INR',
                 name: 'MovieBuff',
                 description: 'Theater Manager Subscription',
-                order_id: payment.id,
+                order_id: payment.orderId || payment.id,
                 handler: function (response) {
-                    dispatch(verifyPayment({
+                    // Ensure all required fields are included in the verification request
+                    const verificationData = {
                         razorpayOrderId: response.razorpay_order_id,
                         razorpayPaymentId: response.razorpay_payment_id,
-                        razorpaySignature: response.razorpay_signature
-                    }));
+                        razorpaySignature: response.razorpay_signature,
+                        subscriptionId: subscription.id
+                    };
+                    
+                    // Check that all required fields are present
+                    if (!verificationData.razorpayOrderId || !verificationData.razorpayPaymentId || !verificationData.razorpaySignature) {
+                        setPaymentStatus({
+                            status: 'error',
+                            message: 'Payment verification failed: Missing payment information from gateway.'
+                        });
+                        return;
+                    }
+                    
+                    setPaymentStatus({
+                        status: 'processing',
+                        message: 'Verifying payment...'
+                    });
+                    
+                    dispatch(verifyPayment(verificationData));
                 },
                 prefill: {
                     name: 'Theater Manager',
@@ -93,25 +135,67 @@ const SubscriptionPlans = () => {
                 },
                 modal: {
                     ondismiss: function() {
-                        console.log('Payment modal closed');
+                        setPaymentStatus({
+                            status: 'error',
+                            message: `Payment was canceled. Please try again when you're ready.`
+                        });
                     }
                 }
             };
             
             const razorpay = new window.Razorpay(options);
             razorpay.on('payment.failed', function (response) {
-                console.error('Payment Failed:', response.error);
-                alert(`Payment Failed: ${response.error.description}`);
+                setPaymentStatus({
+                    status: 'error',
+                    message: `Payment failed: ${response.error.description || 'An error occurred during payment processing.'}`
+                });
             });
             
             razorpay.open();
             
         } catch (error) {
             console.error('Subscription Error:', error);
+            setPaymentStatus({
+                status: 'error',
+                message: error.message || 'Failed to process subscription. Please try again later.'
+            });
         }
     };
 
-    if (loading) {
+    const renderPaymentStatusAlert = () => {
+        if (!paymentStatus.status) return null;
+        
+        let variant;
+        switch (paymentStatus.status) {
+            case 'success':
+                variant = 'success';
+                break;
+            case 'error':
+                variant = 'danger';
+                break;
+            case 'processing':
+                variant = 'info';
+                break;
+            default:
+                variant = 'secondary';
+        }
+        
+        return (
+            <Alert 
+                variant={variant} 
+                dismissible 
+                onClose={() => setPaymentStatus({ status: null, message: '' })}
+                className="mb-4"
+            >
+                {paymentStatus.status === 'error' && (
+                    <AlertCircle size={18} className="me-2" />
+                )}
+                {paymentStatus.message}
+            </Alert>
+        );
+    };
+
+    if (loading && plans.length === 0) {
         return (
             <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
                 <Spinner animation="border" />
@@ -127,11 +211,7 @@ const SubscriptionPlans = () => {
                 </Alert>
             )}
             
-            {success && (
-                <Alert variant="success" dismissible onClose={() => dispatch(resetState())}>
-                    {message}
-                </Alert>
-            )}
+            {renderPaymentStatusAlert()}
             
             <h2 className="text-center mb-4">Select a Subscription Plan</h2>
             
@@ -149,16 +229,16 @@ const SubscriptionPlans = () => {
                                 </Card.Header>
                                 <Card.Body className="d-flex flex-column">
                                     <div className="text-center mb-4">
-                                        <h4 className="mb-0">₹{plan.price.toFixed(2)}</h4>
-                                        <small className="text-muted">/{plan.duration.toLowerCase()}</small>
+                                        <h4 className="mb-0">₹{plan.price?.toFixed(2) || '0.00'}</h4>
+                                        <small className="text-muted">/{plan.duration?.toLowerCase() || 'month'}</small>
                                     </div>
                                     <Card.Text>{plan.description}</Card.Text>
                                     <div className="flex-grow-1">
                                         <ul className="list-unstyled">
-                                            {plan.features.map((feature, index) => (
-                                                <li key={index} className="mb-2">
-                                                    <Check size={18} className="text-success me-2" />
-                                                    {feature}
+                                            {plan.features && plan.features.map((feature, index) => (
+                                                <li key={index} className="mb-2 d-flex align-items-center">
+                                                    <Check size={18} color="green" className="me-2" />
+                                                    <span>{feature}</span>
                                                 </li>
                                             ))}
                                         </ul>
@@ -167,9 +247,16 @@ const SubscriptionPlans = () => {
                                         variant="primary" 
                                         className="w-100 mt-3"
                                         onClick={() => handleSubscribe(plan.id)}
-                                        disabled={!razorpayLoaded}
+                                        disabled={!razorpayLoaded || paymentStatus.status === 'processing'}
                                     >
-                                        Subscribe Now
+                                        {paymentStatus.status === 'processing' ? (
+                                            <>
+                                                <Spinner as="span" animation="border" size="sm" className="me-2" />
+                                                Processing...
+                                            </>
+                                        ) : (
+                                            'Subscribe Now'
+                                        )}
                                     </Button>
                                 </Card.Body>
                             </Card>

@@ -11,7 +11,7 @@ import {
     selectSubscriptionLoading,
     selectSubscriptionError,
     selectIsSubscriptionActive,
-    resetState
+    clearError
 } from '../../../redux/slices/subscriptionSlice';
 import { format, differenceInDays } from 'date-fns';
 import { Clock, AlertTriangle, CheckCircle, Calendar, IndianRupee } from 'lucide-react';
@@ -33,20 +33,23 @@ const SubscriptionStatus = () => {
         if (managerId) {
             dispatch(checkSubscriptionStatus(managerId));
             
-            // Only fetch details if subscription is active
+            // Fetch subscription history regardless of active status
+            dispatch(fetchSubscriptionHistory(managerId));
+            
+            // Try to fetch current subscription if active
             if (isActive) {
                 dispatch(fetchManagerSubscription(managerId));
-                dispatch(fetchSubscriptionHistory(managerId));
             }
         }
         
+        // Clear any existing errors when component unmounts
         return () => {
-            dispatch(resetState());
+            dispatch(clearError());
         };
     }, [dispatch, managerId, isActive]);
 
     const handleRenewal = () => {
-        navigate('/manager/subscription/plans');
+        navigate('/manager/subscription');
     };
 
     const getStatusBadgeVariant = (status) => {
@@ -86,20 +89,30 @@ const SubscriptionStatus = () => {
             <Card className="m-4 shadow-sm">
                 <Card.Header className="bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 className="mb-0">Subscription Status</h5>
-                    {currentSubscription && (
+                    {currentSubscription && currentSubscription.status && (
                         <Badge bg={getStatusBadgeVariant(currentSubscription.status)}>
                             {currentSubscription.status}
                         </Badge>
                     )}
                 </Card.Header>
                 <Card.Body>
-                    {error && (
-                        <Alert variant="danger" dismissible onClose={() => dispatch(resetState())}>
-                            {error}
+                    {error && error.includes("No active subscription found") ? (
+                        // Handle specific error for no active subscription
+                        <div className="text-center py-4">
+                            <AlertTriangle size={48} className="text-warning mb-3" />
+                            <h5>No Active Subscription</h5>
+                            <p className="text-muted">Subscribe to a plan to access all features.</p>
+                            <Button variant="primary" onClick={handleRenewal}>
+                                View Subscription Plans
+                            </Button>
+                        </div>
+                    ) : error ? (
+                        // Handle other errors
+                        <Alert variant="danger" dismissible onClose={() => dispatch(clearError())}>
+                            {typeof error === 'object' ? 'An error occurred. Please try again.' : error}
                         </Alert>
-                    )}
-                    
-                    {!isActive || !currentSubscription ? (
+                    ) : !isActive || !currentSubscription ? (
+                        // No active subscription status
                         <div className="text-center py-4">
                             <AlertTriangle size={48} className="text-warning mb-3" />
                             <h5>No Active Subscription</h5>
@@ -109,6 +122,7 @@ const SubscriptionStatus = () => {
                             </Button>
                         </div>
                     ) : (
+                        // Active subscription details
                         <>
                             <div className="row mb-4">
                                 <div className="col-md-6">
@@ -117,7 +131,11 @@ const SubscriptionStatus = () => {
                                             <CheckCircle size={20} className="text-success me-2" />
                                             <strong>Current Plan:</strong>
                                         </div>
-                                        <p className="ms-4 mb-0">{currentSubscription.plan.name}</p>
+                                        <p className="ms-4 mb-0">
+                                            {currentSubscription.plan && typeof currentSubscription.plan === 'object' 
+                                                ? currentSubscription.plan.name 
+                                                : 'Standard Plan'}
+                                        </p>
                                     </div>
                                     <div className="mb-3">
                                         <div className="d-flex align-items-center mb-2">
@@ -125,7 +143,9 @@ const SubscriptionStatus = () => {
                                             <strong>Start Date:</strong>
                                         </div>
                                         <p className="ms-4 mb-0">
-                                            {format(new Date(currentSubscription.startDate), 'PPP')}
+                                            {currentSubscription.startDate ? 
+                                                format(new Date(currentSubscription.startDate), 'PPP') : 
+                                                'Not available'}
                                         </p>
                                     </div>
                                 </div>
@@ -136,7 +156,9 @@ const SubscriptionStatus = () => {
                                             <strong>End Date:</strong>
                                         </div>
                                         <p className="ms-4 mb-0">
-                                            {format(new Date(currentSubscription.endDate), 'PPP')}
+                                            {currentSubscription.endDate ? 
+                                                format(new Date(currentSubscription.endDate), 'PPP') : 
+                                                'Not available'}
                                         </p>
                                     </div>
                                     <div className="mb-3">
@@ -144,7 +166,11 @@ const SubscriptionStatus = () => {
                                             <IndianRupee size={20} className="text-success me-2" />
                                             <strong>Amount Paid:</strong>
                                         </div>
-                                        <p className="ms-4 mb-0">₹{currentSubscription.amount.toFixed(2)}</p>
+                                        <p className="ms-4 mb-0">
+                                            ₹{typeof currentSubscription.amount === 'number' 
+                                                ? currentSubscription.amount.toFixed(2)
+                                                : '0.00'}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -192,8 +218,8 @@ const SubscriptionStatus = () => {
                     {!subscriptionHistory || subscriptionHistory.length === 0 ? (
                         <Alert variant="info">No subscription history found.</Alert>
                     ) : (
-                        <Table responsive>
-                            <thead>
+                        <Table responsive hover>
+                            <thead className="table-light">
                                 <tr>
                                     <th>Plan</th>
                                     <th>Amount</th>
@@ -205,8 +231,16 @@ const SubscriptionStatus = () => {
                             <tbody>
                                 {subscriptionHistory.map((subscription, index) => (
                                     <tr key={index}>
-                                        <td>{subscription.plan.name}</td>
-                                        <td>₹{subscription.amount.toFixed(2)}</td>
+                                        <td>
+                                            {subscription.plan && typeof subscription.plan === 'object'
+                                                ? subscription.plan.name
+                                                : 'Standard Plan'}
+                                        </td>
+                                        <td>
+                                            ₹{typeof subscription.amount === 'number'
+                                                ? subscription.amount.toFixed(2)
+                                                : '0.00'}
+                                        </td>
                                         <td>
                                             {subscription.startDate 
                                                 ? format(new Date(subscription.startDate), 'PP')

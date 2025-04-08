@@ -154,6 +154,8 @@ export const checkSubscriptionStatus = createAsyncThunk(
     'subscription/checkStatus',
     async (managerId, { rejectWithValue }) => {
         try {
+            console.log("checkSubscriptionStatus is called");
+            
             return await subscriptionService.checkSubscriptionStatus(managerId);
         } catch (error) {
             return rejectWithValue(error.toString());

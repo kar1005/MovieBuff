@@ -52,6 +52,7 @@ const AddActor = () => {
   const [imagePreview, setImagePreview] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageError, setImageError] = useState('');
+  const [imageUploaded, setImageUploaded] = useState(false);
 
   // Other state
   const [customAward, setCustomAward] = useState('');
@@ -68,21 +69,29 @@ const AddActor = () => {
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
       setImageError('');
+      setImageUploaded(false); // Reset image uploaded flag when new image is selected
     }
   };
 
   // Handle image upload
   const handleImageUpload = async () => {
-    if (!imageFile) return;
+    if (!imageFile) return null;
+    
     setUploadingImage(true);
     setImageError('');
 
     try {
       const result = await cloudinaryService.uploadImage(imageFile, 'actors');
+      
+      // Update the form data with the image URL
       setFormData(prev => ({ ...prev, imageUrl: result.url }));
+      setImageUploaded(true);
+      
+      return result.url;
     } catch (error) {
       setImageError('Failed to upload image. Please try again.');
       console.error('Image upload error:', error);
+      return null;
     } finally {
       setUploadingImage(false);
     }
@@ -150,12 +159,25 @@ const AddActor = () => {
     
     if (!validateForm()) return;
     
-    if (imageFile && !formData.imageUrl) {
-      await handleImageUpload();
+    // Upload image if not already uploaded
+    let imageUrl = formData.imageUrl;
+    if (imageFile && !imageUploaded) {
+      const uploadedUrl = await handleImageUpload();
+      if (!uploadedUrl) {
+        // If image upload failed, don't proceed
+        return;
+      }
+      imageUrl = uploadedUrl;
     }
 
+    // Create the final form data with the image URL
+    const finalFormData = {
+      ...formData,
+      imageUrl
+    };
+
     try {
-      await dispatch(createActor(formData)).unwrap();
+      await dispatch(createActor(finalFormData)).unwrap();
       navigate('/admin/actors');
     } catch (error) {
       console.error('Failed to create actor:', error);
@@ -187,6 +209,7 @@ const AddActor = () => {
                           setImageFile(null);
                           setImagePreview('');
                           setFormData(prev => ({ ...prev, imageUrl: '' }));
+                          setImageUploaded(false);
                         }}
                       >
                         <X size={24} />
@@ -211,10 +234,24 @@ const AddActor = () => {
                     {imageError}
                   </Alert>
                 )}
+                {imageUploaded && (
+                  <Alert variant="success" className="mt-2">
+                    Image uploaded successfully
+                  </Alert>
+                )}
                 {uploadingImage && (
                   <div className="text-center mt-2">
                     <Spinner animation="border" size="sm" /> Uploading...
                   </div>
+                )}
+                {imageFile && !imageUploaded && !uploadingImage && (
+                  <Button 
+                    variant="primary" 
+                    className="mt-2 w-100"
+                    onClick={handleImageUpload}
+                  >
+                    Upload Image
+                  </Button>
                 )}
               </Card.Body>
             </Card>
@@ -387,7 +424,7 @@ const AddActor = () => {
                   <Button
                     variant="primary"
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || uploadingImage}
                   >
                     {loading ? (
                       <>

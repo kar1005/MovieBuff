@@ -1,19 +1,28 @@
 package com.moviebuff.moviebuff_backend.service.movie;
 
+import com.cloudinary.Cloudinary;
 import com.moviebuff.moviebuff_backend.dto.request.ActorRequest;
 import com.moviebuff.moviebuff_backend.dto.response.ActorResponse;
 import com.moviebuff.moviebuff_backend.model.movie.actors;
 import com.moviebuff.moviebuff_backend.repository.interfaces.movie.ActorRepository;
 import com.moviebuff.moviebuff_backend.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Value;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import com.cloudinary.utils.ObjectUtils;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -25,6 +34,15 @@ public class ActorServiceImpl implements IActorService {
     
     private final ActorRepository actorRepository;
     private final MongoTemplate mongoTemplate;
+
+    @Value("${cloudinary.cloud-name}")
+private String cloudName;
+
+@Value("${cloudinary.api-key}")
+private String apiKey;
+
+@Value("${cloudinary.api-secret}")
+private String apiSecret;
 
     @Override
     @CacheEvict(value = {"actors", "trending-actors"}, allEntries = true)
@@ -67,14 +85,46 @@ public class ActorServiceImpl implements IActorService {
         return mapToResponse(actorRepository.save(actor));
     }
 
+    
+    
     @Override
     @CacheEvict(value = {"actors", "trending-actors"}, allEntries = true)
-    public void deleteActor(String id) {
-        if (!actorRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Actor not found with id: " + id);
+@Transactional
+public void deleteActor(String id) {
+    actors actor = actorRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Actor not found with id: " + id));
+    
+    // Delete image from Cloudinary if it exists
+    if (actor.getImageUrl() != null && !actor.getImageUrl().isEmpty()) {
+        try {
+            // Extract public ID from URL
+            String imageUrl = actor.getImageUrl();
+            String pattern = ".+/upload/v\\d+/(.+)\\..+";
+            Pattern r = Pattern.compile(pattern);
+            Matcher m = r.matcher(imageUrl);
+            
+            if (m.find()) {
+                String publicId = m.group(1);
+                
+                // Direct Cloudinary API call without using the controller
+                Cloudinary cloudinary = new Cloudinary(ObjectUtils.asMap(
+                    "cloud_name", cloudName,
+                    "api_key", apiKey,
+                    "api_secret", apiSecret
+                ));
+                
+                cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+                // logger.info("Deleted image from Cloudinary: {}", publicId);
+            }
+        } catch (Exception e) {
+            // log.error("Failed to delete image from Cloudinary", e);
+            // Continue with actor deletion even if image deletion fails
         }
-        actorRepository.deleteById(id);
     }
+    
+    // Delete the actor
+    actorRepository.deleteById(id);
+}
 
     @Override
     public List<ActorResponse> searchActors(String query, Integer limit) {

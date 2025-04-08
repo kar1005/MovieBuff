@@ -15,6 +15,7 @@ import EditActor from './Actors/EditActor.js';
 import AddActor from './Actors/AddActor.js';
 import AddTheatreManager from './TheatreManager/AddTheatreManager.js';
 import SliderManagement from './Slider/SliderManagement.js';
+import Statistics from './Analytics/Statistics.js';
 
 const AdminApp = () => {
   return (
@@ -37,6 +38,9 @@ const AdminApp = () => {
 
         <Route path="/theater-managers" element={<TheaterManagers />} />
         <Route path="/theater-Add" element={<AddTheatreManager />} />
+
+        <Route path="/stats" element={<Statistics />} />
+
 
         <Route path="/subscription" element={<ManageSubscriptionPlans/>} />
 

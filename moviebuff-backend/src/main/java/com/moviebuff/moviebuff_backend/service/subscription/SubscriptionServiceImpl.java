@@ -3,23 +3,29 @@ package com.moviebuff.moviebuff_backend.service.subscription;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
+import java.util.Comparator;
 import com.moviebuff.moviebuff_backend.dto.response.SubscriptionPlanResponse;
 import com.moviebuff.moviebuff_backend.dto.subscription.PaymentInitiateRequest;
 import com.moviebuff.moviebuff_backend.dto.subscription.PaymentResponse;
 import com.moviebuff.moviebuff_backend.dto.subscription.PaymentVerificationRequest;
 import com.moviebuff.moviebuff_backend.dto.subscription.SubscriptionRequest;
 import com.moviebuff.moviebuff_backend.dto.subscription.SubscriptionResponse;
+import com.moviebuff.moviebuff_backend.exception.ResourceNotFoundException;
 import com.moviebuff.moviebuff_backend.model.subscription.PaymentHistory;
 import com.moviebuff.moviebuff_backend.model.subscription.Subscription;
 import com.moviebuff.moviebuff_backend.model.subscription.Subscription.PaymentMethod;
 import com.moviebuff.moviebuff_backend.model.subscription.Subscription.PaymentStatus;
 import com.moviebuff.moviebuff_backend.model.subscription.Subscription.SubscriptionStatus;
+import com.moviebuff.moviebuff_backend.model.subscription.SubscriptionPlan;
+import com.moviebuff.moviebuff_backend.repository.interfaces.subscription.SubscriptionPlanRepository;
 import com.moviebuff.moviebuff_backend.repository.interfaces.subscription.SubscriptionRepository;
 import com.razorpay.Order;
 import com.razorpay.RazorpayClient;
@@ -34,9 +40,15 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class SubscriptionServiceImpl implements ISubscriptionService {
-    private final SubscriptionRepository subscriptionRepository;
-    private final ISubscriptionPlanService planService;
-    
+    @Autowired
+    private SubscriptionRepository subscriptionRepository;
+    @Autowired
+    private ISubscriptionPlanService planService;
+    @Autowired
+    private SubscriptionPlanRepository subscriptionPlanRepository;
+    @Autowired
+    private SubscriptionMapper subscriptionMapper;
+
     @Value("${razorpay.key.id}")
     private String razorpayKeyId;
 
@@ -211,33 +223,49 @@ public class SubscriptionServiceImpl implements ISubscriptionService {
     }
 
     private SubscriptionResponse mapToResponse(Subscription subscription) {
-        SubscriptionResponse response = new SubscriptionResponse();
-        response.setId(subscription.getId());
-        response.setManagerId(subscription.getManagerId());
-        response.setPlan(planService.getPlanById(subscription.getPlanId()));
-        response.setAmount(subscription.getAmount());
-        response.setStartDate(subscription.getStartDate());
-        response.setEndDate(subscription.getEndDate());
-        response.setStatus(subscription.getStatus());
-        response.setPaymentHistory(subscription.getPaymentHistory());
-        response.setCreatedAt(subscription.getCreatedAt());
-        response.setUpdatedAt(subscription.getUpdatedAt());
-        return response;
+        SubscriptionPlan plan = subscriptionPlanRepository.findById(subscription.getPlanId())
+            .orElse(null); // Get plan but allow it to be null
+        return subscriptionMapper.mapToResponse(subscription, plan);
     }
 
-    @Override
-    public void checkAndUpdateExpiredSubscriptions() {
-        LocalDateTime now = LocalDateTime.now();
-        List<Subscription> expiredSubscriptions = subscriptionRepository.findExpiredSubscriptions(now);
-        
-        log.info("Found {} expired subscriptions to update", expiredSubscriptions.size());
-
-        for (Subscription subscription : expiredSubscriptions) {
-            subscription.setStatus(SubscriptionStatus.EXPIRED);
-            subscriptionRepository.save(subscription);
-            log.info("Updated subscription {} status to EXPIRED", subscription.getId());
-        }
+@Override
+@Scheduled(cron = "0 0 0 * * ?") // Run daily at midnight
+public void checkAndUpdateExpiredSubscriptions() {
+    log.info("Running scheduled task to check and update expired subscriptions");
+    LocalDateTime now = LocalDateTime.now();
+    
+    // Find all active subscriptions that have ended
+    List<Subscription> expiredSubscriptions = subscriptionRepository.findByStatusAndEndDateBefore(
+        Subscription.SubscriptionStatus.ACTIVE, 
+        now
+    );
+    
+    log.info("Found {} expired subscriptions", expiredSubscriptions.size());
+    
+    for (Subscription subscription : expiredSubscriptions) {
+        subscription.setStatus(Subscription.SubscriptionStatus.EXPIRED);
+        subscriptionRepository.save(subscription);
+        log.info("Updated subscription ID: {} to EXPIRED status", subscription.getId());
     }
+}
+
+private void checkAndUpdateManagerExpiredSubscriptions(String managerId) {
+    LocalDateTime now = LocalDateTime.now();
+    
+    // Find all active subscriptions for this manager that have ended
+    List<Subscription> expiredSubscriptions = subscriptionRepository.findByManagerIdAndStatusAndEndDateBefore(
+        managerId,
+        Subscription.SubscriptionStatus.ACTIVE, 
+        now
+    );
+    
+    for (Subscription subscription : expiredSubscriptions) {
+        subscription.setStatus(Subscription.SubscriptionStatus.EXPIRED);
+        subscriptionRepository.save(subscription);
+        log.info("Updated subscription ID: {} to EXPIRED status for manager: {}", 
+            subscription.getId(), managerId);
+    }
+}
 
     @Override
     public SubscriptionResponse getSubscription(String id) {
@@ -248,6 +276,7 @@ public class SubscriptionServiceImpl implements ISubscriptionService {
 
     @Override
     public boolean isSubscriptionActive(String managerId) {
+        checkAndUpdateManagerExpiredSubscriptions(managerId);
         boolean isActive = subscriptionRepository.existsByManagerIdAndStatusAndEndDateAfter(
                 managerId,
                 SubscriptionStatus.ACTIVE,
@@ -267,9 +296,29 @@ public class SubscriptionServiceImpl implements ISubscriptionService {
     }
 
     @Override
-    public SubscriptionResponse getManagerActiveSubscription(String managerId) {
-        return subscriptionRepository.findByManagerIdAndStatus(managerId, SubscriptionStatus.ACTIVE)
-                .map(this::mapToResponse)
-                .orElseThrow(() -> new RuntimeException("No active subscription found for manager: " + managerId));
+public SubscriptionResponse getManagerActiveSubscription(String managerId) {
+    // First check and update any expired subscriptions
+    checkAndUpdateManagerExpiredSubscriptions(managerId);
+    
+    // Get all active subscriptions for this manager
+    Optional<Subscription> activeSubscriptions = subscriptionRepository.findByManagerIdAndStatus(
+        managerId, Subscription.SubscriptionStatus.ACTIVE);
+    
+    if (activeSubscriptions.isEmpty()) {
+        throw new ResourceNotFoundException("No active subscription found for manager ID: " + managerId);
     }
+    
+    // If multiple active subscriptions exist, return the most recent one based on start date
+    Subscription latestSubscription = activeSubscriptions.stream()
+        .sorted(Comparator.comparing(Subscription::getStartDate).reversed())
+        .findFirst()
+        .orElseThrow(() -> new ResourceNotFoundException("No active subscription found for manager ID: " + managerId));
+    
+    // Fetch plan details for the response
+    SubscriptionPlan plan = subscriptionPlanRepository.findById(latestSubscription.getPlanId())
+        .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found"));
+    
+    // Map to response object and return
+    return subscriptionMapper.mapToResponse(latestSubscription, plan);
+}
 }

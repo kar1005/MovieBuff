@@ -1,0 +1,35 @@
+/* Add this to your Reviews.css or include in your component */
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    border-bottom-width: 1px;
+  }
+  
+  .nav-tabs .nav-link {
+    border-radius: 0.25rem 0.25rem 0 0;
+  }
+  
+  .nav-tabs .nav-link.active {
+    font-weight: 500;
+  }
+  
+  .form-select, .form-control {
+    border-radius: 0.25rem;
+  }
+  
+  .form-select:focus, .form-control:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  }
+  
+  .status-filter {
+    min-width: 150px;
+  }
+  
+  .filter-item {
+    flex: 1;
+    min-width: 180px;
+  }
+  
+  .action-button {
+    white-space: nowrap;
+  }

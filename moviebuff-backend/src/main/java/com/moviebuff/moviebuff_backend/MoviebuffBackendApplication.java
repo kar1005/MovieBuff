@@ -5,8 +5,10 @@ package com.moviebuff.moviebuff_backend;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
+@EnableScheduling
 @EnableMongoRepositories(basePackages = "com.moviebuff.moviebuff_backend.repository")
 public class MoviebuffBackendApplication {
     public static void main(String[] args) {

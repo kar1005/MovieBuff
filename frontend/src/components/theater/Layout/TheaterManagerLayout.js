@@ -1,6 +1,6 @@
 // src/components/theater/Layout/TheaterManagerLayout.js
 import React, { useEffect, useState } from 'react';
-import { Container, Nav, Navbar, Button, Offcanvas } from 'react-bootstrap';
+import { Container, Row, Col, Nav, Navbar, Button, Badge } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../../redux/slices/authSlice';
@@ -10,15 +10,22 @@ import {
 } from '../../../redux/slices/theaterSlice';
 import { checkSubscriptionStatus } from '../../../redux/slices/subscriptionSlice';
 import { 
-  Drama, 
-  Home, 
+  LayoutDashboard, 
+  Settings, 
   Film, 
-  ChartBar, 
-  Cog, 
+  BarChart3, 
   CalendarDays, 
   LogOut, 
-  Wallet
+  Wallet,
+  Menu,
+  X,
+  Theater,
+  AlertCircle,
+  User,
+  Bell
 } from 'lucide-react';
+import './TheaterManagerLayout.css';
+import logo from '../../../images/Logo/Logo.png';
 
 const TheaterManagerLayout = ({ children }) => {
   const dispatch = useDispatch();
@@ -27,7 +34,7 @@ const TheaterManagerLayout = ({ children }) => {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
   const { currentTheater } = useSelector((state) => state.theater);
   const { isSubscriptionActive } = useSelector((state) => state.subscription);
-  const [showSidebar, setShowSidebar] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(true);
 
   useEffect(() => {
     // Redirect to login if not authenticated
@@ -52,19 +59,6 @@ const TheaterManagerLayout = ({ children }) => {
     }
   }, [currentTheater, dispatch]);
 
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
-  };
-
-  // Handler to toggle sidebar on mobile
-  const toggleSidebar = () => setShowSidebar(!showSidebar);
-
-  // Check if path is active
-  const isActive = (path) => {
-    return location.pathname.startsWith(path);
-  };
-
   // Redirect to subscription page if subscription is not active
   useEffect(() => {
     if (isAuthenticated && user?.role === 'THEATER_MANAGER' && isSubscriptionActive === false) {
@@ -75,262 +69,154 @@ const TheaterManagerLayout = ({ children }) => {
     }
   }, [isSubscriptionActive, isAuthenticated, user, navigate, location]);
 
-  return (
-    <div className="theater-manager-layout d-flex">
-      {/* Sidebar for larger screens */}
-      <div className="sidebar d-none d-lg-flex flex-column flex-shrink-0 p-3 bg-dark" style={{ width: '280px', minHeight: '100vh' }}>
-        <div className="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-          <Drama size={24} className="me-2" />
-          <span className="fs-4">Manager Portal</span>
-        </div>
-        <hr className="text-white" />
-        
-        {currentTheater && (
-          <div className="text-center mb-3">
-            <h5 className="text-white">{currentTheater.name}</h5>
-            <span className="badge bg-primary">{currentTheater.status}</span>
-          </div>
-        )}
-        
-        <Nav className="flex-column mb-auto">
-          <Nav.Item>
-            <Nav.Link 
-              as={Link} 
-              to="/manager" 
-              className={`text-white ${isActive('/manager') && !isActive('/manager/') ? 'active' : ''}`}
-            >
-              <Home className="me-2" /> Dashboard
-            </Nav.Link>
-          </Nav.Item>
-          
-          <Nav.Item>
-            <Nav.Link 
-              as={Link} 
-              to="/manager/theater/edit" 
-              className={`text-white ${isActive('/manager/theater/edit') ? 'active' : ''}`}
-            >
-              <Cog className="me-2" /> Theater Settings
-            </Nav.Link>
-          </Nav.Item>
-          
-          <Nav.Item>
-            <Nav.Link 
-              as={Link} 
-              to="/manager/theaters/:theaterId/screens" 
-              className={`text-white ${isActive('/manager/theaters') && isActive('/screens') ? 'active' : ''}`}
-              onClick={(e) => {
-                e.preventDefault();
-                if (currentTheater) {
-                  navigate(`/manager/theaters/${currentTheater.id}/screens`);
-                }
-              }}
-            >
-              <Drama className="me-2" /> Screen Management
-            </Nav.Link>
-          </Nav.Item>
-          
-          <Nav.Item>
-            <Nav.Link 
-              as={Link} 
-              to="/manager/shows/manage" 
-              className={`text-white ${isActive('/manager/shows/manage') ? 'active' : ''}`}
-            >
-              <Film className="me-2" /> Show Management
-            </Nav.Link>
-          </Nav.Item>
-          
-          <Nav.Item>
-            <Nav.Link 
-              as={Link} 
-              to="/manager/shows/schedule" 
-              className={`text-white ${isActive('/manager/shows/schedule') ? 'active' : ''}`}
-            >
-              <CalendarDays className="me-2" /> Schedule Shows
-            </Nav.Link>
-          </Nav.Item>
-          
-          <Nav.Item>
-            <Nav.Link 
-              as={Link} 
-              to="/manager/analytics" 
-              className={`text-white ${isActive('/manager/analytics') ? 'active' : ''}`}
-            >
-              <ChartBar className="me-2" /> Analytics
-            </Nav.Link>
-          </Nav.Item>
-          
-          <Nav.Item>
-            <Nav.Link 
-              as={Link} 
-              to="/manager/subscription/status" 
-              className={`text-white ${isActive('/manager/subscription') ? 'active' : ''}`}
-            >
-              <Wallet className="me-2" /> Subscription
-            </Nav.Link>
-          </Nav.Item>
-        </Nav>
-        
-        <hr className="text-white" />
-        <Button variant="outline-light" onClick={handleLogout}>
-          <LogOut className="me-2" /> Logout
-        </Button>
-      </div>
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/login');
+  };
 
-      {/* Mobile sidebar toggle and header */}
-      <div className="d-flex flex-column flex-grow-1">
-        <Navbar bg="dark" variant="dark" expand={false} className="d-lg-none mb-3">
-          <Container fluid>
-            <Button 
-              variant="outline-light" 
-              onClick={toggleSidebar}
-              className="me-2"
+  const menuItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/manager' },
+    { id: 'theater-settings', label: 'Theater Settings', icon: Settings, path: '/manager/theater/edit' },
+    { id: 'manage-screens', label: 'Manage Screens', icon: Theater, path: '/manager/theaters/:theaterId/screens' },
+    { id: 'show-schedule', label: 'Show Schedule', icon: CalendarDays, path: '/manager/shows' },
+    { id: 'subscription', label: 'Subscription', icon: Wallet, path: '/manager/subscription/status' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, path: '/manager/analytics' },
+  ];
+
+  const isActive = (path) => {
+    // Special case for dashboard which should only be active when exactly at /manager
+    if (path === '/manager') {
+      return location.pathname === '/manager';
+    }
+    // For other paths, check if the current path starts with the menu item path
+    return location.pathname.startsWith(path);
+  };
+
+  const handleNavigation = (path) => {
+    // Replace :theaterId with actual theater ID if present
+    if (path.includes(':theaterId') && currentTheater) {
+      path = path.replace(':theaterId', currentTheater.id);
+    }
+    navigate(path);
+    if (window.innerWidth < 992) {
+      setShowSidebar(false);
+    }
+  };
+
+  // Status badge styling
+  const getStatusBadgeVariant = (status) => {
+    if (!status) return 'secondary';
+    
+    switch(status.toUpperCase()) {
+      case 'ACTIVE':
+        return 'success';
+      case 'INACTIVE':
+        return 'danger';
+      default:
+        return 'secondary';
+    }
+  };
+
+  return (
+    <div className="theater-manager-layout d-flex flex-column">
+      {/* Top Navbar */}
+      <Navbar bg="dark" variant="dark" className="border-bottom shadow-sm navbar-custom">
+        <Container fluid className="px-3">
+          <div className="d-flex align-items-center">
+            <button 
+              className="btn btn-link text-white p-0 d-lg-none me-3"
+              onClick={() => setShowSidebar(!showSidebar)}
             >
-              <span className="navbar-toggler-icon"></span>
-            </Button>
-            <Navbar.Brand as={Link} to="/manager">Theater Manager</Navbar.Brand>
-            
+              {showSidebar ? <X size={24} /> : <Menu size={24} />}
+            </button>
+            <Navbar.Brand className="d-flex align-items-center m-0">
+              <img
+                src={logo}
+                alt="MovieBuff Logo"
+                className="d-inline-block align-middle"
+                height="36"
+              />
+              <span className="ms-2 fw-semibold fs-5">Theater Manager</span>
+            </Navbar.Brand>
+          </div>
+          
+          <div className="d-flex align-items-center navbar-right">
+            {/* Subscription Status */}
             {!isSubscriptionActive && (
-              <Link to="/manager/subscription" className="ms-auto me-2">
-                <Button variant="warning" size="sm">Subscribe Now</Button>
+              <Link to="/manager/subscription" className="me-3 text-decoration-none">
+                <Button size="sm" variant="warning" className="d-flex align-items-center py-1 px-3">
+                  <AlertCircle size={16} className="me-1" />
+                  <span>Subscribe</span>
+                </Button>
               </Link>
             )}
-            
-            <Button 
-              variant="outline-light" 
-              size="sm" 
-              onClick={handleLogout}
-              className="d-flex align-items-center"
-            >
-              <LogOut />
-            </Button>
-          </Container>
-        </Navbar>
-        
-        {/* Mobile sidebar */}
-        <Offcanvas show={showSidebar} onHide={toggleSidebar} className="bg-dark text-white">
-          <Offcanvas.Header closeButton closeVariant="white">
-            <Offcanvas.Title className="d-flex align-items-center">
-              <Drama size={24} className="me-2" />
-              <span>Manager Portal</span>
-            </Offcanvas.Title>
-          </Offcanvas.Header>
-          <Offcanvas.Body>
+          </div>
+        </Container>
+      </Navbar>
+
+      {/* Subscription Warning Banner */}
+      {!isSubscriptionActive && location.pathname !== '/manager/subscription' && (
+        <div className="subscription-alert-banner">
+          <AlertCircle size={16} className="me-2" />
+          <span>Your subscription is inactive. Some features may be limited.</span>
+          <Link to="/manager/subscription" className="ms-3">
+            <Button size="sm" variant="light">Renew Now</Button>
+          </Link>
+        </div>
+      )}
+
+      <Container fluid className="flex-grow-1 px-0">
+        <Row className="g-0 h-100">
+          {/* Sidebar */}
+          <Col 
+            lg={2} 
+            className={`sidebar bg-dark ${showSidebar ? 'd-block' : 'd-none'} d-lg-block`}
+          >
+            {/* Theater Info */}
             {currentTheater && (
-              <div className="text-center mb-3">
-                <h5>{currentTheater.name}</h5>
-                <span className="badge bg-primary">{currentTheater.status}</span>
+              <div className="theater-info p-3 mb-2 border-bottom border-secondary">
+                <h6 className="text-light mb-1">Your Theater</h6>
+                <div className="d-flex justify-content-between align-items-center">
+                  <div className="text-light fw-bold theater-name">{currentTheater.name}</div>
+                  <Badge bg={getStatusBadgeVariant(currentTheater.status)} className="text-uppercase">
+                    {currentTheater.status}
+                  </Badge>
+                </div>
               </div>
             )}
             
-            <Nav className="flex-column mb-auto">
-              <Nav.Item>
+            {/* Navigation Menu */}
+            <Nav className="flex-column py-2">
+              {menuItems.map((item) => (
                 <Nav.Link 
-                  as={Link} 
-                  to="/manager" 
-                  className={`text-white ${isActive('/manager') && !isActive('/manager/') ? 'active' : ''}`}
-                  onClick={toggleSidebar}
+                  key={item.id}
+                  className={`nav-link-custom d-flex align-items-center px-3 py-2 my-1 mx-2 rounded ${
+                    isActive(item.path) ? 'active' : ''
+                  }`}
+                  onClick={() => handleNavigation(item.path)}
                 >
-                  <Home className="me-2" /> Dashboard
+                  <item.icon size={18} className="me-3" strokeWidth={2} />
+                  <span className="menu-text">{item.label}</span>
                 </Nav.Link>
-              </Nav.Item>
+              ))}
               
-              <Nav.Item>
-                <Nav.Link 
-                  as={Link} 
-                  to="/manager/theater/edit" 
-                  className={`text-white ${isActive('/manager/theater/edit') ? 'active' : ''}`}
-                  onClick={toggleSidebar}
-                >
-                  <Cog className="me-2" /> Theater Settings
-                </Nav.Link>
-              </Nav.Item>
-              
-              <Nav.Item>
-                <Nav.Link 
-                  as={Link} 
-                  to="/manager/theaters/:theaterId/screens" 
-                  className={`text-white ${isActive('/manager/theaters') && isActive('/screens') ? 'active' : ''}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    toggleSidebar();
-                    if (currentTheater) {
-                      navigate(`/manager/theaters/${currentTheater.id}/screens`);
-                    }
-                  }}
-                >
-                  <Drama className="me-2" /> Screen Management
-                </Nav.Link>
-              </Nav.Item>
-              
-              <Nav.Item>
-                <Nav.Link 
-                  as={Link} 
-                  to="/manager/shows" 
-                  className={`text-white ${isActive('/manager/shows') ? 'active' : ''}`}
-                  onClick={toggleSidebar}
-                >
-                  <Film className="me-2" /> Show Management
-                </Nav.Link>
-              </Nav.Item>
-              
-              <Nav.Item>
-                <Nav.Link 
-                  as={Link} 
-                  to="/manager/shows/schedule" 
-                  className={`text-white ${isActive('/manager/shows/schedule') ? 'active' : ''}`}
-                  onClick={toggleSidebar}
-                >
-                  <CalendarDays className="me-2" /> Schedule Shows
-                </Nav.Link>
-              </Nav.Item>
-              
-              <Nav.Item>
-                <Nav.Link 
-                  as={Link} 
-                  to="/manager/analytics" 
-                  className={`text-white ${isActive('/manager/analytics') ? 'active' : ''}`}
-                  onClick={toggleSidebar}
-                >
-                  <ChartBar className="me-2" /> Analytics
-                </Nav.Link>
-              </Nav.Item>
-              
-              <Nav.Item>
-                <Nav.Link 
-                  as={Link} 
-                  to="/manager/subscription/status" 
-                  className={`text-white ${isActive('/manager/subscription') ? 'active' : ''}`}
-                  onClick={toggleSidebar}
-                >
-                  <Wallet className="me-2" /> Subscription
-                </Nav.Link>
-              </Nav.Item>
+              {/* Logout Button */}
+              <Nav.Link 
+                className="nav-link-custom d-flex align-items-center px-3 py-2 my-1 mx-2 rounded text-danger mt-auto"
+                onClick={handleLogout}
+              >
+                <LogOut size={18} className="me-3" strokeWidth={2} />
+                <span className="menu-text">Logout</span>
+              </Nav.Link>
             </Nav>
-            
-            <hr className="text-white" />
-            <Button variant="outline-light" onClick={() => {
-              toggleSidebar();
-              handleLogout();
-            }}>
-              <LogOut className="me-2" /> Logout
-            </Button>
-          </Offcanvas.Body>
-        </Offcanvas>
+          </Col>
 
-        {/* Main content */}
-        <Container fluid className="main-content py-3">
-          {!isSubscriptionActive && location.pathname !== '/manager/subscription' && (
-            <div className="alert alert-warning mb-4">
-              <strong>Subscription Required:</strong> Your subscription is inactive or has expired. 
-              <Link to="/manager/subscription" className="ms-2">
-                <Button variant="warning" size="sm">Subscribe Now</Button>
-              </Link>
-            </div>
-          )}
-          
-          {children}
-        </Container>
-      </div>
+          {/* Main Content */}
+          <Col lg={showSidebar ? 10 : 12} className="main-content p-4 bg-light">
+            {children}
+          </Col>
+        </Row>
+      </Container>
     </div>
   );
 };
