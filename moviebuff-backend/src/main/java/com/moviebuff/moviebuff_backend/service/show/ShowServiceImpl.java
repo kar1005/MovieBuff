@@ -1,19 +1,16 @@
 package com.moviebuff.moviebuff_backend.service.show;
 
-import com.moviebuff.moviebuff_backend.dto.request.ShowRequest;
-import com.moviebuff.moviebuff_backend.dto.response.ShowResponse;
-import com.moviebuff.moviebuff_backend.exception.BadRequestException;
-import com.moviebuff.moviebuff_backend.exception.ResourceNotFoundException;
-import com.moviebuff.moviebuff_backend.model.movie.Movie;
-import com.moviebuff.moviebuff_backend.model.show.Show;
-import com.moviebuff.moviebuff_backend.model.theater.Theater;
-import com.moviebuff.moviebuff_backend.repository.interfaces.movie.MovieRepository;
-import com.moviebuff.moviebuff_backend.repository.interfaces.show.IShowRepository;
-import com.moviebuff.moviebuff_backend.repository.interfaces.theater.ITheaterRepository;
-import com.moviebuff.moviebuff_backend.service.show.ShowRequestMapper;
-import com.moviebuff.moviebuff_backend.service.show.ShowResponseMapper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -24,12 +21,19 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.moviebuff.moviebuff_backend.dto.request.ShowRequest;
+import com.moviebuff.moviebuff_backend.dto.response.ShowResponse;
+import com.moviebuff.moviebuff_backend.exception.BadRequestException;
+import com.moviebuff.moviebuff_backend.exception.ResourceNotFoundException;
+import com.moviebuff.moviebuff_backend.model.movie.Movie;
+import com.moviebuff.moviebuff_backend.model.show.Show;
+import com.moviebuff.moviebuff_backend.model.theater.Theater;
+import com.moviebuff.moviebuff_backend.repository.interfaces.movie.MovieRepository;
+import com.moviebuff.moviebuff_backend.repository.interfaces.show.IShowRepository;
+import com.moviebuff.moviebuff_backend.repository.interfaces.theater.ITheaterRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -195,9 +199,15 @@ public class ShowServiceImpl implements IShowService {
                 .map(Theater::getId)
                 .collect(Collectors.toList());
         
+        LocalDateTime now = LocalDateTime.now();
+        System.out.println("Finding shows for movie "+movieId+"in city "+city+" after "+now);
+        
         // Get shows for the movie from these theaters
         List<Show> shows = showRepository.findByMovieIdAndTheaterIdInAndShowTimeAfter(
-                movieId, theaterIds, LocalDateTime.now());
+                movieId, theaterIds, now);
+        
+        System.out.println("Found "+shows.size()+" shows");
+        shows.forEach(show -> log.info("Show: id={}, time={}", show.getId(), show.getShowTime()));
         
         return shows.stream()
                 .map(responseMapper::mapToResponse)

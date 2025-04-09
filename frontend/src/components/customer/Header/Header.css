@@ -149,7 +149,7 @@
 
 .register-link {
   background-color: #ef4444;
-  color: white !important;
+  color: white ;
   box-shadow: 0 2px 5px rgba(239, 68, 68, 0.3);
 }
 
@@ -157,6 +157,7 @@
   background-color: #e53e3e;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(239, 68, 68, 0.4);
+  color: white;
 }
 
 .register-link::after, .login-link::after {

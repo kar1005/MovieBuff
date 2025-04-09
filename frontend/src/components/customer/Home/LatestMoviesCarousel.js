@@ -1,14 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Star, Clock, Ticket } from 'lucide-react';
 import './LatestMovieCarousel.css'; 
 
-const LatestMoviesCarousel = ({ onBookMovie }) => {
+function LatestMoviesCarousel() {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   
   const [itemsToShow, setItemsToShow] = useState(3);
+
+  const navigate = useNavigate();
   
   useEffect(() => {
     const handleResize = () => {
@@ -80,12 +83,6 @@ const LatestMoviesCarousel = ({ onBookMovie }) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${hours}h ${mins}m`;
-  };
-
-  const handleBookNow = (movieId) => {
-    if (onBookMovie) {
-      onBookMovie(movieId);
-    }
   };
   
   if (loading) {
@@ -188,7 +185,7 @@ const LatestMoviesCarousel = ({ onBookMovie }) => {
                       ))}
                     </div>
                     <button 
-                      onClick={() => handleBookNow(movie.id)}
+                      onClick={() => navigate('customer/theaters/movie/' + movie.id)}
                       className="book-now-button"
                     >
                       <Ticket className="h-4 w-4" />

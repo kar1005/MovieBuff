@@ -1,0 +1,450 @@
+.movie-theater-list-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Roboto', sans-serif;
+}
+
+.movie-theater-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e1e1e1;
+}
+
+.movie-theater-list-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.movie-header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.movie-title {
+  color: #1976d2;
+  font-weight: 700;
+}
+
+.movie-city-name {
+  color: #e53935;
+  font-weight: 700;
+}
+
+.movie-change-location-btn, .movie-view-all-theaters-btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.movie-change-location-btn {
+  background-color: transparent;
+  border: 1px solid #e53935;
+  color: #e53935;
+}
+
+.movie-change-location-btn:hover {
+  background-color: #e53935;
+  color: white;
+}
+
+.movie-view-all-theaters-btn {
+  background-color: transparent;
+  border: 1px solid #2196f3;
+  color: #2196f3;
+}
+
+.movie-view-all-theaters-btn:hover {
+  background-color: #2196f3;
+  color: white;
+}
+
+/* Date selector styles */
+.movie-date-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.movie-date-selector label {
+  font-weight: 500;
+  color: #333;
+}
+
+.date-select {
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  background-color: white;
+  min-width: 150px;
+  cursor: pointer;
+}
+
+/* Status legend styles */
+.movie-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 10px 15px;
+  background-color: #f8f8f8;
+  border-radius: 4px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.legend-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.legend-indicator.available {
+  background-color: #4caf50;
+}
+
+.legend-indicator.filling-fast {
+  background-color: #ff9800;
+}
+
+.legend-indicator.few-seats {
+  background-color: #f44336;
+}
+
+.legend-indicator.sold-out {
+  background-color: #9e9e9e;
+}
+
+.movie-theaters-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.movie-theater-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  transition: box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  border-left: 4px solid #0f172a;
+}
+
+.movie-theater-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.movie-theater-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.movie-theater-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.movie-theater-status {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  text-transform: lowercase;
+  font-weight: 500;
+}
+
+.movie-theater-status.active {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.movie-theater-status.inactive {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.movie-theater-location {
+  margin-bottom: 15px;
+  color: #555;
+  font-size: 14px;
+}
+
+.movie-theater-location p {
+  margin: 3px 0;
+}
+
+.movie-google-maps-link {
+  color: #1976d2;
+  text-decoration: none;
+  font-size: 13px;
+  display: inline-block;
+  margin-top: 5px;
+}
+
+.movie-google-maps-link:hover {
+  text-decoration: underline;
+}
+
+.movie-theater-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.movie-theater-details {
+  display: flex;
+  gap: 20px;
+}
+
+.movie-detail-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.movie-detail-label {
+  font-size: 12px;
+  color: #777;
+  margin-bottom: 4px;
+}
+
+.movie-detail-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.movie-theater-amenities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.movie-amenity-badge {
+  background-color: #e3f2fd;
+  color: #0f172a;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+/* Show times section */
+.movie-show-times-section {
+  margin-top: 15px;
+  margin-bottom: 15px;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+}
+
+.movie-show-times-section h4 {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.movie-show-times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.movie-show-time {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 8px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 90px;
+  background-color: white;
+  position: relative;
+}
+
+.movie-show-time .time {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+}
+
+.movie-show-time .screen-info {
+  font-size: 11px;
+  color: #777;
+  margin-top: 2px;
+}
+
+.movie-show-time .experience-tag {
+  font-size: 10px;
+  background-color: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-top: 4px;
+}
+
+/* Ticket status styles */
+.ticket-status-available {
+  border-color: #4caf50;
+}
+
+.ticket-status-available:hover {
+  background-color: #f1f8e9;
+}
+
+.ticket-status-filling-fast {
+  border-color: #ff9800;
+}
+
+.ticket-status-filling-fast:hover {
+  background-color: #fff8e1;
+}
+
+.ticket-status-few-seats {
+  border-color: #f44336;
+}
+
+.ticket-status-few-seats:hover {
+  background-color: #ffebee;
+}
+
+.ticket-status-sold-out {
+  border-color: #9e9e9e;
+  background-color: #f5f5f5;
+  color: #9e9e9e;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.view-theater-btn {
+  padding: 8px 16px;
+  background-color: #0f172a;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.view-theater-btn:hover {
+  background-color: #1e293b;
+}
+
+.no-shows-message {
+  color: #777;
+  font-style: italic;
+  font-size: 14px;
+}
+
+.movie-theater-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+.movie-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(33, 150, 243, 0.2);
+  border-radius: 50%;
+  border-top-color: #2196f3;
+  animation: movie-spin 1s ease infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes movie-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.movie-theater-error, .movie-no-theaters {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  text-align: center;
+  max-width: 500px;
+  margin: 50px auto;
+  border-left: 4px solid #2196f3;
+}
+
+.movie-theater-error h3, .movie-no-theaters h3 {
+  color: #1976d2;
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+.movie-theater-error p, .movie-no-theaters p {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.movie-no-theaters-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .movie-theater-list-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .movie-header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .movie-theater-card {
+    padding: 15px;
+  }
+  
+  .movie-theater-info {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .movie-theater-amenities {
+    margin-top: 10px;
+    justify-content: flex-start;
+  }
+  
+  .movie-show-times {
+    justify-content: flex-start;
+  }
+  
+  .movie-legend {
+    gap: 10px;
+  }
+}
