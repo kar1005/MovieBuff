@@ -30,7 +30,7 @@ const CustomerLayout = ({ children }) => {
 
       <Footer />
     </div>
-  );
+  )
 };
 
 export default CustomerLayout;
