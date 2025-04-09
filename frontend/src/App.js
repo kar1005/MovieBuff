@@ -11,7 +11,7 @@ import ManagerApp from "./components/theater/ManagerApp";
 import AdminApp from "./components/admin/AdminApp";
 
 // Common components
-import Index from "./components/customer/Home/Index";
+// import Index from "./components/customer/Home/Index";
 import Authenticate from "./components/common/Authenticate/Authenticate";
 import Register from "./components/common/Register/Register";
 
@@ -19,6 +19,7 @@ import Register from "./components/common/Register/Register";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "react-toastify/dist/ReactToastify.css";
 import "./styles/main.css";
+import Home from "./components/customer/Home/Home";
 
 function App() {
   return (
@@ -39,10 +40,13 @@ function App() {
           
           {/* Customer Routes */}
           <Route path="/customer/*" element={<CustomerApp />} />
+
+          <Route path="/home" element={<Home />} />
+
           
           {/* Home Page and Default Redirect */}
-          <Route path="/" element={<Index />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* <Route path="/" element={<Index />} /> */}
+          {/* <Route path="*" element={<Navigate to="/customer" replace />} /> */}
         </Routes>
       </Router>
     </Provider>

@@ -1,0 +1,42 @@
+/* src/components/customer/Layout/CustomerLayout.css */
+
+.customer-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #0f172a;
+    color: #e2e8f0;
+  }
+  
+  .customer-main {
+    flex: 1;
+    width: 100%;
+    padding: 0;
+    /* Important: This needs to be exactly the height of the header */
+    margin-top: 65px; /* Use margin-top instead of padding-top */
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Remove any padding from Bootstrap container inside */
+  .customer-main .container-fluid {
+    padding-left: 0;
+    padding-right: 0;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  
+  /* For sections that need padding */
+  .content-section {
+    padding: 2rem 1rem;
+  }
+  
+  /* For full-width sections */
+  .full-width-section {
+    width: 100%;
+  }
+  
+  /* Different background sections for visual separation */
+  .alternate-section {
+    background-color: #1e293b;
+  }

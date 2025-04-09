@@ -11,6 +11,41 @@
     --light-color: #f8f9fa;
     --dark-color: #212529;
   }
+
+
+
+
+
+
+
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .customer-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  
+  .customer-layout main {
+    flex: 1;
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
   
   /* General Styles */
   body {

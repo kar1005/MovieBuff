@@ -1,13 +1,13 @@
 import React from 'react'
-import Layout from '../../customer/Layout/Layout'
 import Login from './../Login/Login'
+import CustomerLayout from '../../customer/Layout/CustomerLayout'
 
 function Authenticate() {
   return (
     <div>
-      <Layout>
+      <CustomerLayout>
         <Login/>
-      </Layout>
+      </CustomerLayout>
     </div>
   )
 }

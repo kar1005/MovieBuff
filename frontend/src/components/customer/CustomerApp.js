@@ -2,6 +2,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import CustomerLayout from './Layout/CustomerLayout';
+import Home from './Home/Home';
 
 // Import customer-specific components
 // import CustomerDashboard from './Dashboard/CustomerDashboard';
@@ -20,8 +21,10 @@ import CustomerLayout from './Layout/CustomerLayout';
 const CustomerApp = () => {
   return (
     <CustomerLayout>
-      {/* <Routes>
-        <Route path="/" element={<Navigate to="/customer/dashboard" replace />} />
+
+       <Routes>
+        <Route path="/" element={<Home />} />
+        {/* <Route path="/" element={<Navigate to="/customer/dashboard" replace />} />
         <Route path="/dashboard" element={<CustomerDashboard />} />
         
         {/* Movie Routes 
@@ -45,8 +48,8 @@ const CustomerApp = () => {
         <Route path="/reviews" element={<ReviewsPage />} />
         
         {/* Actor Profile 
-        <Route path="/actors/:id" element={<ActorProfile />} />
-      </Routes> */}
+        <Route path="/actors/:id" element={<ActorProfile />} /> */}
+      </Routes>
     </CustomerLayout>
   );
 };

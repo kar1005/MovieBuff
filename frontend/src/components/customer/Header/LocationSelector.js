@@ -1,13 +1,12 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Container, Navbar, Nav, Form, Button, Modal, Spinner } from 'react-bootstrap';
-import { Link, useLocation } from 'react-router-dom';
-import Logo from "./../../../images/Logo/Logo.png";
+import { Button, Modal, Form } from 'react-bootstrap';
+import { MapPin } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { setLocation, selectUserCity, selectIsLocationSet } from '../../../redux/slices/locationSlice';
-import './Header.css';
+import './LocationSelector.css';
 
-function Header() {
+function LocationSelector() {
   const dispatch = useDispatch();
   const storedCity = useSelector(selectUserCity);
   const isLocationSet = useSelector(selectIsLocationSet);
@@ -16,13 +15,14 @@ function Header() {
   const [userCity, setUserCity] = useState(storedCity || 'Select City');
   const [cityInput, setCityInput] = useState('');
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [locationDetected, setLocationDetected] = useState(false);
   const [locationError, setLocationError] = useState('');
   const [locationData, setLocationData] = useState({
     coordinates: null,
     googleLink: '',
     city: ''
   });
-  const [popularCities, setPopularCities] = useState([
+  const [popularCities] = useState([
     'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Kolkata', 
     'Pune', 'Ahmedabad', 'Jaipur', 'Lucknow'
   ]);
@@ -30,8 +30,6 @@ function Header() {
   const [isLoadingCities, setIsLoadingCities] = useState(false);
   const [showAllCities, setShowAllCities] = useState(false);
   const [allCities, setAllCities] = useState([]);
-  
-  const location = useLocation();
   
   const handleShow = () => setShowModal(true);
   const handleClose = () => {
@@ -75,6 +73,7 @@ function Header() {
   
   const detectUserLocation = () => {
     setIsLoadingLocation(true);
+    setLocationDetected(false);
     setLocationError('');
     
     if (navigator.geolocation) {
@@ -105,42 +104,49 @@ function Header() {
   };
   
   const fetchCityFromCoords = async (latitude, longitude) => {
-    const geocodingServices = [
+    try {
       // OpenStreetMap Nominatim
-      async () => {
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
-          { headers: { 'Accept-Language': 'en' } }
-        );
-        const data = await response.json();
-        return data.address.city || data.address.town || 'Unknown';
-      },
-      // Your other geocoding services here
-    ];
-  
-    for (const service of geocodingServices) {
-      try {
-        const city = await service();
-        if (city !== 'Unknown') {
-          handleLocationChange('city', city);
-          
-          // Dispatch to Redux store with coordinates
-          dispatch(setLocation({
-            city: city,
-            coordinates: [latitude, longitude]
-          }));
-          
-          setUserCity(city);
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      
+      if (!response.ok) throw new Error('Failed to fetch city data');
+      
+      const data = await response.json();
+      const city = data.address.city || data.address.town || data.address.village || 'Unknown';
+      
+      if (city !== 'Unknown') {
+        handleLocationChange('city', city);
+        
+        // Dispatch to Redux store with coordinates
+        dispatch(setLocation({
+          city: city,
+          coordinates: [latitude, longitude]
+        }));
+        
+        setUserCity(city);
+        setLocationDetected(true);
+        
+        // Stop the loading immediately when we have the data
+        setIsLoadingLocation(false);
+        
+        // Close modal after successful location detection
+        setTimeout(() => {
           setShowModal(false);
-          return;
-        }
-      } catch (error) {
-        console.error('Geocoding service failed:', error);
+        }, 1000);
+        
+        return;
       }
+      
+      // Fallback if city not found
+      throw new Error('Could not determine city from coordinates');
+      
+    } catch (error) {
+      console.error('Geocoding service failed:', error);
+      setLocationError('Could not determine your precise location');
+      setIsLoadingLocation(false);
     }
-  
-    // Fallback if all services fail
-    setLocationError('Could not determine your precise location');
   };
 
   const debounce = (func, delay) => {
@@ -236,15 +242,11 @@ function Header() {
       }
     }
   };
-  
-  // Function to chunk an array into smaller arrays of specified size
-  const chunkArray = (array, size) => {
-    const chunkedArr = [];
-    for (let i = 0; i < array.length; i += size) {
-      chunkedArr.push(array.slice(i, i + size));
-    }
-    return chunkedArr;
-  };
+
+  // Filter cities in the "All Cities" view
+  const filteredAllCities = cityInput.trim() 
+    ? allCities.filter(city => city.toLowerCase().includes(cityInput.toLowerCase()))
+    : allCities;
 
   // Check if there's already a stored city on component mount
   useEffect(() => {
@@ -257,82 +259,62 @@ function Header() {
   }, [storedCity]);
   
   return (
-    <div>
-      <Navbar bg="dark" variant="dark" expand="lg" sticky="top" className="navbar">
-        <Container>
-          <div className="d-flex align-items-center">
-            <img src={Logo} className="navbar-logo me-2" alt="MovieBuff Logo" />
-            <Navbar.Brand href="/">MovieBuff</Navbar.Brand>
-          </div>
-          
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            {/* Main navigation on the left */}
-            <Nav className="main-links">
-              <Nav.Link as={Link} to="/" className={location.pathname === "/" ? "active" : ""}>
-                Home
-              </Nav.Link>
-              <Nav.Link as={Link} to="/book" className={location.pathname === "/book" ? "active" : ""}>
-                Book
-              </Nav.Link>
-              <Form className="d-flex search-bar-container mx-lg-4">
-                <div className="position-relative w-100">
-                  <i className="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-                  <Form.Control 
-                    type="text" 
-                    placeholder="Search for Movies, Events and more" 
-                    className="search-input"
-                  />
-                </div>
-                <Button 
-                  variant="outline-light" 
-                  onClick={handleShow} 
-                  className="location-button d-flex align-items-center"
-                  size="sm"
-                >
-                  <i className="bi bi-geo-alt-fill me-1"></i>
-                  {userCity}
-                </Button>
-              </Form>
-            </Nav>
-            
-            {/* Auth links on the right */}
-            <div className="auth-container">
-              <Nav.Link as={Link} to="/login" className={`auth-link login-link ${location.pathname === "/login" ? "active" : ""}`}>
-                Login
-              </Nav.Link>
-              <Nav.Link as={Link} to="/register" className={`auth-link register-link ${location.pathname === "/register" ? "active" : ""}`}>
-                Register
-              </Nav.Link>
-            </div>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
+    <>
+      <Button 
+        variant="outline-light" 
+        onClick={handleShow} 
+        className="location-selector-button"
+      >
+        <MapPin size={16} className="location-icon" />
+        <span className="location-text">{userCity}</span>
+      </Button>
       
       {/* Location Modal - Non-dismissible when location not set */}
       <Modal 
         show={showModal} 
         onHide={handleClose} 
-        backdrop="static"  // Prevents closing when clicking outside
-        keyboard={isLocationSet}  // Only allow ESC key to close if location is set
+        backdrop="static"
+        keyboard={isLocationSet}
         centered
         size={showAllCities ? "lg" : "md"}
-        className="city-selection-modal"
+        className="location-modal"
       >
         <Modal.Header closeButton={isLocationSet} className="location-modal-header">
           <Modal.Title>{showAllCities ? "All Cities" : "Select Your Location"}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-                {showAllCities ? (
+          {showAllCities ? (
             <div className="all-cities-container">
-              {isLoadingCities ? (
-                <div className="text-center my-4">
-                  <Spinner animation="border" />
-                  <p className="mt-2">Loading cities...</p>
+              {/* Improved search bar in All Cities view */}
+              <div className="city-search-wrapper mb-3">
+                <div className="position-relative">
+                  <MapPin className="search-icon-city" size={16} />
+                  <Form.Control 
+                    type="text" 
+                    placeholder="Search for cities" 
+                    className="city-search-input"
+                    value={cityInput}
+                    onChange={handleCityInputChange}
+                    autoComplete="off"
+                  />
+                  {isLoadingCities && (
+                    <div className="loading-indicator">
+                      <div className="loading-spinner"></div>
+                    </div>
+                  )}
                 </div>
-              ) : (
+              </div>
+              
+              {isLoadingCities && !filteredAllCities.length ? (
+                <div className="text-center my-4">
+                  <div className="single-spinner-container">
+                    <div className="single-spinner"></div>
+                  </div>
+                  <p className="mt-3 text-muted">Loading cities...</p>
+                </div>
+              ) : filteredAllCities.length > 0 ? (
                 <div className="all-cities-grid">
-                  {allCities.map((city, index) => (
+                  {filteredAllCities.map((city, index) => (
                     <Button 
                       key={index} 
                       variant="light" 
@@ -343,117 +325,92 @@ function Header() {
                     </Button>
                   ))}
                 </div>
+              ) : (
+                <div className="text-center my-4">
+                  <p className="text-muted">No cities found matching your search.</p>
+                </div>
               )}
             </div>
           ) : (
             <>
-          {!isLocationSet && (
-            <div className="mb-3">
-              <p>To provide you with the best movie experience, we need to know your location.</p>
-              <p>Please select your city to continue.</p>
-            </div>
-          )}
-        
-          <Button 
-            variant="outline-primary" 
-            onClick={detectUserLocation} 
-            className="detect-location-btn mb-3 w-100"
-            disabled={isLoadingLocation}
-          >
-            {isLoadingLocation ? (
-              <>
-                <Spinner animation="border" size="sm" className="me-2" />
-                Detecting your location...
-              </>
-            ) : (
-              <>
-                <i className="bi bi-crosshair me-2"></i>
-                Detect my current location
-              </>
-            )}
-          </Button>
-          
-          {locationError && (
-            <div className="alert alert-warning">{locationError}</div>
-          )}
-          
-          {locationData.googleLink && (
-            <div className="location-preview mb-3">
-              <small className="text-muted d-block mb-1">Your detected location:</small>
-              <a 
-                href={locationData.googleLink} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="d-flex align-items-center text-primary"
-              >
-                <i className="bi bi-map me-1"></i>
-                {locationData.city || 'View on map'}
-              </a>
-            </div>
-          )}
-          
-          <div className="city-search-wrapper mb-3 position-relative">
-            <Form.Group className="position-relative">
-              <i className="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-              <Form.Control 
-                type="text" 
-                placeholder="Search for your city" 
-                className="city-search-input ps-5"
-                value={cityInput}
-                onChange={handleCityInputChange}
-                autoComplete="off"
-              />
-              {isLoadingCities && (
-                <Spinner 
-                  animation="border" 
-                  size="sm" 
-                  className="position-absolute top-50 end-0 translate-middle-y me-3"
-                />
+              {!isLocationSet && (
+                <div className="mb-3">
+                  <p>To provide you with the best movie experience, we need to know your location.</p>
+                  <p>Please select your city to continue.</p>
+                </div>
               )}
-            </Form.Group>
-            
-            {/* City suggestions dropdown */}
-            {citySuggestions.length > 0 && (
-              <div className="city-suggestions">
-                {citySuggestions.map((city, index) => (
-                  <div 
+              
+              <Button 
+                variant="outline-primary" 
+                onClick={detectUserLocation} 
+                className="detect-location-btn mb-3 w-100"
+                disabled={isLoadingLocation}
+              >
+                {isLoadingLocation ? (
+                  <>
+                    <div className="single-spinner-small me-2"></div>
+                    Detecting your location...
+                  </>
+                ) : (
+                  <>
+                    <MapPin size={16} className="me-2" />
+                    Detect my current location
+                  </>
+                )}
+              </Button>
+              
+              {locationError && (
+                <div className="alert alert-warning">{locationError}</div>
+              )}
+              
+              {locationDetected && (
+                <div className="alert alert-success">
+                  <div className="d-flex align-items-center justify-content-between">
+                    <div>Location detected! Selected city: <strong>{locationData.city}</strong></div>
+                  </div>
+                </div>
+              )}
+              
+              {locationData.googleLink && !locationDetected && !isLoadingLocation && (
+                <div className="location-preview mb-3">
+                  <small className="text-muted d-block mb-1">Your detected location:</small>
+                  <a 
+                    href={locationData.googleLink} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="d-flex align-items-center text-primary"
+                  >
+                    <MapPin size={16} className="me-1" />
+                    {locationData.city || 'View on map'}
+                  </a>
+                </div>
+              )}
+              
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h6 className="popular-cities-heading mb-0">Popular Cities</h6>
+                <Button 
+                  variant="link" 
+                  className="show-all-cities-btn p-0"
+                  onClick={handleShowAllCities}
+                  disabled={isLoadingCities}
+                >
+                  Show All Cities
+                </Button>
+              </div>
+              
+              <div className="popular-cities-grid">
+                {popularCities.map((city, index) => (
+                  <Button 
                     key={index} 
-                    className="city-suggestion-item" 
+                    variant="light" 
+                    className="city-button" 
                     onClick={() => handleCitySelection(city)}
                   >
-                    <i className="bi bi-geo-alt me-2 text-muted"></i>
                     {city}
-                  </div>
+                  </Button>
                 ))}
               </div>
-            )}
-          </div>
-          
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <h6 className="popular-cities-heading mb-0">Popular Cities</h6>
-            <Button 
-              variant="link" 
-              className="show-all-cities-btn p-0"
-              onClick={handleShowAllCities}
-              disabled={isLoadingCities}
-            >
-              Show All Cities
-            </Button>
-          </div>
-          
-          <div className="popular-cities-grid">
-            {popularCities.map((city, index) => (
-              <Button 
-                key={index} 
-                variant="light" 
-                className="city-button" 
-                onClick={() => handleCitySelection(city)}
-              >
-                {city}
-              </Button>
-            ))}
-          </div>
-          </>
+            </>
           )}
         </Modal.Body>
         <Modal.Footer>
@@ -479,8 +436,8 @@ function Header() {
           )}
         </Modal.Footer>
       </Modal>
-    </div>
+    </>
   );
 }
 
-export default Header;
+export default LocationSelector;
