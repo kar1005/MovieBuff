@@ -19,7 +19,6 @@ import Booking from './Theatre/Booking/Booking';
 import TheatreListOnMovies from './Theatre/TheatreListOnMovies/TheatreListOnMovies';
 // import ReviewsPage from './Reviews/ReviewsPage';
 // import ActorProfile from './Actor/ActorProfile';
-import Layout from './Layout/Layout';
 
 const CustomerApp = () => {
   return (

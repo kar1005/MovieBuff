@@ -29,7 +29,9 @@ public interface IShowRepository extends MongoRepository<Show, String> {
             String movieId, List<String> theaterIds, LocalDateTime time);
     
     List<Show> findByTheaterIdInAndShowTimeAfter(List<String> theaterIds, LocalDateTime time);
-    
+    List<Show> findByTheaterIdAndScreenNumber(String theaterId, Integer screenNumber);
+
+
     List<Show> findByShowTimeAfter(LocalDateTime time);
     
     @Query("{'status': ?0}")

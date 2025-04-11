@@ -131,13 +131,23 @@ export const fetchSubscription = createAsyncThunk(
 export const fetchManagerSubscription = createAsyncThunk(
     'subscription/fetchManagerSubscription',
     async (managerId, { rejectWithValue }) => {
-        try {
-            return await subscriptionService.getManagerActiveSubscription(managerId);
-        } catch (error) {
-            return rejectWithValue(error.toString());
+      try {
+        const response = await subscriptionService.getManagerActiveSubscription(managerId);
+        return response;
+      } catch (error) {
+        // If it's a 404, we expect this when no subscription exists
+        if (error.response && error.response.status === 404) {
+          return rejectWithValue({ code: 404, message: 'No active subscription found' });
         }
+        // For other errors, return a more structured error
+        return rejectWithValue(
+          error.response?.data?.message || 
+          error.message || 
+          'Failed to fetch subscription'
+        );
+      }
     }
-);
+  );
 
 export const fetchSubscriptionHistory = createAsyncThunk(
     'subscription/fetchHistory',
@@ -191,10 +201,11 @@ const subscriptionSlice = createSlice({
         },
         resetState: (state) => {
             state.loading = false;
-            state.error = null;
+            state.error = null; // Make sure to reset error to null, not undefined
             state.success = false;
             state.message = "";
-        }
+          }
+          
     },
     extraReducers: (builder) => {
         builder
@@ -392,9 +403,18 @@ const subscriptionSlice = createSlice({
             })
             .addCase(fetchManagerSubscription.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload;
-                // Not setting isSubscriptionActive to false here as the error might be unrelated
-            })
+                
+                // Handle 404 errors (no subscription) silently
+                if (action.payload && action.payload.code === 404) {
+                  state.currentSubscription = null; // Ensure currentSubscription is set to null
+                  // Don't set error state for 404s
+                } else {
+                  // For other errors, set error state
+                  state.error = typeof action.payload === 'object' 
+                    ? action.payload.message || 'An error occurred'
+                    : action.payload || action.error.message;
+                }
+              })
             
             // Fetch Subscription History
             .addCase(fetchSubscriptionHistory.pending, (state) => {

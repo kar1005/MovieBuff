@@ -66,16 +66,6 @@ const HomePageSlider = () => {
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
         >
-            <div className="slider-progress-bar">
-                <div 
-                    className="progress" 
-                    style={{ 
-                        width: `${((currentSlide + 1) / sliderImages.length) * 100}%`,
-                        transition: isHovering ? 'none' : 'width 5s linear'
-                    }}
-                ></div>
-            </div>
-            
             {sliderImages.length > 0 && (
                 <div className="slider-wrapper">
                     {sliderImages.map((image, index) => (
@@ -89,7 +79,6 @@ const HomePageSlider = () => {
                             }}
                         >
                             <div className="slide-overlay"></div>
-                            {/* Removed content elements as requested */}
                         </div>
                     ))}
                 </div>

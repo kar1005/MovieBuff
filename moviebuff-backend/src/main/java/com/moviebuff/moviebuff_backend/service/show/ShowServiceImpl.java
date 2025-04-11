@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.cache.annotation.CacheEvict;
@@ -530,22 +531,83 @@ public class ShowServiceImpl implements IShowService {
         }
         
         // Calculate show end time based on movie duration
-        LocalDateTime showEndTime = request.getShowTime().plusMinutes(totalDuration);
+        LocalDateTime showTime = request.getShowTime();
+        LocalDateTime showEndTime = showTime.plusMinutes(totalDuration);
         
-        // Add buffer time between shows (e.g., 30 minutes)
-        LocalDateTime bufferStartTime = request.getShowTime().minusMinutes(30);
-        LocalDateTime bufferEndTime = showEndTime.plusMinutes(30);
+        log.info("Validating show time: {} to {}", showTime, showEndTime);
         
-        // Check for conflicting shows
-        List<Show> conflictingShows = showRepository.findByTheaterIdAndScreenNumberAndShowTimeBetween(
+        // Get all shows for the screen on that day
+        LocalDateTime startOfDay = showTime.toLocalDate().atStartOfDay();
+        LocalDateTime endOfDay = showTime.toLocalDate().atTime(23, 59, 59);
+        
+        List<Show> allScreenShows = showRepository.findByTheaterIdAndScreenNumberAndShowTimeBetween(
                 request.getTheaterId(), 
                 request.getScreenNumber(),
-                bufferStartTime,
-                bufferEndTime
+                startOfDay,
+                endOfDay
         );
         
+        // Log all existing shows for debugging
+        for (Show existingShow : allScreenShows) {
+            log.info("Existing show: {} to {}", existingShow.getShowTime(), existingShow.getEndTime());
+        }
+        
+        List<Show> conflictingShows = allScreenShows.stream()
+            .filter(show -> {
+                LocalDateTime existingShowStart = show.getShowTime();
+                LocalDateTime existingShowEnd = show.getEndTime();
+                
+                // Correct overlap logic: 
+                // There's a conflict if:
+                // 1. The new show starts during an existing show (newStart < existingEnd && newStart >= existingStart)
+                // 2. The new show ends during an existing show (newEnd <= existingEnd && newEnd > existingStart)
+                // 3. The new show completely encapsulates an existing show (newStart <= existingStart && newEnd >= existingEnd)
+                
+                boolean startsDuringExistingShow = showTime.isBefore(existingShowEnd) && 
+                                                  !showTime.isBefore(existingShowStart);
+                                                  
+                boolean endsDuringExistingShow = !showEndTime.isAfter(existingShowEnd) && 
+                                                showEndTime.isAfter(existingShowStart);
+                                                
+                boolean encapsulatesExistingShow = !showTime.isAfter(existingShowStart) && 
+                                                  !showEndTime.isBefore(existingShowEnd);
+                                                  
+                boolean isConflict = startsDuringExistingShow || endsDuringExistingShow || encapsulatesExistingShow;
+                
+                if (isConflict) {
+                    log.info("Conflict detected with show at {} to {}", existingShowStart, existingShowEnd);
+                }
+                
+                return isConflict;
+            })
+            .collect(Collectors.toList());
+        
         if (!conflictingShows.isEmpty()) {
-            throw new BadRequestException("Show timing conflicts with existing shows (including buffer time)");
+            // Construct a detailed error message
+            StringBuilder errorBuilder = new StringBuilder("Show timing conflicts with existing shows: ");
+            for (Show conflictShow : conflictingShows) {
+                // Get movie title outside of lambda
+                String movieTitle = "Unknown";
+                Optional<Movie> conflictMovie = movieRepository.findById(conflictShow.getMovieId());
+                if (conflictMovie.isPresent()) {
+                    movieTitle = conflictMovie.get().getTitle();
+                }
+                
+                errorBuilder.append(
+                    String.format("[%s: %s - %s]", 
+                        movieTitle,
+                        conflictShow.getShowTime().format(DateTimeFormatter.ofPattern("HH:mm")),
+                        conflictShow.getEndTime().format(DateTimeFormatter.ofPattern("HH:mm"))
+                    )
+                );
+                errorBuilder.append(", ");
+            }
+            // Remove trailing comma and space if there are any conflicts
+            String errorMessage = errorBuilder.toString();
+            if (errorMessage.endsWith(", ")) {
+                errorMessage = errorMessage.substring(0, errorMessage.length() - 2);
+            }
+            throw new BadRequestException(errorMessage);
         }
     }
     

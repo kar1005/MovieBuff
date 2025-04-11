@@ -2,37 +2,44 @@
 
 /* Theater Grid Container */
 .theater-grid-container {
-  margin: 2rem 0;
-  overflow-x: auto;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem;
+  max-width: 100%;
 }
 
 /* Theater Screen */
 .theater-screen {
-  background: #e2e8f0;
-  padding: 1rem;
-  text-align: center;
-  border-radius: 8px;
-  margin-bottom: 2rem;
+  background: linear-gradient(to right, #e2e8f0, #cbd5e1, #e2e8f0);
+  border-radius: 6px 6px 0 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin: 0 auto 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  color: #64748b;
-  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+/* Grid Designer Wrapper - Prevents horizontal overflow */
+.grid-designer-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
 }
 
 /* Theater Grid */
 .theater-grid {
   position: relative;
-  overflow-x: auto;
-  padding: 1rem;
   background: #f8fafc;
-  border-radius: 8px;
+  padding: 1rem;
 }
 
 .grid-content {
   min-width: fit-content;
-  padding: 20px;
 }
 
 /* Grid Cell Base Styles */
@@ -49,48 +56,44 @@
   margin: 1px;
   position: relative;
   user-select: none;
+  border-radius: 2px;
 }
 
 /* Grid Cell Hover Effects */
 .grid-cell:hover {
   opacity: 0.8;
-}
-
-/* Seat Categories */
-.grid-cell[data-category="premium"] {
-  background-color: #9333ea;
-  color: white;
-}
-
-.grid-cell[data-category="gold"] {
-  background-color: #fbbf24;
-  color: black;
-}
-
-.grid-cell[data-category="silver"] {
-  background-color: #9ca3af;
-  color: white;
+  transform: scale(1.05);
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Cell Types */
-.grid-cell[data-type="AISLE"] {
+.grid-cell.aisle {
   background-color: #e2e8f0;
+  background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.05) 5px, rgba(0,0,0,0.05) 10px);
 }
 
-.grid-cell[data-type="STAIRS"] {
+.grid-cell.stairs {
   background-color: #fde68a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
 }
 
-.grid-cell[data-type="EXIT"] {
+.grid-cell.exit {
   background-color: #ef4444;
   color: white;
+  font-weight: bold;
+  font-size: 10px;
 }
 
-.grid-cell[data-type="GAP"] {
+.grid-cell.gap {
   background-color: #f3f4f6;
+  background-image: repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(0,0,0,0.03) 5px, rgba(0,0,0,0.03) 10px);
 }
 
-.grid-cell[data-type="EMPTY"] {
+.grid-cell.empty {
   background-color: #ffffff;
 }
 
@@ -105,16 +108,46 @@
   height: 100%;
 }
 
-.seat-number {
+.seat-content small {
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .seat-type-indicator {
-  font-size: 14px;
   position: absolute;
-  top: -8px;
-  right: -8px;
+  top: -6px;
+  right: -6px;
+  background: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  font-size: 10px;
+  z-index: 2;
+}
+
+/* Tools Panel */
+.tools-panel {
+  height: calc(100vh - 70px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+.tools-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tools-panel::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+.tools-panel::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 6px;
 }
 
 /* Legend Box */
@@ -125,27 +158,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 10px;
   border: 1px solid #e2e8f0;
-}
-
-/* Category Buttons */
-.category-premium {
-  background-color: #9333ea;
-  border-color: #9333ea;
-  color: white;
-}
-
-.category-gold {
-  background-color: #fbbf24;
-  border-color: #fbbf24;
-  color: black;
-}
-
-.category-silver {
-  background-color: #9ca3af;
-  border-color: #9ca3af;
-  color: white;
+  margin-right: 4px;
 }
 
 /* Drawing Mode */
@@ -158,74 +173,102 @@
   transform: rotate(180deg);
 }
 
-/* Row and Column Labels */
-.row-label,
-.column-label {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 500;
+/* Tab styles */
+.nav-tabs .nav-link {
   color: #64748b;
-}
-
-/* Grid Headers */
-.grid-headers {
-  display: flex;
-  margin-left: 40px; /* Space for row labels */
-}
-
-.column-header {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 0.875rem;
   font-weight: 500;
-  color: #64748b;
+  padding: 0.5rem 1rem;
 }
 
-/* Animation for unsaved changes */
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+.nav-tabs .nav-link.active {
+  color: #3b82f6;
+  font-weight: 600;
+  border-bottom-color: #3b82f6;
 }
 
-.badge-warning {
-  animation: pulse 2s infinite;
+/* Category badges */
+.badge {
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+/* History button styles */
+.card-header .btn-light {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.card-header .btn-light:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.card-header .btn-light:disabled {
+  color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Buttons hover effects */
+.btn {
+  transition: all 0.2s ease;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Responsive Design */
+@media (max-width: 992px) {
+  .theater-grid-container {
+    padding: 1rem;
+  }
+
+  .grid-cell {
+    width: 36px;
+    height: 36px;
+    font-size: 10px;
+    margin: 1px;
+  }
+
+  .tools-panel {
+    height: auto;
+    max-height: 300px;
+  }
+}
+
 @media (max-width: 768px) {
   .theater-grid-container {
-    margin: 1rem 0;
+    padding: 0.5rem;
+  }
+
+  .theater-screen {
+    height: 10px;
   }
 
   .grid-cell {
     width: 32px;
     height: 32px;
-    font-size: 10px;
+    font-size: 9px;
+    margin: 1px;
   }
 
-  .row-label,
-  .column-label,
-  .column-header {
-    width: 32px;
-    height: 32px;
-    font-size: 10px;
+  .tools-panel {
+    position: static;
+    height: auto;
+    max-height: 300px;
+    margin-bottom: 1rem;
   }
-
+  
   .seat-type-indicator {
-    font-size: 12px;
-    top: -6px;
-    right: -6px;
-  }
-
-  .legend-box {
-    width: 20px;
-    height: 20px;
+    font-size: 8px;
+    width: 14px;
+    height: 14px;
   }
 }
 
@@ -246,4 +289,44 @@
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
+  
+  .nav-tabs, 
+  .tab-content {
+    display: none !important;
+  }
+}
+
+/* Category badge hover effects */
+.badge:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s;
+}
+
+/* Add this to src/styles/ScreenSetup.css */
+
+/* Improved seat icon styling */
+.seat-icon {
+  font-size: 16px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+/* Seat content */
+.seat-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.seat-content small {
+  font-size: 10px;
+  font-weight: 600;
+  z-index: 1;
 }

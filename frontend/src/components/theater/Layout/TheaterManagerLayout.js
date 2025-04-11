@@ -1,73 +1,114 @@
 // src/components/theater/Layout/TheaterManagerLayout.js
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Nav, Navbar, Button, Badge } from 'react-bootstrap';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../../../redux/slices/authSlice';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   fetchManagerTheaters, 
   fetchTheaterStats 
 } from '../../../redux/slices/theaterSlice';
 import { checkSubscriptionStatus } from '../../../redux/slices/subscriptionSlice';
+import { logout } from '../../../redux/slices/authSlice';
 import { 
   LayoutDashboard, 
   Settings, 
-  Film, 
+  MonitorPlay, 
   BarChart3, 
-  CalendarDays, 
+  Calendar, 
   LogOut, 
-  Wallet,
+  CreditCard,
   Menu,
-  X,
-  Theater,
   AlertCircle,
-  User,
-  Bell
+  ChevronRight
 } from 'lucide-react';
-import './TheaterManagerLayout.css';
+import styles from './TheaterManagerLayout.module.css';
 import logo from '../../../images/Logo/Logo.png';
 
 const TheaterManagerLayout = ({ children }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  
   const { user, isAuthenticated } = useSelector((state) => state.auth);
   const { currentTheater } = useSelector((state) => state.theater);
   const { isSubscriptionActive } = useSelector((state) => state.subscription);
-  const [showSidebar, setShowSidebar] = useState(true);
+  
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  // Authentication and data fetching
   useEffect(() => {
-    // Redirect to login if not authenticated
     if (!isAuthenticated) {
       navigate('/login');
     } else if (user?.role !== 'THEATER_MANAGER') {
-      // Redirect to appropriate page if not a theater manager
       navigate('/');
     } else {
-      // Fetch theater details
       dispatch(fetchManagerTheaters(user.id));
-      
-      // Check subscription status
       dispatch(checkSubscriptionStatus(user.id));
     }
   }, [isAuthenticated, user, dispatch, navigate]);
 
+  // Fetch theater stats
   useEffect(() => {
-    // Fetch theater stats when current theater changes
     if (currentTheater) {
       dispatch(fetchTheaterStats(currentTheater.id));
     }
   }, [currentTheater, dispatch]);
 
-  // Redirect to subscription page if subscription is not active
+  // Handle post-login subscription check
   useEffect(() => {
-    if (isAuthenticated && user?.role === 'THEATER_MANAGER' && isSubscriptionActive === false) {
-      // Skip redirect if already on subscription page
-      if (!location.pathname.includes('/subscription')) {
-        navigate('/manager/subscription');
-      }
+    const fromLogin = sessionStorage.getItem('fromLogin');
+    
+    if (fromLogin === 'true' && location.pathname === '/manager') {
+      sessionStorage.removeItem('fromLogin');
+      
+      const checkSubscription = async () => {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        if (isSubscriptionActive === false) {
+          navigate('/manager/subscription');
+        }
+      };
+      
+      checkSubscription();
     }
-  }, [isSubscriptionActive, isAuthenticated, user, navigate, location]);
+  }, [location.pathname, isSubscriptionActive, navigate]);
+
+  // Close mobile sidebar when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const sidebar = document.querySelector(`.${styles.sidebar}`);
+      const menuButton = document.querySelector(`.${styles.menuButton}`);
+      
+      if (window.innerWidth < 992 && sidebarOpen && 
+          sidebar && menuButton && 
+          !sidebar.contains(event.target) && 
+          !menuButton.contains(event.target)) {
+        setSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [sidebarOpen]);
+
+  // Auto-close sidebar on small screens
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 992) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Initial check
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -75,148 +116,156 @@ const TheaterManagerLayout = ({ children }) => {
   };
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/manager' },
-    { id: 'theater-settings', label: 'Theater Settings', icon: Settings, path: '/manager/theater/edit' },
-    { id: 'manage-screens', label: 'Manage Screens', icon: Theater, path: '/manager/theaters/:theaterId/screens' },
-    { id: 'show-schedule', label: 'Show Schedule', icon: CalendarDays, path: '/manager/shows' },
-    { id: 'subscription', label: 'Subscription', icon: Wallet, path: '/manager/subscription/status' },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3, path: '/manager/analytics' },
+    { 
+      id: 'dashboard', 
+      label: 'Dashboard', 
+      icon: LayoutDashboard, 
+      path: '/manager',
+      description: 'Overview of your theater'
+    },
+    { 
+      id: 'settings', 
+      label: 'Settings', 
+      icon: Settings, 
+      path: '/manager/theater/edit',
+      description: 'Edit theater details'
+    },
+    { 
+      id: 'screens', 
+      label: 'Screens', 
+      icon: MonitorPlay, 
+      path: '/manager/theaters/:theaterId/screens',
+      description: 'Manage theater screens'
+    },
+    { 
+      id: 'schedule', 
+      label: 'Schedule', 
+      icon: Calendar, 
+      path: '/manager/shows',
+      description: 'Manage show times'
+    },
+    { 
+      id: 'subscription', 
+      label: 'Subscription', 
+      icon: CreditCard, 
+      path: '/manager/subscription/status',
+      description: 'Manage your subscription'
+    },
+    { 
+      id: 'analytics', 
+      label: 'Analytics', 
+      icon: BarChart3, 
+      path: '/manager/analytics',
+      description: 'View performance metrics'
+    },
   ];
 
   const isActive = (path) => {
-    // Special case for dashboard which should only be active when exactly at /manager
     if (path === '/manager') {
       return location.pathname === '/manager';
     }
-    // For other paths, check if the current path starts with the menu item path
+
+    // Special case for screens path with variable theaterId
+    if (path.includes(':theaterId/screens')) {
+      return location.pathname.includes('/theaters/') && location.pathname.includes('/screens');
+    }
+  
     return location.pathname.startsWith(path);
   };
 
   const handleNavigation = (path) => {
-    // Replace :theaterId with actual theater ID if present
     if (path.includes(':theaterId') && currentTheater) {
       path = path.replace(':theaterId', currentTheater.id);
     }
     navigate(path);
     if (window.innerWidth < 992) {
-      setShowSidebar(false);
-    }
-  };
-
-  // Status badge styling
-  const getStatusBadgeVariant = (status) => {
-    if (!status) return 'secondary';
-    
-    switch(status.toUpperCase()) {
-      case 'ACTIVE':
-        return 'success';
-      case 'INACTIVE':
-        return 'danger';
-      default:
-        return 'secondary';
+      setSidebarOpen(false);
     }
   };
 
   return (
-    <div className="theater-manager-layout d-flex flex-column">
-      {/* Top Navbar */}
-      <Navbar bg="dark" variant="dark" className="border-bottom shadow-sm navbar-custom">
-        <Container fluid className="px-3">
-          <div className="d-flex align-items-center">
-            <button 
-              className="btn btn-link text-white p-0 d-lg-none me-3"
-              onClick={() => setShowSidebar(!showSidebar)}
-            >
-              {showSidebar ? <X size={24} /> : <Menu size={24} />}
-            </button>
-            <Navbar.Brand className="d-flex align-items-center m-0">
-              <img
-                src={logo}
-                alt="MovieBuff Logo"
-                className="d-inline-block align-middle"
-                height="36"
-              />
-              <span className="ms-2 fw-semibold fs-5">Theater Manager</span>
-            </Navbar.Brand>
-          </div>
+    <div className={styles.theaterManagerLayout}>
+      {/* Top navbar */}
+      <nav className={styles.topNavbar}>
+        <div className={styles.navbarLeft}>
+          <button 
+            className={styles.menuButton}
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            aria-label="Toggle menu"
+          >
+            <Menu size={20} />
+          </button>
           
-          <div className="d-flex align-items-center navbar-right">
-            {/* Subscription Status */}
-            {!isSubscriptionActive && (
-              <Link to="/manager/subscription" className="me-3 text-decoration-none">
-                <Button size="sm" variant="warning" className="d-flex align-items-center py-1 px-3">
-                  <AlertCircle size={16} className="me-1" />
-                  <span>Subscribe</span>
-                </Button>
-              </Link>
-            )}
+          <div className={styles.logoContainer}>
+            <img src={logo} alt="MovieBuff" className={styles.navbarLogo} />
+            <h1 className={styles.navbarTitle}>Theater Manager</h1>
           </div>
-        </Container>
-      </Navbar>
+        </div>
+        
+        <div className={styles.navbarRight}>
+          {!isSubscriptionActive && (
+            <Link to="/manager/subscription" className={styles.subscriptionAlert}>
+              <AlertCircle size={20} />
+            </Link>
+          )}
+          
+          <button className={styles.logoutButton} onClick={handleLogout}>
+            <LogOut size={20} />
+          </button>
+        </div>
+      </nav>
 
-      {/* Subscription Warning Banner */}
+      {/* Subscription warning banner */}
       {!isSubscriptionActive && location.pathname !== '/manager/subscription' && (
-        <div className="subscription-alert-banner">
-          <AlertCircle size={16} className="me-2" />
-          <span>Your subscription is inactive. Some features may be limited.</span>
-          <Link to="/manager/subscription" className="ms-3">
-            <Button size="sm" variant="light">Renew Now</Button>
-          </Link>
+        <div className={styles.subscriptionBanner}>
+          <AlertCircle size={16} />
+          <p>Your subscription is inactive. Some features may be limited.</p>
+          <Link to="/manager/subscription">Renew Now</Link>
         </div>
       )}
 
-      <Container fluid className="flex-grow-1 px-0">
-        <Row className="g-0 h-100">
-          {/* Sidebar */}
-          <Col 
-            lg={2} 
-            className={`sidebar bg-dark ${showSidebar ? 'd-block' : 'd-none'} d-lg-block`}
-          >
-            {/* Theater Info */}
+      <div className={styles.layoutContainer}>
+        {/* Sidebar */}
+        <aside className={`${styles.sidebar} ${sidebarOpen ? styles.open : styles.closed}`}>
+          <div className={styles.theaterInfo}>
             {currentTheater && (
-              <div className="theater-info p-3 mb-2 border-bottom border-secondary">
-                <h6 className="text-light mb-1">Your Theater</h6>
-                <div className="d-flex justify-content-between align-items-center">
-                  <div className="text-light fw-bold theater-name">{currentTheater.name}</div>
-                  <Badge bg={getStatusBadgeVariant(currentTheater.status)} className="text-uppercase">
-                    {currentTheater.status}
-                  </Badge>
+              <>
+                <div className={styles.theaterNameContainer}>
+                  <h2 className={styles.theaterName}>{currentTheater.name}</h2>
+                  <span className={`${styles.statusIndicator} ${currentTheater.status?.toLowerCase() === 'active' ? styles.active : styles.inactive}`}>
+                    {currentTheater.status || 'UNKNOWN'}
+                  </span>
                 </div>
-              </div>
+                <p className={styles.theaterLocation}>{currentTheater.location?.city}, {currentTheater.location?.state}</p>
+              </>
             )}
-            
-            {/* Navigation Menu */}
-            <Nav className="flex-column py-2">
-              {menuItems.map((item) => (
-                <Nav.Link 
-                  key={item.id}
-                  className={`nav-link-custom d-flex align-items-center px-3 py-2 my-1 mx-2 rounded ${
-                    isActive(item.path) ? 'active' : ''
-                  }`}
-                  onClick={() => handleNavigation(item.path)}
-                >
-                  <item.icon size={18} className="me-3" strokeWidth={2} />
-                  <span className="menu-text">{item.label}</span>
-                </Nav.Link>
-              ))}
-              
-              {/* Logout Button */}
-              <Nav.Link 
-                className="nav-link-custom d-flex align-items-center px-3 py-2 my-1 mx-2 rounded text-danger mt-auto"
-                onClick={handleLogout}
+          </div>
+          
+          <nav className={styles.sidebarNav}>
+            {menuItems.map((item) => (
+              <button
+                key={item.id}
+                className={`${styles.navItem} ${isActive(item.path) ? styles.active : ''}`}
+                onClick={() => handleNavigation(item.path)}
               >
-                <LogOut size={18} className="me-3" strokeWidth={2} />
-                <span className="menu-text">Logout</span>
-              </Nav.Link>
-            </Nav>
-          </Col>
+                <div className={styles.navIcon}>
+                  <item.icon size={20} />
+                </div>
+                <div className={styles.navContent}>
+                  <span className={styles.navLabel}>{item.label}</span>
+                  <span className={styles.navDescription}>{item.description}</span>
+                </div>
+                <ChevronRight size={16} className={styles.navArrow} />
+              </button>
+            ))}
+          </nav>
+        </aside>
 
-          {/* Main Content */}
-          <Col lg={showSidebar ? 10 : 12} className="main-content p-4 bg-light">
-            {children}
-          </Col>
-        </Row>
-      </Container>
+        {/* Main content */}
+        <main className={`${styles.mainContent} ${sidebarOpen ? styles.sidebarOpen : styles.sidebarClosed}`}>
+          {children}
+        </main>
+      </div>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-/* LocationSelector.css - Improved styling for the location component */
+/* src/components/customer/Header/LocationSelector.css */
 
 /* Location button styling */
 .location-selector-button {
@@ -11,12 +11,13 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
   transition: all 0.2s ease;
   height: 34px;
+  color: white;
 }
 
 .location-selector-button:hover {
   background-color: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.5);
-  color: #ff4d6d;
+  color: #eab308;
 }
 
 .location-selector-button:focus,
@@ -29,6 +30,7 @@
 .location-icon {
   margin-right: 6px;
   flex-shrink: 0;
+  color: #eab308;
 }
 
 .location-text {
@@ -44,12 +46,18 @@
   overflow: hidden;
   border: none;
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  background-color: #f8f9fa;
 }
 
 .location-modal .location-modal-header {
   background-color: #f8f9fa;
   border-bottom: 1px solid #e9ecef;
   padding: 16px 20px;
+}
+
+.location-modal .modal-title {
+  font-weight: 600;
+  color: #333;
 }
 
 .location-modal .modal-body {
@@ -59,6 +67,7 @@
 .location-modal .modal-footer {
   padding: 12px 20px;
   border-top: 1px solid #e9ecef;
+  background-color: #f8f9fa;
 }
 
 .location-modal .detect-location-btn {
@@ -69,6 +78,14 @@
   padding: 8px 16px;
   transition: all 0.2s ease;
   height: 42px;
+  background-color: #eab308;
+  border-color: #eab308;
+  color: #0f172a;
+}
+
+.location-modal .detect-location-btn:hover {
+  background-color: #f59e0b;
+  border-color: #f59e0b;
 }
 
 /* Custom loading spinners */
@@ -82,8 +99,8 @@
 .single-spinner {
   width: 30px;
   height: 30px;
-  border: 3px solid rgba(13, 110, 253, 0.2);
-  border-top: 3px solid #0d6efd;
+  border: 3px solid rgba(234, 179, 8, 0.2);
+  border-top: 3px solid #eab308;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -92,8 +109,8 @@
   display: inline-block;
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(13, 110, 253, 0.2);
-  border-top: 2px solid #0d6efd;
+  border: 2px solid rgba(234, 179, 8, 0.2);
+  border-top: 2px solid #eab308;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -118,8 +135,8 @@
 }
 
 .city-search-input:focus {
-  border-color: #0d6efd;
-  box-shadow: none;
+  border-color: #eab308;
+  box-shadow: 0 0 0 0.2rem rgba(234, 179, 8, 0.25);
   outline: none;
 }
 
@@ -188,8 +205,8 @@
 
 .location-modal .city-button:hover {
   background-color: #e9ecef;
-  color: #0d6efd;
-  border-color: #0d6efd;
+  color: #eab308;
+  border-color: #eab308;
 }
 
 /* All Cities styling */
@@ -226,13 +243,13 @@
 /* Show all cities button */
 .location-modal .show-all-cities-btn {
   font-size: 0.85rem;
-  color: #0d6efd;
+  color: #eab308;
   text-decoration: none;
 }
 
 .location-modal .show-all-cities-btn:hover {
   text-decoration: underline;
-  color: #0a58ca;
+  color: #f59e0b;
 }
 
 /* Location preview styling */
@@ -252,6 +269,43 @@
 
 .location-modal .location-preview a:hover {
   text-decoration: underline;
+}
+
+/* Button styling */
+.location-modal .btn-primary {
+  background-color: #eab308;
+  border-color: #eab308;
+  color: #0f172a;
+}
+
+.location-modal .btn-primary:hover,
+.location-modal .btn-primary:focus {
+  background-color: #f59e0b;
+  border-color: #f59e0b;
+}
+
+.location-modal .btn-secondary {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.location-modal .btn-secondary:hover,
+.location-modal .btn-secondary:focus {
+  background-color: #5a6268;
+  border-color: #5a6268;
+}
+
+/* Alert styling */
+.location-modal .alert-success {
+  background-color: #d1fae5;
+  border-color: #a7f3d0;
+  color: #065f46;
+}
+
+.location-modal .alert-warning {
+  background-color: #fff7ed;
+  border-color: #fed7aa;
+  color: #c2410c;
 }
 
 /* Media queries for responsive design */

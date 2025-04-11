@@ -28,9 +28,9 @@ const ManagerApp = () => {
         
         {/* Screen Management */}
         <Route path="/theaters/:theaterId/screens" element={<TheaterScreens />} />
-        <Route path="/theaters/:theaterId/screens/:screenId/edit" element={<ScreenSetup />} />
-        <Route path="/theaters/:theaterId/screens/add" element={<ScreenSetup />} />
-        <Route path="/screen-setup" element={<ScreenSetup />} />
+        <Route path="/theaters/:theaterId/screens/:screenId/edit/*" element={<ScreenSetup />} />
+        <Route path="/theaters/:theaterId/screens/add/*" element={<ScreenSetup />} />
+        {/* <Route path="/screen-setup" element={<ScreenSetup />} /> */}
         <Route path="/view-screen" element={<TheaterSeatLayout />} />
         
         {/* Show Management */}
