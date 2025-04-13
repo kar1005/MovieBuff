@@ -17,6 +17,8 @@ import TheaterList from './Theatre/TheatreList/TheatreList';
 import TheatreDetails from './Theatre/TheatreDetails/TheatreDetails';
 import Booking from './Theatre/Booking/Booking';
 import TheatreListOnMovies from './Theatre/TheatreListOnMovies/TheatreListOnMovies';
+import MovieDetails from './Movies/MovieDetails/MovieDetails';
+import ActorDetails from './Movies/ActorDetails/ActorDetails';
 // import ReviewsPage from './Reviews/ReviewsPage';
 // import ActorProfile from './Actor/ActorProfile';
 
@@ -38,7 +40,8 @@ const CustomerApp = () => {
         <Route path="/theaters/movie/:id" element={<TheatreListOnMovies/>} />
         <Route path="/theater/:theatreId" element={<TheatreDetails />} />
         <Route path="/booking/:showId" element={<Booking />} />
-        
+        <Route path="/movie-detail/:movieId" element={<MovieDetails />} /> 
+        <Route path="/actor/:showId" element={<ActorDetails />} />
         {/* Booking Routes  */}
         {/* <Route path="/booking/:showId" element={<BookingPage />} />
         <Route path="/booking/confirm/:bookingId" element={<BookingConfirmation />} />

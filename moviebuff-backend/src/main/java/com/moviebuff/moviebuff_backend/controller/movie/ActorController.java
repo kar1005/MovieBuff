@@ -1,18 +1,30 @@
 package com.moviebuff.moviebuff_backend.controller.movie;
 
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.moviebuff.moviebuff_backend.dto.request.ActorRequest;
 import com.moviebuff.moviebuff_backend.dto.response.ActorResponse;
 import com.moviebuff.moviebuff_backend.model.movie.actors;
 import com.moviebuff.moviebuff_backend.service.movie.IActorService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/actors")
@@ -103,5 +115,13 @@ public class ActorController {
     public ResponseEntity<List<ActorResponse>> getTrendingActors(
             @RequestParam(defaultValue = "10") int limit) {
         return ResponseEntity.ok(actorService.getTrendingActors(limit));
+    }
+    
+    // Get random actors
+    @GetMapping("/random")
+    public ResponseEntity<List<ActorResponse>> getRandomActors(
+            @RequestParam(defaultValue = "5") int limit,
+            @RequestParam(required = false) String excludeId) {
+        return ResponseEntity.ok(actorService.getRandomActors(limit, excludeId));
     }
 }

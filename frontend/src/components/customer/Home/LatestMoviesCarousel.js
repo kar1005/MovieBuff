@@ -64,6 +64,10 @@ function LatestMoviesCarousel() {
     
     fetchMovies();
   }, []);
+
+  const handleCardClick = (movieId) => {
+    navigate(`/customer/movie-detail/${movieId}`);
+  };
   
   const nextSlide = () => {
     setCurrentIndex(prevIndex => {
@@ -154,6 +158,7 @@ function LatestMoviesCarousel() {
                     <img 
                       src={movie.posterUrl || '/api/placeholder/300/450'} 
                       alt={movie.title}
+                      onClick={() => handleCardClick(movie.id)}
                       className="movie-poster"
                     />
                     {movie.rating?.average && (
@@ -185,7 +190,7 @@ function LatestMoviesCarousel() {
                       ))}
                     </div>
                     <button 
-                      onClick={() => navigate('customer/theaters/movie/' + movie.id)}
+                      onClick={() => navigate('/customer/theaters/movie/' + movie.id)}
                       className="book-now-button"
                     >
                       <Ticket className="h-4 w-4" />
