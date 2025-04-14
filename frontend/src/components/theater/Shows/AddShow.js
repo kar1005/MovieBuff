@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Form, Button, Card, Row, Col, InputGroup, Alert, ListGroup, Spinner, Badge } from 'react-bootstrap';
+import TimePicker  from './TimePicker';
 import { 
   Calendar, 
   Clock, 
@@ -338,10 +339,13 @@ const AddShow = () => {
       
       // Calculate width as percentage of day
       const widthPercentage = (durationMinutes / 1440) * 100;
+
+      // Get movie title from show
+      const movieTitle = show.movie?.title || "Unknown Movie";
       
       return {
         id: show.id,
-        title: show.movie?.title || 'Unknown Movie',
+        title: movieTitle,
         startTime: formatTimeDisplay(startTime),
         endTime: formatTimeDisplay(endTime),
         leftPosition,
@@ -371,25 +375,61 @@ const AddShow = () => {
     }
   }, [dispatch, currentTheater]);
 
-  // Screen and shows conflict checking
+  // Screen and shows conflict checking - Enhanced to trigger on screen or date change
   useEffect(() => {
     if (currentTheater?.id && showData.screenNumber && showData.showDate) {
-      const selectedDate = new Date(showData.showDate);
-      const startOfDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 0, 0, 0);
-      const endOfDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 23, 59, 59);
-      
-      dispatch(getShowsByTheaterAndScreen({
-        theaterId: currentTheater.id,
-        screenNumber: parseInt(showData.screenNumber),
-        startTime: startOfDay.toISOString(),
-        endTime: endOfDay.toISOString()
-      }));
+      try {
+        // Format dates correctly for the backend (without time zone)
+        const selectedDate = new Date(showData.showDate);
+        
+        // Format as 'YYYY-MM-DDT00:00:00' without timezone suffix
+        const startOfDay = `${showData.showDate}T00:00:00`;
+        const endOfDay = `${showData.showDate}T23:59:59`;
+        
+        console.log("Fetching shows for date range:", { startOfDay, endOfDay });
+        
+        // Fetch shows for the selected theater, screen, and date
+        dispatch(getShowsByTheaterAndScreen({
+          theaterId: currentTheater.id,
+          screenNumber: parseInt(showData.screenNumber),
+          startTime: startOfDay,
+          endTime: endOfDay
+        }))
+        .unwrap()
+        .then(() => {
+          console.log("Successfully fetched shows for the selected date and screen");
+        })
+        .catch(error => {
+          console.error("Error fetching shows for timeline:", error);
+          
+          // Extract and format the error message properly
+          let errorMessage = "Failed to load schedule timeline";
+          
+          if (error && typeof error === 'object') {
+            // Try to extract message from API error response
+            if (error.message) {
+              errorMessage = error.message;
+            } else if (error.data && error.data.message) {
+              errorMessage = error.data.message;
+            } else if (error.status && error.statusText) {
+              errorMessage = `Error ${error.status}: ${error.statusText}`;
+            }
+          } else if (typeof error === 'string') {
+            errorMessage = error;
+          }
+          
+          toast.error(errorMessage);
+        });
+      } catch (err) {
+        console.error("Error preparing timeline request:", err);
+        toast.error("Failed to prepare schedule timeline request");
+      }
     }
   }, [dispatch, currentTheater, showData.screenNumber, showData.showDate]);
 
   // Generate schedule timeline when shows are loaded
   useEffect(() => {
-    if (showsByScreen && showsByScreen.length > 0) {
+    if (showsByScreen) {
       const timeline = generateScheduleTimeline();
       setScheduleTimeline(timeline);
     } else {
@@ -399,7 +439,7 @@ const AddShow = () => {
 
   // Check for time conflicts when relevant data changes
   useEffect(() => {
-    if (showsByScreen.length > 0 && showData.showTime && showData.movieId) {
+    if (showsByScreen?.length > 0 && showData.showTime && showData.movieId) {
       checkTimeConflicts();
     }
   }, [showsByScreen, showData.showTime, showData.movieId, showData.intervalTime, showData.cleanupTime]);
@@ -503,18 +543,24 @@ const AddShow = () => {
       });
     }
     
-    // Prepare submission data - using the correct datetime format
+    // Prepare submission data - using the correct datetime format (YYYY-MM-DDThh:mm:ss)
+    const [year, month, day] = showData.showDate.split('-').map(Number);
+    const [hours, minutes] = showData.showTime.split(':').map(Number);
+    const showTimeFormatted = `${showData.showDate}T${showData.showTime}:00`;
+    
     const submissionData = {
       movieId: showData.movieId,
       theaterId: showData.theaterId,
       screenNumber: parseInt(showData.screenNumber),
-      showTime: createLocalDateTime(showData.showDate, showData.showTime),
+      showTime: showTimeFormatted,
       language: showData.language,
       experience: showData.experience,
       cleanupTime: showData.cleanupTime,
       intervalTime: showData.intervalTime,
       pricing: formattedPricing
     };
+    
+    console.log("Submitting show data:", submissionData);
     
     dispatch(createShow(submissionData))
       .unwrap()
@@ -523,19 +569,35 @@ const AddShow = () => {
         navigate('/manager/shows');
       })
       .catch(error => {
-        // Improved error handling
+        // Enhanced error handling with detailed logging
+        console.error("Error while creating show:", error);
+        
         let errorMessage = 'Failed to schedule show';
         
-        if (typeof error === 'object' && error !== null) {
-          // Try to extract a meaningful message
-          errorMessage = error.message || JSON.stringify(error);
-        } else if (typeof error === 'string') {
-          errorMessage = error;
+        try {
+          if (error && typeof error === 'object') {
+            if (error.message) {
+              errorMessage = error.message;
+            } else if (error.data && error.data.message) {
+              errorMessage = error.data.message;
+            } else if (error.toString && typeof error.toString === 'function') {
+              const errorString = error.toString();
+              errorMessage = errorString !== '[object Object]' ? errorString : 'Server error occurred';
+            } else {
+              errorMessage = JSON.stringify(error);
+            }
+          } else if (typeof error === 'string') {
+            errorMessage = error;
+          }
+        } catch (e) {
+          console.error("Error while parsing error message:", e);
+          errorMessage = "An unknown error occurred";
         }
         
         toast.error(errorMessage);
       });
   };
+  
 
   return (
     <div className="container py-4">
@@ -668,84 +730,90 @@ const AddShow = () => {
                   </Form.Group>
                 </Col>
                 <Col lg={6}>
-                  <Form.Group>
-                    <Form.Label className="fw-bold d-flex align-items-center">
-                      <Clock size={18} className="me-2 text-primary" />
-                      Show Time
-                      <span className="text-danger ms-1">*</span>
-                    </Form.Label>
-                    <InputGroup className="shadow-sm">
-                      <InputGroup.Text className="bg-white">
-                        <Clock size={16} />
-                      </InputGroup.Text>
-                      <Form.Select 
-                        name="showTime"
-                        value={showData.showTime}
-                        onChange={handleInputChange}
-                        required
-                        className="border-start-0"
-                      >
-                        <option value="">Select Time</option>
-                        {timeSlots.map(time => (
-                          <option key={time} value={time}>{time}</option>
-                        ))}
-                      </Form.Select>
-                    </InputGroup>
-                  </Form.Group>
-                </Col>
+  <Form.Group>
+    <Form.Label className="fw-bold d-flex align-items-center">
+      <Clock size={18} className="me-2 text-primary" />
+      Show Time
+      <span className="text-danger ms-1">*</span>
+    </Form.Label>
+    <TimePicker 
+      value={showData.showTime}
+      onChange={(time) => {
+        setShowData(prev => ({
+          ...prev,
+          showTime: time
+        }));
+      }}
+      name="showTime"
+    />
+  </Form.Group>
+</Col>
               </Row>
 
               {/* Schedule Timeline */}
-              {scheduleTimeline.length > 0 && (
-                <Card className="mb-4 border-0 shadow-sm">
-                  <Card.Header className="bg-light">
-                    <h5 className="mb-0">Screen Schedule for {showData.showDate}</h5>
-                  </Card.Header>
-                  <Card.Body>
-                    <div className="timeline-container position-relative" style={{ height: '60px', background: '#f8f9fa' }}>
-                      {/* Time markers */}
-                      {[0, 6, 12, 18, 24].map((hour) => (
-                        <div 
-                          key={hour} 
-                          className="time-marker position-absolute" 
-                          style={{ left: `${(hour / 24) * 100}%`, top: '0px', bottom: '0px', borderLeft: '1px dashed #ccc' }}
-                        >
-                          <span className="badge bg-secondary position-absolute" style={{ top: '-20px', transform: 'translateX(-50%)' }}>
-                            {hour}:00
-                          </span>
+              <Card className="mb-4 border-0 shadow-sm">
+                <Card.Header className="bg-light">
+                  <h5 className="mb-0">
+                    {scheduleTimeline.length > 0 
+                      ? `Screen Schedule for ${showData.showDate}` 
+                      : showData.screenNumber && showData.showDate
+                        ? "No shows scheduled for this date and screen"
+                        : "Select a screen and date to view schedule"}
+                  </h5>
+                </Card.Header>
+                <Card.Body>
+                  <div className="timeline-container position-relative" style={{ height: '80px', background: '#f8f9fa' }}>
+                    {/* Time markers */}
+                    {[0, 6, 12, 18, 24].map((hour) => (
+                      <div 
+                        key={hour} 
+                        className="time-marker position-absolute" 
+                        style={{ left: `${(hour / 24) * 100}%`, top: '0px', bottom: '0px', borderLeft: '1px dashed #ccc' }}
+                      >
+                        <span className="badge bg-secondary position-absolute" style={{ top: '-20px', transform: 'translateX(-50%)' }}>
+                          {hour}:00
+                        </span>
+                      </div>
+                    ))}
+                    
+                    {/* Show blocks */}
+                    {scheduleTimeline.map((item) => (
+                      <div 
+                        key={item.id}
+                        className="show-block position-absolute rounded"
+                        style={{
+                          left: `${item.leftPosition}%`,
+                          width: `${item.widthPercentage}%`,
+                          top: '10px',
+                          height: '60px',
+                          backgroundColor: '#0d6efd',
+                          color: 'white',
+                          padding: '4px 8px',
+                          fontSize: '12px',
+                          overflow: 'hidden',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center'
+                        }}
+                        title={`${item.title} (${item.startTime} - ${item.endTime})`}
+                      >
+                        <div style={{ 
+                          fontWeight: 'bold', 
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}>
+                          {item.title}
                         </div>
-                      ))}
-                      
-                      {/* Show blocks */}
-                      {scheduleTimeline.map((item) => (
-                        <div 
-                          key={item.id}
-                          className="show-block position-absolute rounded"
-                          style={{
-                            left: `${item.leftPosition}%`,
-                            width: `${item.widthPercentage}%`,
-                            top: '10px',
-                            height: '40px',
-                            backgroundColor: '#0d6efd',
-                            color: 'white',
-                            padding: '2px 8px',
-                            fontSize: '12px',
-                            overflow: 'hidden',
-                            whiteSpace: 'nowrap',
-                            textOverflow: 'ellipsis'
-                          }}
-                          title={`${item.title} (${item.startTime} - ${item.endTime})`}
-                        >
-                          {item.startTime} - {item.endTime}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-2 text-center">
-                      <small className="text-muted">24-hour timeline of scheduled shows for the selected screen</small>
-                    </div>
-                  </Card.Body>
-                </Card>
-              )}
+                        <div>{item.startTime} - {item.endTime}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-2 text-center">
+                    <small className="text-muted">24-hour timeline of scheduled shows for the selected screen</small>
+                  </div>
+                </Card.Body>
+              </Card>
 
               {/* Error display for time conflicts */}
               {timeConflictError && (
@@ -780,7 +848,7 @@ const AddShow = () => {
                     >
                       <option value="">Select Language</option>
                       {movies
-                        .find(m => m.id === showData.movieId)
+                        .find(m => m.id ===showData.movieId)
                         ?.languages?.map(lang => (
                           <option key={lang} value={lang}>{lang}</option>
                         ))}

@@ -7,6 +7,8 @@ import { Search, Plus, X } from "lucide-react";
 import { createMovie } from "../../../redux/slices/adminSlice";
 import actorService from "../../../services/actorService";
 import cloudinaryService from "../../../services/cloudinaryService";
+import LanguageSelector from "../common/LanguageSelector";
+
 import "./AddMovie.css";
 
 const AddMovie = () => {
@@ -314,7 +316,19 @@ const AddMovie = () => {
                 <h3>Basic Details</h3>
                 {renderFormField("Title", "title")}
                 {renderFormField("Duration (minutes)", "duration", "number")}
-                {renderFormField("Languages", "languages", "array")}
+                <div className="form-group">
+  <label className="form-label">Languages</label>
+  <LanguageSelector
+    selectedLanguages={formData.languages.map(lang => ({ code: lang.toLowerCase(), name: lang }))}
+    onChange={(selected) => {
+      const languages = selected.map(lang => lang.name);
+      setFormData(prev => ({
+        ...prev,
+        languages
+      }));
+    }}
+  />
+</div>
                 {renderFormField("Genres", "genres", "array")}
                 {renderFormField("Experience", "experience", "array")}
               </div>
@@ -418,7 +432,7 @@ const AddMovie = () => {
                 {renderFormField("Trailer URL", "trailerUrl", "url")}
                 {renderFormField("Status", "status", "select", [
                   { value: "UPCOMING", label: "Upcoming" },
-                  { value: "RELEASED", label: "Now Showing" },
+                  { value: "RELEASED", label: "Released" },
                 ])}
                 {renderFormField("Description", "description", "textarea")}
               </div>

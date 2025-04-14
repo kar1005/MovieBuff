@@ -144,14 +144,40 @@ public class Show {
     }
     
     // Method to update show status based on seat availability
-    public void updateShowStatus() {
-        if (this.availableSeats == 0) {
-            this.status = ShowStatus.SOLDOUT;
-        } else if (this.availableSeats <= (this.totalSeats * 0.1)) { // Less than 10% seats left
-            this.status = ShowStatus.FEWSEATSLEFT;
+    public void updateShowStatus(LocalDateTime currentTime) {
+        // Don't change cancelled status
+        if (this.status == ShowStatus.CANCELLED) {
+            return;
+        }
+        
+        // First check time-based status
+        if (this.endTime != null && currentTime.isAfter(this.endTime)) {
+            this.status = ShowStatus.FINISHED;
+            return;
+        } else if (this.showTime != null && currentTime.isAfter(this.showTime)) {
+            this.status = ShowStatus.STARTED;
+            return;
+        }
+        
+        // For upcoming shows, check seat-based status
+        if (this.availableSeats != null && this.totalSeats != null) {
+            if (this.availableSeats == 0) {
+                this.status = ShowStatus.SOLDOUT;
+            } else if (this.availableSeats <= (this.totalSeats * 0.1)) { // Less than 10% seats left
+                this.status = ShowStatus.FEWSEATSLEFT;
+            } else {
+                // Check if filling fast based on booking rate or default to OPEN
+                this.status = this.bookingAttempts != null && this.bookingAttempts > (this.totalSeats * 0.1) ?
+                        ShowStatus.FILLINGFAST : ShowStatus.OPEN;
+            }
         } else {
             this.status = ShowStatus.OPEN;
         }
+    }
+    
+    // Method with no parameters (for backward compatibility)
+    public void updateShowStatus() {
+        updateShowStatus(LocalDateTime.now());
     }
     
     // Calculate popularity score based on various metrics

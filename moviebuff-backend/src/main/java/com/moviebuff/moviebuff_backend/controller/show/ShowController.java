@@ -7,10 +7,12 @@ import com.moviebuff.moviebuff_backend.service.show.IShowService;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 // import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -47,10 +49,19 @@ public class ShowController {
        return ResponseEntity.ok(showService.getShow(id));
    }
 
-   @GetMapping("/theater/{theaterId}")
-   public ResponseEntity<List<ShowResponse>> getShowsByTheater(@PathVariable String theaterId) {
-       return ResponseEntity.ok(showService.getShowsByTheater(theaterId));
-   }
+   // Update the existing endpoint to accept an optional parameter
+@GetMapping("/theater/{theaterId}")
+public ResponseEntity<List<ShowResponse>> getShowsByTheater(
+        @PathVariable String theaterId,
+        @RequestParam(defaultValue = "false") boolean includePastShows) {
+    return ResponseEntity.ok(showService.getShowsByTheater(theaterId, includePastShows));
+}
+@GetMapping("/theater/{theaterId}/date/{date}")
+public ResponseEntity<List<ShowResponse>> getShowsByTheaterAndDate(
+        @PathVariable String theaterId,
+        @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+    return ResponseEntity.ok(showService.getShowsByTheaterAndDate(theaterId, date));
+}
 
    @GetMapping("/movie/{movieId}")
    public ResponseEntity<List<ShowResponse>> getShowsByMovie(@PathVariable String movieId) {
@@ -119,5 +130,11 @@ public ResponseEntity<List<ShowResponse>> getTrendingShows(
         @RequestParam(required = false) String city,
         @RequestParam(defaultValue = "10") int limit) {
     return ResponseEntity.ok(showService.getTrendingShows(city, limit));
+}
+
+@PostMapping("/{showId}/refresh-status")
+public ResponseEntity<Void> refreshShowStatus(@PathVariable String showId) {
+    showService.refreshShowStatus(showId);
+    return ResponseEntity.ok().build();
 }
 }

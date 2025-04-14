@@ -17,6 +17,8 @@ import TheaterList from './Theatre/TheatreList/TheatreList';
 import TheatreDetails from './Theatre/TheatreDetails/TheatreDetails';
 import Booking from './Theatre/Booking/Booking';
 import TheatreListOnMovies from './Theatre/TheatreListOnMovies/TheatreListOnMovies';
+import CustomerProfilePage from './AccountPages/ProfilePage';
+import HelpSupportPage from './AccountPages/HelpSupportPage';
 // import ReviewsPage from './Reviews/ReviewsPage';
 // import ActorProfile from './Actor/ActorProfile';
 
@@ -46,7 +48,8 @@ const CustomerApp = () => {
         <Route path="/booking/payment/:bookingId" element={<PaymentPage />} /> */}
         
          {/* User Profile  */}
-        {/* <Route path="/profile" element={<ProfilePage />} /> */}
+        <Route path="/profile" element={<CustomerProfilePage />} />
+        <Route path="/help-support" element={<HelpSupportPage />} />
         
          {/* Reviews  */}
         {/* <Route path="/reviews" element={<ReviewsPage />} /> */}

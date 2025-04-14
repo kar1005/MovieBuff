@@ -12,7 +12,8 @@ import java.util.List;
 public interface IShowRepository extends MongoRepository<Show, String> {
 
     List<Show> findByTheaterIdAndShowTimeAfter(String theaterId, LocalDateTime time);
-    
+    List<Show> findByTheaterId(String theaterId);
+
     List<Show> findByMovieIdAndShowTimeAfter(String movieId, LocalDateTime time);
     
     List<Show> findByTheaterIdAndScreenNumberAndShowTimeBetween(
@@ -31,8 +32,12 @@ public interface IShowRepository extends MongoRepository<Show, String> {
     List<Show> findByTheaterIdInAndShowTimeAfter(List<String> theaterIds, LocalDateTime time);
     List<Show> findByTheaterIdAndScreenNumber(String theaterId, Integer screenNumber);
 
+    List<Show> findByStatusNotIn(List<Show.ShowStatus> statuses);
 
     List<Show> findByShowTimeAfter(LocalDateTime time);
+
+    // Add these methods to your IShowRepository interface
+List<Show> findByTheaterIdAndShowTimeBetween(String theaterId, LocalDateTime startTime, LocalDateTime endTime);
     
     @Query("{'status': ?0}")
     List<Show> findByStatus(Show.ShowStatus status);

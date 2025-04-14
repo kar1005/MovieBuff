@@ -24,6 +24,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.mongodb.core.query.Query;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -575,7 +576,6 @@ public class BookingServiceImpl implements IBookingService {
 
     @Override
     public Map<String, Object> getBookingAnalytics(String startDate, String endDate, String movieId, String theaterId) {
-        // Parse dates
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDateTime start = startDate != null ? 
                 LocalDate.parse(startDate, formatter).atStartOfDay() : 
@@ -584,139 +584,126 @@ public class BookingServiceImpl implements IBookingService {
         LocalDateTime end = endDate != null ? 
                 LocalDate.parse(endDate, formatter).atTime(23, 59, 59) : 
                 LocalDateTime.now();
-        
+    
         Map<String, Object> analytics = new HashMap<>();
-        
-        // Build base criteria
-        Criteria criteria = Criteria.where("createdAt").gte(start).lte(end);
-        
-        // Add movie filter
+    
+        // Base criteria (no status filter)
+        Criteria baseCriteria = Criteria.where("createdAt").gte(start).lte(end);
+    
         if (movieId != null) {
-            criteria = criteria.and("movieId").is(movieId);
+            baseCriteria = baseCriteria.and("movieId").is(movieId);
         }
-        
-        // Add theater filter
+    
         if (theaterId != null) {
-            criteria = criteria.and("theaterId").is(theaterId);
+            baseCriteria = baseCriteria.and("theaterId").is(theaterId);
         }
-        
+    
         // Total bookings
-        long totalBookings = mongoTemplate.count(
-                new org.springframework.data.mongodb.core.query.Query(criteria), 
-                Booking.class);
+        long totalBookings = mongoTemplate.count(new Query(baseCriteria), Booking.class);
         analytics.put("totalBookings", totalBookings);
-        
+    
         // Confirmed bookings
-        Criteria confirmedCriteria = criteria.and("status").is(Booking.BookingStatus.CONFIRMED);
-        long confirmedBookings = mongoTemplate.count(
-                new org.springframework.data.mongodb.core.query.Query(confirmedCriteria), 
-                Booking.class);
+        Criteria confirmedCriteria = new Criteria().andOperator(
+                baseCriteria, Criteria.where("status").is(Booking.BookingStatus.CONFIRMED)
+        );
+        long confirmedBookings = mongoTemplate.count(new Query(confirmedCriteria), Booking.class);
         analytics.put("confirmedBookings", confirmedBookings);
-        
+    
         // Cancelled bookings
-        Criteria cancelledCriteria = criteria.and("status").is(Booking.BookingStatus.CANCELLED);
-        long cancelledBookings = mongoTemplate.count(
-                new org.springframework.data.mongodb.core.query.Query(cancelledCriteria), 
-                Booking.class);
+        Criteria cancelledCriteria = new Criteria().andOperator(
+                baseCriteria, Criteria.where("status").is(Booking.BookingStatus.CANCELLED)
+        );
+        long cancelledBookings = mongoTemplate.count(new Query(cancelledCriteria), Booking.class);
         analytics.put("cancelledBookings", cancelledBookings);
-        
+    
         // Total revenue from confirmed bookings
         Aggregation revenueAgg = Aggregation.newAggregation(
                 Aggregation.match(confirmedCriteria),
                 Aggregation.group().sum("totalAmount").as("totalRevenue")
         );
-        
-        AggregationResults<Map> revenueResults = mongoTemplate.aggregate(
-                revenueAgg, Booking.class, Map.class);
-        
+    
+        AggregationResults<Map> revenueResults = mongoTemplate.aggregate(revenueAgg, Booking.class, Map.class);
         double totalRevenue = revenueResults.getMappedResults().isEmpty() ? 
-                0.0 : (Double) revenueResults.getMappedResults().get(0).get("totalRevenue");
+                0.0 : ((Number) revenueResults.getMappedResults().get(0).get("totalRevenue")).doubleValue();
         analytics.put("totalRevenue", totalRevenue);
-        
+    
         // Average ticket price
         Aggregation ticketAgg = Aggregation.newAggregation(
                 Aggregation.match(confirmedCriteria),
                 Aggregation.unwind("seats"),
                 Aggregation.group().avg("seats.finalPrice").as("averageTicketPrice")
         );
-        
-        AggregationResults<Map> ticketResults = mongoTemplate.aggregate(
-                ticketAgg, Booking.class, Map.class);
-        
+    
+        AggregationResults<Map> ticketResults = mongoTemplate.aggregate(ticketAgg, Booking.class, Map.class);
         double averageTicketPrice = ticketResults.getMappedResults().isEmpty() ? 
-                0.0 : (Double) ticketResults.getMappedResults().get(0).get("averageTicketPrice");
+                0.0 : ((Number) ticketResults.getMappedResults().get(0).get("averageTicketPrice")).doubleValue();
         analytics.put("averageTicketPrice", averageTicketPrice);
-        
-        // Bookings by show time (time of day distribution)
+    
+        // Bookings by show hour
         Aggregation timeAgg = Aggregation.newAggregation(
                 Aggregation.match(confirmedCriteria),
-                Aggregation.project()
-                        .andExpression("hour(showTime)").as("hour"),
+                Aggregation.project().andExpression("hour(showTime)").as("hour"),
                 Aggregation.group("hour").count().as("count"),
                 Aggregation.sort(org.springframework.data.domain.Sort.Direction.ASC, "_id")
         );
-        
-        AggregationResults<Map> timeResults = mongoTemplate.aggregate(
-                timeAgg, Booking.class, Map.class);
-        
+    
+        AggregationResults<Map> timeResults = mongoTemplate.aggregate(timeAgg, Booking.class, Map.class);
         Map<String, Long> bookingsByHour = new HashMap<>();
         timeResults.getMappedResults().forEach(result -> {
             int hour = (Integer) result.get("_id");
-            long count = (Long) result.get("count");
+            long count = ((Number) result.get("count")).longValue();
             bookingsByHour.put(String.valueOf(hour), count);
         });
         analytics.put("bookingsByHour", bookingsByHour);
-        
+    
         // Bookings by date
         Aggregation dateAgg = Aggregation.newAggregation(
                 Aggregation.match(confirmedCriteria),
-                Aggregation.project()
-                        .andExpression("dateToString('%Y-%m-%d', showTime)").as("date"),
+                Aggregation.project().andExpression("dateToString('%Y-%m-%d', showTime)").as("date"),
                 Aggregation.group("date").count().as("count")
         );
-        
-        AggregationResults<Map> dateResults = mongoTemplate.aggregate(
-                dateAgg, Booking.class, Map.class);
-        
+    
+        AggregationResults<Map> dateResults = mongoTemplate.aggregate(dateAgg, Booking.class, Map.class);
         Map<String, Long> bookingsByDate = new HashMap<>();
         dateResults.getMappedResults().forEach(result -> {
             String date = (String) result.get("_id");
-            long count = (Long) result.get("count");
+            long count = ((Number) result.get("count")).longValue();
             bookingsByDate.put(date, count);
         });
         analytics.put("bookingsByDate", bookingsByDate);
-        
+    
         // Bookings by payment method
         Aggregation paymentAgg = Aggregation.newAggregation(
                 Aggregation.match(confirmedCriteria),
                 Aggregation.group("paymentDetails.method").count().as("count")
         );
-        
-        AggregationResults<Map> paymentResults = mongoTemplate.aggregate(
-                paymentAgg, Booking.class, Map.class);
-        
+    
+        AggregationResults<Map> paymentResults = mongoTemplate.aggregate(paymentAgg, Booking.class, Map.class);
         Map<String, Long> bookingsByPaymentMethod = new HashMap<>();
         paymentResults.getMappedResults().forEach(result -> {
             String method = result.get("_id") != null ? result.get("_id").toString() : "UNKNOWN";
-            long count = (Long) result.get("count");
+            long count = ((Number) result.get("count")).longValue();
             bookingsByPaymentMethod.put(method, count);
         });
         analytics.put("bookingsByPaymentMethod", bookingsByPaymentMethod);
-        
-        // Coupon usage
-        Criteria couponCriteria = confirmedCriteria.and("appliedCoupon").exists(true);
-        long couponUsage = mongoTemplate.count(
-                new org.springframework.data.mongodb.core.query.Query(couponCriteria), 
-                Booking.class);
+    
+        // Coupon usage from confirmed bookings
+        Criteria couponCriteria = new Criteria().andOperator(
+                baseCriteria,
+                Criteria.where("status").is(Booking.BookingStatus.CONFIRMED),
+                Criteria.where("appliedCoupon").exists(true)
+        );
+        long couponUsage = mongoTemplate.count(new Query(couponCriteria), Booking.class);
         analytics.put("bookingsWithCoupon", couponUsage);
-        
+    
         // Cancellation rate
-        double cancellationRate = totalBookings > 0 ? 
+        double cancellationRate = totalBookings > 0 ?
                 (double) cancelledBookings / totalBookings : 0.0;
         analytics.put("cancellationRate", cancellationRate);
-        
+    
         return analytics;
     }
+    
     
     // Helper methods
     

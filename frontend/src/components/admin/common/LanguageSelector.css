@@ -1,0 +1,89 @@
+/* src/components/common/LanguageSelector.css */
+.language-selector-container {
+    position: relative;
+    width: 100%;
+  }
+  
+  .selected-languages {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+    min-height: 28px;
+  }
+  
+  .language-badge {
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+  
+  .badge-remove-icon {
+    margin-left: 6px;
+    cursor: pointer;
+  }
+  
+  .language-dropdown {
+    position: absolute;
+    width: 100%;
+    max-height: 250px;
+    overflow-y: auto;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+    margin-top: 2px;
+  }
+  
+  .language-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .language-list li {
+    padding: 8px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .language-list li:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .language-list li.selected {
+    background-color: #e9f4ff;
+    font-weight: 500;
+  }
+  
+  .selected-icon {
+    color: #0d6efd;
+  }
+  
+  .custom-badge {
+    font-size: 0.75rem;
+    font-weight: normal;
+    margin-left: 6px;
+  }
+  
+  .dropdown-loading,
+  .no-results {
+    padding: 12px;
+    text-align: center;
+    color: #6c757d;
+  }
+  
+  .add-new-language {
+    padding: 10px;
+    border-top: 1px solid #dee2e6;
+  }
+  
+  /* Increase specificity for Bootstrap overrides */
+  .language-selector-container .input-group {
+    position: relative;
+    z-index: 2;
+  }

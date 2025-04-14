@@ -18,7 +18,7 @@
   --gray-700: #495057;
   --gray-800: #343a40;
   --gray-900: #212529;
-  --active-blue: #2196f3;
+  --active-blue: #eab308;
   --navbar-height: 60px;
   --sidebar-width: 280px;
   --border-radius: 6px;
@@ -285,7 +285,7 @@
 }
 
 .navItem.active {
-  background-color: rgba(33, 150, 243, 0.15);
+  /* background-color: rgba(245, 238, 44, 0.15); */
   color: var(--active-blue);
 }
 

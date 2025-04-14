@@ -5,6 +5,9 @@ import com.moviebuff.moviebuff_backend.payload.response.JwtResponse;
 import com.moviebuff.moviebuff_backend.payload.response.LoginRequest;
 
 import java.util.Collections;
+// import javax.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import com.moviebuff.moviebuff_backend.repository.interfaces.user.IUserRepository;
 import com.moviebuff.moviebuff_backend.service.Email.EmailService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -182,4 +186,35 @@ public class AuthController {
             
         return ResponseEntity.ok(user);
     }
+
+    @PostMapping("/logout")
+public ResponseEntity<?> logoutUser(HttpServletRequest request) {
+    try {
+        // Get the JWT token from the request
+        String jwt = getJwtFromRequest(request);
+        
+        if (jwt != null && !jwt.isEmpty()) {
+            // You could implement a token blacklist here
+            // This would require storing invalidated tokens until they expire
+            // tokenBlacklistService.addToBlacklist(jwt);
+        }
+        
+        // Clear the security context
+        SecurityContextHolder.clearContext();
+        
+        return ResponseEntity.ok().body("Logged out successfully");
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body("Error during logout: " + e.getMessage());
+    }
+}
+
+// Helper method to extract JWT token from request
+private String getJwtFromRequest(HttpServletRequest request) {
+    String bearerToken = request.getHeader("Authorization");
+    if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+        return bearerToken.substring(7);
+    }
+    return null;
+}
 }

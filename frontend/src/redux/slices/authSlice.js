@@ -2,15 +2,21 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import authService from '../../services/authServices';
 
+const token = localStorage.getItem('token');
+const userId = localStorage.getItem('userId');
+const userEmail = localStorage.getItem('userEmail');
+const userRole = localStorage.getItem('userRole') || 'GUEST';
+
+
 const initialState = {
   user: null,
-  token: localStorage.getItem('token'),
-  email: null,
-  id: null,
-  isAuthenticated: !!localStorage.getItem('token'),
+  token: token,
+  email: userEmail,
+  id: userId,
+  isAuthenticated: !!token,
   loading: false,
   error: null,
-  role: 'GUEST',
+  role: userRole,
 };
 
 // Async thunks
@@ -54,6 +60,7 @@ const authSlice = createSlice({
       state.role = action.payload.role;
       state.id = action.payload.id;
       state.user = action.payload;
+      localStorage.setItem('userRole', action.payload.role);
     },
     loginFailure: (state, action) => {
       state.loading = false;
@@ -66,7 +73,6 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
       state.role = 'GUEST';
-      localStorage.removeItem('token');
     },
     clearError: (state) => {
       state.error = null;

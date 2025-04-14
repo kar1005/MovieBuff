@@ -133,7 +133,7 @@
   .movie-poster {
     width: auto !important; /* Override any other width settings */
     height: 100% !important; /* Make it take full height */
-    max-width: 100%; /* Constrain width */
+    max-width: 100% !important; /* Constrain width */
     object-fit: contain !important; /* Ensure entire image is visible */
     margin: 0 auto; /* Center the image */
     display: block;

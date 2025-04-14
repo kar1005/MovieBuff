@@ -20,6 +20,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "react-toastify/dist/ReactToastify.css";
 import "./styles/main.css";
 import Home from "./components/customer/Home/Home";
+import Logout from "./components/common/Logout";
 
 function App() {
   return (
@@ -31,7 +32,8 @@ function App() {
           {/* Common Authentication Routes */}
           <Route path="/login" element={<Authenticate />} />
           <Route path="/register" element={<Register />} />
-          
+          <Route path="/logout" element={<Logout />} />
+
           {/* Admin Routes */}
           <Route path="/admin/*" element={<AdminApp />} />
           

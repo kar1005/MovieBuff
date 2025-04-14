@@ -137,13 +137,43 @@ public class ShowServiceImpl implements IShowService {
     }
 
     @Override
-    @Cacheable(value = "shows", key = "'theater:' + #theaterId")
-    public List<ShowResponse> getShowsByTheater(String theaterId) {
-        List<Show> shows = showRepository.findByTheaterIdAndShowTimeAfter(theaterId, LocalDateTime.now());
-        return shows.stream()
-                .map(responseMapper::mapToResponse)
-                .collect(Collectors.toList());
+@Cacheable(value = "shows", key = "'theater:' + #theaterId")
+public List<ShowResponse> getShowsByTheater(String theaterId) {
+    // Call the new method with default value (false)
+    return getShowsByTheater(theaterId, false);
+}
+@Override
+public List<ShowResponse> getShowsByTheaterAndDate(String theaterId, LocalDate date) {
+    // Convert date to start and end of day
+    LocalDateTime startOfDay = date.atStartOfDay();
+    LocalDateTime endOfDay = date.atTime(23, 59, 59);
+    
+    List<Show> shows = showRepository.findByTheaterIdAndShowTimeBetween(theaterId, startOfDay, endOfDay);
+    
+    return shows.stream()
+            .map(responseMapper::mapToResponse)
+            .collect(Collectors.toList());
+}
+
+// Add the new implementation
+@Override
+@Cacheable(value = "shows", key = "'theater:' + #theaterId + ':includePast:' + #includePastShows")
+public List<ShowResponse> getShowsByTheater(String theaterId, boolean includePastShows) {
+    List<Show> shows;
+    
+    if (includePastShows) {
+        // Get all shows regardless of time
+        shows = showRepository.findByTheaterId(theaterId);
+    } else {
+        // Original behavior - only upcoming shows
+        shows = showRepository.findByTheaterIdAndShowTimeAfter(theaterId, LocalDateTime.now());
     }
+    
+    return shows.stream()
+            .map(responseMapper::mapToResponse)
+            .collect(Collectors.toList());
+}
+
 
     @Override
     @Cacheable(value = "shows", key = "'movie:' + #movieId")
@@ -372,7 +402,8 @@ public class ShowServiceImpl implements IShowService {
         Map<String, Long> showsByStatus = new HashMap<>();
         statusResults.getMappedResults().forEach(result -> {
             String status = result.get("_id") != null ? result.get("_id").toString() : "UNKNOWN";
-            long count = (Long) result.get("count");
+            long count = ((Number) result.get("count")).longValue();
+
             showsByStatus.put(status, count);
         });
         analytics.put("showsByStatus", showsByStatus);
@@ -393,7 +424,7 @@ public class ShowServiceImpl implements IShowService {
         String[] days = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
         dowResults.getMappedResults().forEach(result -> {
             int dow = (Integer) result.get("_id");
-            long count = (Long) result.get("count");
+            long count = ((Number) result.get("count")).longValue();
             showsByDayOfWeek.put(days[dow % 7], count);
         });
         analytics.put("showsByDayOfWeek", showsByDayOfWeek);
@@ -413,7 +444,7 @@ public class ShowServiceImpl implements IShowService {
         Map<String, Long> showsByHour = new HashMap<>();
         hourResults.getMappedResults().forEach(result -> {
             int hour = (Integer) result.get("_id");
-            long count = (Long) result.get("count");
+            long count = ((Number) result.get("count")).longValue();
             showsByHour.put(String.valueOf(hour), count);
         });
         analytics.put("showsByHour", showsByHour);
@@ -626,26 +657,107 @@ public class ShowServiceImpl implements IShowService {
         }
         
         // Calculate show end time based on movie duration
-        LocalDateTime showEndTime = request.getShowTime().plusMinutes(totalDuration);
+        LocalDateTime showTime = request.getShowTime();
+        LocalDateTime showEndTime = showTime.plusMinutes(totalDuration);
         
-        // Add buffer time between shows (e.g., 30 minutes)
-        LocalDateTime bufferStartTime = request.getShowTime().minusMinutes(30);
-        LocalDateTime bufferEndTime = showEndTime.plusMinutes(30);
+        log.info("Validating show update time: {} to {}", showTime, showEndTime);
         
-        // Check for conflicting shows, excluding the current show
-        List<Show> conflictingShows = showRepository.findByTheaterIdAndScreenNumberAndShowTimeBetween(
+        // Get all shows for the screen on that day
+        LocalDateTime startOfDay = showTime.toLocalDate().atStartOfDay();
+        LocalDateTime endOfDay = showTime.toLocalDate().atTime(23, 59, 59);
+        
+        List<Show> allScreenShows = showRepository.findByTheaterIdAndScreenNumberAndShowTimeBetween(
                 request.getTheaterId(), 
                 request.getScreenNumber(),
-                bufferStartTime,
-                bufferEndTime
-        ).stream()
-                .filter(show -> !show.getId().equals(existingShow.getId()))
-                .collect(Collectors.toList());
+                startOfDay,
+                endOfDay
+        );
+        
+        // Log all existing shows for debugging
+        for (Show show : allScreenShows) {
+            log.info("Existing show: {} to {}", show.getShowTime(), show.getEndTime());
+        }
+        
+        List<Show> conflictingShows = allScreenShows.stream()
+            .filter(show -> !show.getId().equals(existingShow.getId())) // exclude current show
+            .filter(show -> {
+                LocalDateTime existingShowStart = show.getShowTime();
+                LocalDateTime existingShowEnd = show.getEndTime();
+                
+                // Correct overlap logic: 
+                // There's a conflict if:
+                // 1. The new show starts during an existing show
+                boolean startsDuringExistingShow = showTime.isBefore(existingShowEnd) && 
+                                                  !showTime.isBefore(existingShowStart);
+                                                  
+                // 2. The new show ends during an existing show
+                boolean endsDuringExistingShow = !showEndTime.isAfter(existingShowEnd) && 
+                                                showEndTime.isAfter(existingShowStart);
+                                                
+                // 3. The new show completely encapsulates an existing show
+                boolean encapsulatesExistingShow = !showTime.isAfter(existingShowStart) && 
+                                                  !showEndTime.isBefore(existingShowEnd);
+                                                  
+                boolean isConflict = startsDuringExistingShow || endsDuringExistingShow || encapsulatesExistingShow;
+                
+                if (isConflict) {
+                    log.info("Conflict detected with show at {} to {}", existingShowStart, existingShowEnd);
+                }
+                
+                return isConflict;
+            })
+            .collect(Collectors.toList());
         
         if (!conflictingShows.isEmpty()) {
-            throw new BadRequestException("Show timing conflicts with existing shows (including buffer time)");
+            // Construct a detailed error message
+            StringBuilder errorBuilder = new StringBuilder("Show timing conflicts with existing shows: ");
+            for (Show conflictShow : conflictingShows) {
+                // Get movie title
+                String movieTitle = "Unknown";
+                Optional<Movie> conflictMovie = movieRepository.findById(conflictShow.getMovieId());
+                if (conflictMovie.isPresent()) {
+                    movieTitle = conflictMovie.get().getTitle();
+                }
+                
+                errorBuilder.append(
+                    String.format("[%s: %s - %s]", 
+                        movieTitle,
+                        conflictShow.getShowTime().format(DateTimeFormatter.ofPattern("HH:mm")),
+                        conflictShow.getEndTime().format(DateTimeFormatter.ofPattern("HH:mm"))
+                    )
+                );
+                errorBuilder.append(", ");
+            }
+            
+            // Remove trailing comma and space if there are any conflicts
+            String errorMessage = errorBuilder.toString();
+            if (errorMessage.endsWith(", ")) {
+                errorMessage = errorMessage.substring(0, errorMessage.length() - 2);
+            }
+            throw new BadRequestException(errorMessage);
         }
     }
+
+
+    @Override
+@Transactional
+@CacheEvict(value = "shows", key = "#showId")
+public void refreshShowStatus(String showId) {
+    Show show = showRepository.findById(showId)
+            .orElseThrow(() -> new ResourceNotFoundException("Show not found with id: " + showId));
+    
+    // Update show status based on current time
+    LocalDateTime now = LocalDateTime.now();
+    Show.ShowStatus oldStatus = show.getStatus();
+    show.updateShowStatus(now);
+    
+    // If status changed, save the show
+    if (oldStatus != show.getStatus()) {
+        log.info("Show {} status refreshed: {} -> {}", showId, oldStatus, show.getStatus());
+        showRepository.save(show);
+    }
+}
+
 
 
 

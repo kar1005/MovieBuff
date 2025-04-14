@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import LanguageSelector from "../common/LanguageSelector";
+
 import {
   Container,
   Row,
@@ -27,15 +29,15 @@ import {
 import cloudinaryService from "../../../services/cloudinaryService";
 import "./EditActor.css";
 
-const LANGUAGES = [
-  "Hindi",
-  "English",
-  "Tamil",
-  "Telugu",
-  "Malayalam",
-  "Kannada",
-  "Bengali",
-];
+// const LANGUAGES = [
+//   "Hindi",
+//   "English",
+//   "Tamil",
+//   "Telugu",
+//   "Malayalam",
+//   "Kannada",
+//   "Bengali",
+// ];
 const AWARDS = [
   "National Film Award",
   "Filmfare Award",
@@ -432,27 +434,19 @@ const EditActor = () => {
                 </Row>
 
                 <Form.Group className="mb-3">
-                  <Form.Label>Languages*</Form.Label>
-                  <Form.Select
-                    multiple
-                    name="languages"
-                    value={formData.languages}
-                    onChange={handleLanguageChange}
-                    isInvalid={!!validationErrors.languages}
-                  >
-                    {LANGUAGES.map((lang) => (
-                      <option key={lang} value={lang}>
-                        {lang}
-                      </option>
-                    ))}
-                  </Form.Select>
-                  <Form.Text className="text-muted">
-                    Hold Ctrl/Cmd to select multiple languages
-                  </Form.Text>
-                  <Form.Control.Feedback type="invalid">
-                    {validationErrors.languages}
-                  </Form.Control.Feedback>
-                </Form.Group>
+  <Form.Label>Languages*</Form.Label>
+  <LanguageSelector
+    selectedLanguages={formData.languages.map(lang => ({ code: lang.toLowerCase(), name: lang }))}
+    onChange={(selected) => {
+      const languages = selected.map(lang => lang.name);
+      setFormData(prev => ({ ...prev, languages }));
+      setValidationErrors(prev => ({ ...prev, languages: "" }));
+      setHasChanges(true);
+    }}
+    isInvalid={!!validationErrors.languages}
+    errorMessage={validationErrors.languages}
+  />
+</Form.Group>
 
                 <Form.Group className="mb-3">
                   <Form.Label>Description*</Form.Label>

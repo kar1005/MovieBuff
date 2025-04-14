@@ -31,6 +31,8 @@ public interface IBookingRepository extends MongoRepository<Booking, String> {
     List<Booking> findByMovieIdAndTheaterId(String movieId, String theaterId);
     
     List<Booking> findByStatusAndMovieIdAndTheaterId(Booking.BookingStatus status, String movieId, String theaterId);
+
+    List<Booking> findByShowIdInAndStatus(List<String> showIds, Booking.BookingStatus status);
     
     @Query("{'showTime': {$gt: ?0}}")
     List<Booking> findUpcomingBookings(LocalDateTime now);

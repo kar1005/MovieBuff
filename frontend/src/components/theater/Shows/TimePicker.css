@@ -1,0 +1,88 @@
+/* Time Picker Styles */
+.time-picker-modal {
+    width: 280px;
+    padding: 16px;
+    background: white;
+  }
+  
+  .time-picker-header {
+    margin-bottom: 8px;
+  }
+  
+  .time-picker-selectors {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+  
+  .hour-selector,
+  .minute-selector {
+    width: 60px;
+    text-align: center;
+    max-height: 180px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  
+  .hour-selector::-webkit-scrollbar,
+  .minute-selector::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .hour-selector::-webkit-scrollbar-thumb,
+  .minute-selector::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 4px;
+  }
+  
+  .separator {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0 8px;
+    line-height: 36px;
+  }
+  
+  .time-option {
+    padding: 8px 0;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 20px;
+  }
+  
+  .time-option:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .time-option.selected {
+    background-color: #6366f1;
+    color: white;
+    font-weight: 500;
+  }
+  
+  .period-selector {
+    display: flex;
+    flex-direction: column;
+    margin-left: 12px;
+  }
+  
+  .period-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  
+  .period-option:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .period-option.selected {
+    background-color: #6366f1;
+    color: white;
+    font-weight: 500;
+  }
+  
+  .action-buttons {
+    margin-top: 16px;
+  }

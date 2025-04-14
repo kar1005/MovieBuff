@@ -21,7 +21,12 @@ import {
   Activity, 
   BarChart2, 
   PieChart,
-  Percent
+  Building,
+  Percent,
+  AlertOctagon,
+  Award,
+  UserPlus,
+  Clock
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
@@ -32,6 +37,7 @@ import {
 import { fetchCustomers, fetchTheaterManagers } from '../../../redux/slices/userSlice';
 import { getBookingAnalytics } from '../../../redux/slices/bookingSlice';
 import { fetchTheaters } from '../../../redux/slices/theaterSlice';
+import { getAllReviews } from '../../../redux/slices/reviewSlice';
 import './AdminDashboard.css';
 
 function AdminDashboard() {
@@ -42,6 +48,7 @@ function AdminDashboard() {
   const { customers, theaterManagers, loading: usersLoading } = useSelector(state => state.users);
   const { analytics: bookingAnalytics, isLoading: bookingLoading } = useSelector(state => state.booking);
   const { theaters, loading: theatersLoading } = useSelector(state => state.theater);
+  const { reviews, loading: reviewsLoading } = useSelector(state => state.reviews);
   
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -52,19 +59,49 @@ function AdminDashboard() {
     totalTheaters: 0,
     upcomingMoviesCount: 0,
     recentBookings: 0,
+    newUsers: 0,
     newMovies: 0,
     userGrowth: 0,
-    revenueGrowth: 0
+    revenueGrowth: 0,
+    totalReviews: 0,
+    occupancyRate: 0,
+    activeTheaters: 0,
+    averageRating: 0,
+    highestRevenue: 0
   });
   
   // Top performing theaters based on bookings and revenue
   const [topTheaters, setTopTheaters] = useState([]);
+  
+  // Monthly revenue data
+  const [revenueData, setRevenueData] = useState([]);
+  
+  // Booking statistics
+  const [bookingStats, setBookingStats] = useState({
+    totalConfirmed: 0,
+    totalCancelled: 0,
+    pendingRefunds: 0
+  });
+
+  // Date helpers
+  const getDateRange = () => {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 6);
+    
+    return {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0]
+    };
+  };
 
   // Fetch all required data on component mount
   useEffect(() => {
     const fetchDashboardData = async () => {
       setIsLoading(true);
       try {
+        const { startDate, endDate } = getDateRange();
+        
         // Using Promise.all to fetch data in parallel
         await Promise.all([
           dispatch(getAllMovies({ filters: {} })),
@@ -73,9 +110,10 @@ function AdminDashboard() {
           dispatch(fetchCustomers()),
           dispatch(fetchTheaterManagers()),
           dispatch(fetchTheaters()),
+          dispatch(getAllReviews()),
           dispatch(getBookingAnalytics({ 
-            startDate: new Date(new Date().setMonth(new Date().getMonth() - 6)).toISOString().split('T')[0],
-            endDate: new Date().toISOString().split('T')[0]
+            startDate,
+            endDate
           }))
         ]);
       } catch (error) {
@@ -90,7 +128,7 @@ function AdminDashboard() {
 
   // Update stats when data changes
   useEffect(() => {
-    if (movies && customers && theaterManagers && bookingAnalytics && theaters) {
+    if (!isLoading && !moviesLoading && !usersLoading && !bookingLoading && !theatersLoading && !reviewsLoading) {
       // Basic stats
       const totalMoviesCount = Array.isArray(movies) ? movies.length : 0;
       const totalUsersCount = (Array.isArray(customers) ? customers.length : 0) + 
@@ -99,24 +137,68 @@ function AdminDashboard() {
       const totalRevenueAmount = bookingAnalytics?.totalRevenue || 0;
       const totalTheatersCount = Array.isArray(theaters) ? theaters.length : 0;
       const upcomingMoviesCount = Array.isArray(upcomingMovies) ? upcomingMovies.length : 0;
+      const totalReviewsCount = Array.isArray(reviews) ? reviews.length : 0;
+      
+      // Calculate active theaters
+      const activeTheatersCount = Array.isArray(theaters) 
+        ? theaters.filter(theater => theater.status === 'ACTIVE').length 
+        : 0;
+      
+      // Calculate average rating from reviews
+      let avgRating = 0;
+      if (reviews && reviews.length > 0) {
+        const sum = reviews.reduce((total, review) => total + (review.rating || 0), 0);
+        avgRating = sum / reviews.length;
+      }
       
       // Recent booking count (last 30 days)
       const recentBookingsCount = bookingAnalytics?.recentBookings || 
                                 bookingAnalytics?.lastMonthBookings || 0;
       
+      // New users in last 30 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const newUsersLast30Days = customers?.filter(customer => {
+        // If createdAt is available, use it, otherwise fallback to a rough estimate
+        if (customer.createdAt) {
+          const createdDate = new Date(customer.createdAt);
+          return createdDate >= thirtyDaysAgo;
+        }
+        return false;
+      }).length || 0;
+      
       // Growth metrics (calculate or get from analytics)
       const newMoviesLast30Days = movies?.filter(movie => {
+        if (!movie.releaseDate) return false;
         const releaseDate = new Date(movie.releaseDate);
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         return releaseDate >= thirtyDaysAgo;
       }).length || 0;
       
-      // Calculate user growth percentage
-      const userGrowthPercent = bookingAnalytics?.userGrowth || 12; // Fallback to 12%
+      // Calculate user growth percentage from analytics or estimate
+      const userGrowthPercent = bookingAnalytics?.userGrowth || 
+                              (totalUsersCount > 0 ? (newUsersLast30Days / totalUsersCount) * 100 : 0);
       
-      // Calculate revenue growth percentage 
-      const revenueGrowthPercent = bookingAnalytics?.revenueGrowth || 8; // Fallback to 8%
+      // Calculate revenue growth percentage from analytics or estimate
+      const revenueGrowthPercent = bookingAnalytics?.revenueGrowth || 
+                                  (bookingAnalytics?.lastMonthRevenue && bookingAnalytics?.previousMonthRevenue
+                                    ? ((bookingAnalytics.lastMonthRevenue - bookingAnalytics.previousMonthRevenue) / 
+                                      bookingAnalytics.previousMonthRevenue) * 100
+                                    : 0);
+      
+      // Calculate occupancy rate
+      const occupancyRate = bookingAnalytics?.averageOccupancyRate || 
+                          (bookingAnalytics?.totalSeats && bookingAnalytics?.totalBookedSeats
+                            ? (bookingAnalytics.totalBookedSeats / bookingAnalytics.totalSeats) * 100
+                            : 0);
+      
+      // Find highest revenue movie or theater
+      const highestRevenue = bookingAnalytics?.highestRevenue || 0;
+      
+      // Extract booking statistics
+      const confirmedBookings = bookingAnalytics?.bookingsByStatus?.CONFIRMED || 0;
+      const cancelledBookings = bookingAnalytics?.bookingsByStatus?.CANCELLED || 0;
+      const pendingRefunds = bookingAnalytics?.pendingRefunds || 0;
       
       setStats({
         totalMovies: totalMoviesCount,
@@ -126,35 +208,59 @@ function AdminDashboard() {
         totalTheaters: totalTheatersCount,
         upcomingMoviesCount: upcomingMoviesCount,
         recentBookings: recentBookingsCount,
+        newUsers: newUsersLast30Days,
         newMovies: newMoviesLast30Days,
-        userGrowth: userGrowthPercent,
-        revenueGrowth: revenueGrowthPercent
+        userGrowth: parseFloat(userGrowthPercent.toFixed(1)),
+        revenueGrowth: parseFloat(revenueGrowthPercent.toFixed(1)),
+        totalReviews: totalReviewsCount,
+        occupancyRate: parseFloat(occupancyRate.toFixed(1)),
+        activeTheaters: activeTheatersCount,
+        averageRating: parseFloat(avgRating.toFixed(1)),
+        highestRevenue: highestRevenue
       });
+      
+      setBookingStats({
+        totalConfirmed: confirmedBookings,
+        totalCancelled: cancelledBookings,
+        pendingRefunds: pendingRefunds
+      });
+      
+      // Process monthly revenue data
+      if (bookingAnalytics?.monthlyRevenue) {
+        const months = Object.keys(bookingAnalytics.monthlyRevenue);
+        const revenueDataFormatted = months.map(month => ({
+          month,
+          revenue: bookingAnalytics.monthlyRevenue[month]
+        }));
+        setRevenueData(revenueDataFormatted);
+      }
       
       // Process theater data to get top performing theaters
       if (theaters?.length) {
-        // In a real scenario, this data would come from booking analytics
-        // Here we're simulating it with available theater data
-        const processedTheaters = theaters.slice(0, 5).map((theater, index) => {
-          // Simulate booking and revenue data (in a real app, this would come from actual data)
-          const simulatedBookings = Math.floor(1500 - (index * 100) - (Math.random() * 150));
-          const simulatedRevenue = Math.floor(simulatedBookings * (450 - (index * 25) + (Math.random() * 50)));
-          
-          return {
-            id: theater.id,
-            name: theater.name,
-            city: theater.location?.city || 'Unknown',
-            bookings: simulatedBookings,
-            revenue: simulatedRevenue
-          };
-        });
-        
-        // Sort by bookings (in a real scenario, could be sorted by revenue)
-        const sortedTheaters = processedTheaters.sort((a, b) => b.bookings - a.bookings);
-        setTopTheaters(sortedTheaters);
+        // Use actual data if available from backend
+        if (bookingAnalytics?.topTheaters && bookingAnalytics.topTheaters.length > 0) {
+          setTopTheaters(bookingAnalytics.topTheaters);
+        } else {
+          // Don't create simulated data if we don't have real data
+          setTopTheaters([]);
+        }
       }
     }
-  }, [movies, customers, theaterManagers, bookingAnalytics, upcomingMovies, theaters]);
+  }, [
+    isLoading, 
+    moviesLoading, 
+    usersLoading, 
+    bookingLoading, 
+    theatersLoading, 
+    reviewsLoading, 
+    movies, 
+    customers, 
+    theaterManagers, 
+    bookingAnalytics, 
+    upcomingMovies, 
+    theaters,
+    reviews
+  ]);
 
   // Stat card component
   const StatCard = ({ icon: Icon, title, value, variant, subValue, subText }) => (
@@ -166,8 +272,9 @@ function AdminDashboard() {
             <div className="d-flex align-items-baseline">
               <h3 className="mb-0">{value}</h3>
               {subValue && (
-                <small className={`text-${subValue.startsWith('+') ? 'success' : 'danger'} ml-2 ms-2`}>
-                  {subValue}
+                <small className={`text-${parseFloat(subValue) >= 0 ? 'success' : 'danger'} ml-2 ms-2`}>
+                  {parseFloat(subValue) >= 0 ? `+${subValue}` : subValue}
+                  {subValue.toString().includes('%') ? '' : '%'}
                 </small>
               )}
             </div>
@@ -200,7 +307,7 @@ function AdminDashboard() {
       </div>
       <Badge bg={
         movie.status === 'UPCOMING' ? 'warning' : 
-        movie.status === 'NOW_SHOWING' ? 'success' : 
+        movie.status === 'RELEASED' ? 'success' : 
         'secondary'
       } className="movie-status">
         {movie.status ? movie.status.replace('_', ' ') : 'N/A'}
@@ -222,7 +329,12 @@ function AdminDashboard() {
     return new Intl.NumberFormat('en-IN').format(num);
   };
 
-  if (isLoading || moviesLoading || usersLoading || bookingLoading || theatersLoading) {
+  // Format percentage
+  const formatPercent = (value) => {
+    return `${parseFloat(value).toFixed(1)}%`;
+  };
+
+  if (isLoading || moviesLoading || usersLoading || bookingLoading || theatersLoading || reviewsLoading) {
     return (
       <div className="d-flex justify-content-center align-items-center loading-container">
         <Spinner animation="border" role="status" variant="primary">
@@ -233,24 +345,24 @@ function AdminDashboard() {
   }
 
   return (
-    <Container fluid className="p-4 admin-dashboard">
-      <Row className="mb-4">
-        <Col>
-          <h2 className="page-title mb-1">Admin Dashboard</h2>
+    <Container fluid className="p-0 admin-dashboard">
+      <Row className="mb-4 mx-0">
+        <Col className="px-4 py-3">
+          <h2 className="page-title mb-1">Dashboard</h2>
           <p className="text-muted">Welcome back! Here's what's happening with MovieBuff today.</p>
         </Col>
       </Row>
 
       {/* Stats Cards */}
-      <Row className="mb-4 g-3">
+      <Row className="mb-4 g-3 mx-0 px-3">
         <Col md={6} lg={3}>
           <StatCard 
             icon={Film} 
             title="Total Movies" 
             value={formatNumber(stats.totalMovies)}
             variant="primary"
-            subValue={stats.newMovies > 0 ? `+${stats.newMovies} new` : ''} 
-            subText="this month"
+            subValue={stats.newMovies > 0 ? `${stats.newMovies}` : '0'} 
+            subText="new this month"
           />
         </Col>
         <Col md={6} lg={3}>
@@ -259,7 +371,7 @@ function AdminDashboard() {
             title="Total Users" 
             value={formatNumber(stats.totalUsers)}
             variant="success"
-            subValue={stats.userGrowth > 0 ? `+${stats.userGrowth}%` : `${stats.userGrowth}%`} 
+            subValue={stats.userGrowth.toString()} 
             subText="vs last month"
           />
         </Col>
@@ -269,7 +381,8 @@ function AdminDashboard() {
             title="Total Bookings" 
             value={formatNumber(stats.totalBookings)}
             variant="info"
-            subText="all time"
+            subValue={stats.recentBookings > 0 ? `${Math.round((stats.recentBookings / stats.totalBookings) * 100)}%` : '0%'} 
+            subText="recent bookings"
           />
         </Col>
         <Col md={6} lg={3}>
@@ -278,17 +391,59 @@ function AdminDashboard() {
             title="Total Revenue" 
             value={formatCurrency(stats.totalRevenue)}
             variant="warning"
-            subValue={stats.revenueGrowth > 0 ? `+${stats.revenueGrowth}%` : `${stats.revenueGrowth}%`} 
+            subValue={stats.revenueGrowth.toString()} 
             subText="vs last month"
           />
         </Col>
       </Row>
 
+      {/* Additional Stats Row */}
+      <Row className="mb-4 g-3 mx-0 px-3">
+        <Col md={6} lg={3}>
+          <StatCard 
+            icon={Building} 
+            title="Active Theaters" 
+            value={formatNumber(stats.activeTheaters)}
+            variant="secondary"
+            subValue={stats.activeTheaters > 0 ? `${Math.round((stats.activeTheaters / stats.totalTheaters) * 100)}%` : '0%'} 
+            subText="of total theaters"
+          />
+        </Col>
+        <Col md={6} lg={3}>
+          <StatCard 
+            icon={Star} 
+            title="Total Reviews" 
+            value={formatNumber(stats.totalReviews)}
+            variant="danger"
+            subValue={stats.averageRating.toString()} 
+            subText="average rating"
+          />
+        </Col>
+        <Col md={6} lg={3}>
+          <StatCard 
+            icon={Percent} 
+            title="Occupancy Rate" 
+            value={formatPercent(stats.occupancyRate)}
+            variant="primary"
+            subText="average across all theaters"
+          />
+        </Col>
+        <Col md={6} lg={3}>
+          <StatCard 
+            icon={Calendar} 
+            title="Upcoming Movies" 
+            value={formatNumber(stats.upcomingMoviesCount)}
+            variant="success"
+            subText="scheduled for release"
+          />
+        </Col>
+      </Row>
+
       {/* Content Section */}
-      <Row className="g-3">
+      <Row className="g-3 mx-0 px-3">
         {/* Trending Movies */}
         <Col lg={4}>
-          <Card className="h-100">
+          <Card className="h-100 dashboard-card">
             <Card.Header className="d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Trending Movies</h5>
               <TrendingUp size={18} className="text-primary" />
@@ -297,7 +452,7 @@ function AdminDashboard() {
               {trendingMovies && trendingMovies.length > 0 ? (
                 <div className="p-3">
                   {trendingMovies.map((movie, index) => (
-                    <MovieListItem key={movie.id} movie={movie} index={index} />
+                    <MovieListItem key={movie.id || index} movie={movie} index={index} />
                   ))}
                 </div>
               ) : (
@@ -311,7 +466,7 @@ function AdminDashboard() {
 
         {/* Upcoming Movies */}
         <Col lg={4}>
-          <Card className="h-100">
+          <Card className="h-100 dashboard-card">
             <Card.Header className="d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Upcoming Releases</h5>
               <Calendar size={18} className="text-primary" />
@@ -320,7 +475,7 @@ function AdminDashboard() {
               {upcomingMovies && upcomingMovies.length > 0 ? (
                 <div className="p-3">
                   {upcomingMovies.map((movie, index) => (
-                    <MovieListItem key={movie.id} movie={movie} index={index} />
+                    <MovieListItem key={movie.id || index} movie={movie} index={index} />
                   ))}
                 </div>
               ) : (
@@ -332,45 +487,69 @@ function AdminDashboard() {
           </Card>
         </Col>
 
-        {/* Quick Stats */}
+        {/* Booking Status */}
         <Col lg={4}>
-          <Card className="h-100">
+          <Card className="h-100 dashboard-card">
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Quick Stats</h5>
+              <h5 className="mb-0">Booking Status</h5>
               <Activity size={18} className="text-primary" />
             </Card.Header>
             <Card.Body>
               <div className="progress-stats">
-                <div className="mb-3">
-                  <div className="d-flex justify-content-between mb-1">
-                    <span className="fw-medium">Theater Managers</span>
-                    <span>{formatNumber(theaterManagers?.length || 0)}</span>
+                <div className="mb-4">
+                  <div className="d-flex justify-content-between mb-1 align-items-center">
+                    <div className="d-flex align-items-center">
+                      <div className="status-indicator bg-success"></div>
+                      <span className="fw-medium">Confirmed Bookings</span>
+                    </div>
+                    <span>{formatNumber(bookingStats.totalConfirmed)}</span>
                   </div>
-                  <ProgressBar variant="primary" now={Math.min(100, ((theaterManagers?.length || 0) / 50) * 100)} />
+                  <ProgressBar 
+                    variant="success" 
+                    now={Math.min(100, (bookingStats.totalConfirmed / (stats.totalBookings || 1)) * 100)} 
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <div className="d-flex justify-content-between mb-1 align-items-center">
+                    <div className="d-flex align-items-center">
+                      <div className="status-indicator bg-danger"></div>
+                      <span className="fw-medium">Cancelled Bookings</span>
+                    </div>
+                    <span>{formatNumber(bookingStats.totalCancelled)}</span>
+                  </div>
+                  <ProgressBar 
+                    variant="danger" 
+                    now={Math.min(100, (bookingStats.totalCancelled / (stats.totalBookings || 1)) * 100)} 
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <div className="d-flex justify-content-between mb-1 align-items-center">
+                    <div className="d-flex align-items-center">
+                      <div className="status-indicator bg-warning"></div>
+                      <span className="fw-medium">Pending Refunds</span>
+                    </div>
+                    <span>{formatNumber(bookingStats.pendingRefunds)}</span>
+                  </div>
+                  <ProgressBar 
+                    variant="warning" 
+                    now={Math.min(100, (bookingStats.pendingRefunds / (bookingStats.totalCancelled || 1)) * 100)} 
+                  />
                 </div>
 
                 <div className="mb-3">
-                  <div className="d-flex justify-content-between mb-1">
-                    <span className="fw-medium">Registered Customers</span>
-                    <span>{formatNumber(customers?.length || 0)}</span>
+                  <div className="d-flex justify-content-between mb-1 align-items-center">
+                    <div className="d-flex align-items-center">
+                      <div className="status-indicator bg-info"></div>
+                      <span className="fw-medium">New User Registrations</span>
+                    </div>
+                    <span>{formatNumber(stats.newUsers)}</span>
                   </div>
-                  <ProgressBar variant="success" now={Math.min(100, ((customers?.length || 0) / 1000) * 100)} />
-                </div>
-
-                <div className="mb-3">
-                  <div className="d-flex justify-content-between mb-1">
-                    <span className="fw-medium">Upcoming Movies</span>
-                    <span>{formatNumber(stats.upcomingMoviesCount)}</span>
-                  </div>
-                  <ProgressBar variant="warning" now={Math.min(100, (stats.upcomingMoviesCount / 20) * 100)} />
-                </div>
-
-                <div className="mb-3">
-                  <div className="d-flex justify-content-between mb-1">
-                    <span className="fw-medium">Recent Bookings (last 30 days)</span>
-                    <span>{formatNumber(stats.recentBookings)}</span>
-                  </div>
-                  <ProgressBar variant="info" now={Math.min(100, (stats.recentBookings / 500) * 100)} />
+                  <ProgressBar 
+                    variant="info" 
+                    now={Math.min(100, (stats.newUsers / (stats.totalUsers || 1)) * 100)} 
+                  />
                 </div>
               </div>
             </Card.Body>
@@ -379,34 +558,36 @@ function AdminDashboard() {
       </Row>
 
       {/* Analytics Section */}
-      <Row className="mt-4 g-3">
+      <Row className="mt-4 g-3 mx-0 px-3 mb-4">
         {/* Monthly Revenue Chart */}
         <Col lg={6}>
-          <Card>
+          <Card className="dashboard-card">
             <Card.Header className="d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Monthly Revenue</h5>
               <BarChart2 size={18} className="text-primary" />
             </Card.Header>
             <Card.Body className="d-flex justify-content-center align-items-center chart-placeholder">
-              {bookingAnalytics?.monthlyRevenue ? (
-                // Display real chart if data is available
+              {revenueData.length > 0 ? (
                 <div className="w-100 h-100">
-                  {/* Chart component would go here */}
-                  <div className="text-center text-muted">
-                    <BarChart2 size={48} className="mb-3 text-primary" />
-                    <p>Monthly revenue data is available</p>
-                    <small>
-                      Last Month: {formatCurrency(bookingAnalytics.monthlyRevenue?.lastMonth || 0)}, 
-                      Growth: {(bookingAnalytics.monthlyRevenue?.growth || 0).toFixed(1)}%
-                    </small>
+                  <div className="revenue-chart">
+                    {revenueData.map((item, index) => (
+                      <div key={index} className="revenue-chart-column">
+                        <div className="revenue-chart-bar" 
+                             style={{ 
+                               height: `${(item.revenue / Math.max(...revenueData.map(d => d.revenue))) * 100}%` 
+                             }}>
+                          <span className="revenue-value">{formatCurrency(item.revenue)}</span>
+                        </div>
+                        <div className="revenue-month">{item.month}</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ) : (
-                // Placeholder if no data is available
                 <div className="text-center text-muted">
-                  <PieChart size={48} className="mb-3" />
+                  <BarChart2 size={48} className="mb-3" />
                   <p>Revenue analytics chart would be displayed here</p>
-                  <small>Connect a real data source for visualization</small>
+                  <small>No monthly revenue data available at this time</small>
                 </div>
               )}
             </Card.Body>
@@ -414,11 +595,11 @@ function AdminDashboard() {
         </Col>
 
         {/* Top Performing Theaters */}
-        <Col lg={6}>
-          <Card>
+        {/* <Col lg={6}>
+          <Card className="dashboard-card">
             <Card.Header className="d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Top Performing Theaters</h5>
-              <BarChart2 size={18} className="text-primary" />
+              <Award size={18} className="text-primary" />
             </Card.Header>
             <Card.Body className="p-0">
               <Table hover responsive className="theater-table mb-0">
@@ -432,8 +613,8 @@ function AdminDashboard() {
                 </thead>
                 <tbody>
                   {topTheaters.length > 0 ? (
-                    topTheaters.map((theater) => (
-                      <tr key={theater.id}>
+                    topTheaters.map((theater, index) => (
+                      <tr key={theater.id || index}>
                         <td>{theater.name}</td>
                         <td>{theater.city}</td>
                         <td>{formatNumber(theater.bookings)}</td>
@@ -447,6 +628,105 @@ function AdminDashboard() {
                   )}
                 </tbody>
               </Table>
+            </Card.Body>
+          </Card>
+        </Col> */}
+<Col lg={6}>
+  <Card className="dashboard-card">
+    <Card.Header className="d-flex justify-content-between align-items-center">
+      <h5 className="mb-0">Top Performing Theaters</h5>
+      <Award size={18} className="text-primary" />
+    </Card.Header>
+    <Card.Body className="p-0">
+      <Table hover responsive className="theater-table mb-0">
+        <thead>
+          <tr>
+            <th>Theater</th>
+            <th>City</th>
+            <th>Bookings</th>
+            <th>Revenue</th>
+          </tr>
+        </thead>
+        <tbody>
+          {topTheaters.length > 0 ? (
+            topTheaters.map((theater, index) => (
+              <tr key={theater.id || index}>
+                <td>{theater.name || 'N/A'}</td>
+                <td>{theater.city || 'N/A'}</td>
+                <td>{theater.bookings ? formatNumber(theater.bookings) : 'N/A'}</td>
+                <td>{theater.revenue ? formatCurrency(theater.revenue) : 'N/A'}</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="4" className="text-center">No theater data available</td>
+            </tr>
+          )}
+        </tbody>
+      </Table>
+    </Card.Body>
+  </Card>
+</Col>
+      </Row>
+
+      {/* Activity Summary */}
+      <Row className="mt-2 g-3 mx-0 px-3 mb-4">
+        <Col>
+          <Card className="dashboard-card">
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <h5 className="mb-0">Recent Activity Summary</h5>
+              <Clock size={18} className="text-primary" />
+            </Card.Header>
+            <Card.Body className="p-0">
+              <div className="activity-summary">
+                <div className="activity-item d-flex align-items-center">
+                  <div className="activity-icon bg-success-light text-success">
+                    <UserPlus size={18} />
+                  </div>
+                  <div className="ms-3">
+                    <h6 className="mb-1">New User Registrations</h6>
+                    <p className="mb-0 text-muted">
+                      {formatNumber(stats.newUsers)} new users registered in the last 30 days.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="activity-item d-flex align-items-center">
+                  <div className="activity-icon bg-primary-light text-primary">
+                    <Film size={18} />
+                  </div>
+                  <div className="ms-3">
+                    <h6 className="mb-1">New Movies Added</h6>
+                    <p className="mb-0 text-muted">
+                      {formatNumber(stats.newMovies)} new movies added in the last 30 days.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="activity-item d-flex align-items-center">
+                  <div className="activity-icon bg-warning-light text-warning">
+                    <Star size={18} />
+                  </div>
+                  <div className="ms-3">
+                    <h6 className="mb-1">Recent Reviews</h6>
+                    <p className="mb-0 text-muted">
+                      Average movie rating is {stats.averageRating} stars from {formatNumber(stats.totalReviews)} reviews.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="activity-item d-flex align-items-center">
+                  <div className="activity-icon bg-danger-light text-danger">
+                    <AlertOctagon size={18} />
+                  </div>
+                  <div className="ms-3">
+                    <h6 className="mb-1">Pending Actions</h6>
+                    <p className="mb-0 text-muted">
+                      {formatNumber(bookingStats.pendingRefunds)} refunds pending processing.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </Card.Body>
           </Card>
         </Col>
