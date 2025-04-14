@@ -1,13 +1,14 @@
 package com.moviebuff.moviebuff_backend.service.movie;
 
-import com.moviebuff.moviebuff_backend.dto.request.ActorRequest;
-import com.moviebuff.moviebuff_backend.dto.response.ActorResponse;
-import com.moviebuff.moviebuff_backend.model.movie.actors;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-import java.util.Map;
+import com.moviebuff.moviebuff_backend.dto.request.ActorRequest;
+import com.moviebuff.moviebuff_backend.dto.response.ActorResponse;
+import com.moviebuff.moviebuff_backend.model.movie.actors;
 
 public interface IActorService {
     ActorResponse createActor(ActorRequest request);
@@ -22,4 +23,5 @@ public interface IActorService {
     Map<String, Object> getActorStatistics(String id);
     ActorResponse toggleProfileStatus(String id);
     List<ActorResponse> getTrendingActors(int limit);
+    List<ActorResponse> getRandomActors(int limit, String excludeId);
 }

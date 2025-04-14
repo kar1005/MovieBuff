@@ -1,0 +1,309 @@
+/* TheaterBooking.css */
+
+.theater-booking-container {
+  max-width: 1024px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Header */
+.theater-booking-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.header-main {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.header-main h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  color: #111827;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #4b5563;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-right: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.back-button:hover {
+  background-color: #f3f4f6;
+}
+
+.header-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.separator {
+  color: #9ca3af;
+}
+
+/* Status Alerts */
+.status-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  margin: 12px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.status-alert.warning {
+  background-color: #fff7ed;
+  color: #9a3412;
+  border-left: 4px solid #f97316;
+}
+
+.status-alert.success {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border-left: 4px solid #10b981;
+}
+
+.status-alert.error {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border-left: 4px solid #ef4444;
+}
+
+/* Screen */
+.theater-layout-container {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.theater-screen {
+  width: 85%;
+  max-width: 700px;
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.screen-curve {
+  width: 100%;
+  height: 12px;
+  background-color: #d1d5db;
+  border-radius: 100% 100% 0 0 / 300% 300% 0 0;
+  transform: perspective(100px) rotateX(-5deg);
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.screen-label {
+  width: 100%;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e5e7eb;
+  color: #4b5563;
+  font-size: 12px;
+  letter-spacing: 2px;
+  font-weight: 600;
+}
+
+/* Legend */
+.seat-legend {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #4b5563;
+}
+
+.legend-box {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.legend-box.available {
+  background-color: #9333ea; /* Default color, will be overridden by category color */
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.legend-box.selected {
+  background-color: #2563eb;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.legend-box.booked {
+  background-color: #6b7280;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.legend-box.blocked {
+  background-color: #f59e0b;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Category List */
+.category-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.category-badge {
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Seat Types Legend */
+.seat-types-container {
+  margin-bottom: 20px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.toggle-info-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px;
+  background-color: #f3f4f6;
+  border: none;
+  border-radius: 6px;
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.toggle-info-btn:hover {
+  background-color: #e5e7eb;
+}
+
+.toggle-info-btn.active {
+  background-color: #e5e7eb;
+}
+
+.toggle-info-btn .rotated {
+  transform: rotate(180deg);
+}
+
+.seat-types-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px;
+  background-color: #f9fafb;
+  border-radius: 6px;
+}
+
+/* Grid Layout */
+.theater-grid-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+
+.theater-grid {
+  min-width: fit-content;
+  margin: 0 auto;
+}
+
+.grid-columns-header {
+  display: flex;
+  margin-bottom: 6px;
+}
+
+.grid-column-label {
+  width: 40px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+  margin: 0 1px;
+}
+
+.grid-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.grid-row-label {
+  width: 30px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.grid-cell {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e5e7eb;
+  margin: 0 1px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: default;
+  position: relative;
+}
+
+.grid-cell.empty {
+  border: none;
+}
+
+.grid-cell.seat {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.grid-cell.seat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}

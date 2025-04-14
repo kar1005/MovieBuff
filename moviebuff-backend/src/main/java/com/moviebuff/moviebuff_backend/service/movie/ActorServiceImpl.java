@@ -1,32 +1,36 @@
 package com.moviebuff.moviebuff_backend.service.movie;
 
-import com.cloudinary.Cloudinary;
-import com.moviebuff.moviebuff_backend.dto.request.ActorRequest;
-import com.moviebuff.moviebuff_backend.dto.response.ActorResponse;
-import com.moviebuff.moviebuff_backend.model.movie.actors;
-import com.moviebuff.moviebuff_backend.repository.interfaces.movie.ActorRepository;
-import com.moviebuff.moviebuff_backend.exception.ResourceNotFoundException;
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDate;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.moviebuff.moviebuff_backend.dto.request.ActorRequest;
+import com.moviebuff.moviebuff_backend.dto.response.ActorResponse;
+import com.moviebuff.moviebuff_backend.exception.ResourceNotFoundException;
+import com.moviebuff.moviebuff_backend.model.movie.actors;
+import com.moviebuff.moviebuff_backend.repository.interfaces.movie.ActorRepository;
 
-import java.time.LocalDate;
-import java.util.*;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -372,5 +376,48 @@ public void deleteActor(String id) {
                 return ratingScore * recencyWeight;
             })
             .sum();
+    }
+
+    // Get random actors method implementation for IActorService
+    @Override
+    public List<ActorResponse> getRandomActors(int limit, String excludeId) {
+        // First try to get actors from trending list
+        List<ActorResponse> actors = getTrendingActors(limit * 2);
+        
+        // Filter out the excluded actor
+        if (excludeId != null) {
+            actors = actors.stream()
+                    .filter(actor -> !actor.getId().equals(excludeId))
+                    .collect(Collectors.toList());
+        }
+        
+        // If we don't have enough actors, get random ones
+        if (actors.size() < limit) {
+            // Get random page of actors
+            Pageable pageable = PageRequest.of(0, 20);
+            Page<actors> randomActors = actorRepository.findAll(pageable);
+            
+            // Convert to response and filter out already included actors
+            Set<String> existingIds = actors.stream()
+                    .map(ActorResponse::getId)
+                    .collect(Collectors.toSet());
+            
+            // Use the class's own mapToResponse method instead of actorMapper
+            List<ActorResponse> additionalActors = randomActors.getContent().stream()
+                    .filter(actor -> !existingIds.contains(actor.getId()) && 
+                            (excludeId == null || !actor.getId().equals(excludeId)))
+                    .map(this::mapToResponse)  // Fixed: use the existing mapToResponse method
+                    .collect(Collectors.toList());
+            
+            // Shuffle and add the required number of random actors
+            Collections.shuffle(additionalActors);
+            int remainingNeeded = Math.min(additionalActors.size(), limit - actors.size());
+            if (remainingNeeded > 0) {
+                actors.addAll(additionalActors.subList(0, remainingNeeded));
+            }
+        }
+        
+        // Return only the requested amount
+        return actors.subList(0, Math.min(actors.size(), limit));
     }
 }

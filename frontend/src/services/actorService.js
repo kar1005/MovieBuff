@@ -132,7 +132,28 @@ const actorService = {
         } catch (error) {
             throw error.response?.data || 'Failed to fetch trending actors';
         }
+    },
+    //getting random 5 actors
+    getRandomActors: async (limit = 5, excludeId = null) => {
+    try {
+        const params = new URLSearchParams({ limit });
+        if (excludeId) {
+            params.append('excludeId', excludeId);
+        }
+        
+        const response = await axiosInstance.get(`${BASE_URL}/random?${params}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching random actors:", error);
+        // Fallback to trending actors if the random endpoint fails
+        try {
+            const trending = await actorService.getTrendingActors(limit);
+            return trending.filter(actor => actor.id !== excludeId);
+        } catch (fallbackError) {
+            throw error.response?.data || 'Failed to fetch random actors';
+        }
     }
+}
 };
 
 export default actorService;

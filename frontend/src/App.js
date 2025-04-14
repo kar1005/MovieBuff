@@ -29,6 +29,7 @@ function App() {
       <ToastContainer position="top-right" autoClose={3000} />
       <Router>
         <Routes>
+        <Route path="/" element={<Navigate to="/customer" replace />} />
           {/* Common Authentication Routes */}
           <Route path="/login" element={<Authenticate />} />
           <Route path="/register" element={<Register />} />
