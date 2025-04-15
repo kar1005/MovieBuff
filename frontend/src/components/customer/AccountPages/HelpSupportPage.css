@@ -1,7 +1,9 @@
 /* src/components/customer/HelpSupport/HelpSupportPage.css */
 
 .help-support-page {
-    background-color: #1a1f2d;
+    padding: 2rem 0;
+    min-height: calc(100vh - 65px);
+    background-color: #161b29;
     color: #e2e8f0;
   }
   
@@ -79,22 +81,49 @@
     text-decoration: underline;
   }
   
+  /* Content Card Styles */
+  .content-card {
+    background-color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    color: #333; /* Ensuring dark text on white background */
+  }
+  
+  .content-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 1rem 1.5rem;
+  }
+  
+  .content-header h5 {
+    color: #333;
+    font-weight: 600;
+    margin: 0;
+  }
+  
+  .content-card .card-body {
+    padding: 1.5rem;
+  }
+  
   /* FAQ Accordion */
   .faq-accordion {
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
   }
   
   .faq-accordion .accordion-item {
-    background-color: #0f172a;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
     margin-bottom: 10px;
     overflow: hidden;
     border-radius: 8px;
   }
   
   .faq-accordion .accordion-button {
-    background-color: #1e293b;
-    color: #e2e8f0;
+    background-color: #f8f9fa;
+    color: #333;
     padding: 1rem 1.5rem;
     font-weight: 500;
     position: relative;
@@ -102,18 +131,18 @@
   }
   
   .faq-accordion .accordion-button:not(.collapsed) {
-    background-color: #2d3748;
-    color: #ffffff;
+    background-color: #e9ecef;
+    color: #333;
     box-shadow: none;
   }
   
   .faq-accordion .accordion-button::after {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23e2e8f0'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23333'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
   }
   
   .faq-accordion .accordion-body {
-    background-color: #0f172a;
-    color: #cbd5e1;
+    background-color: #fff;
+    color: #4a5568;
     padding: 1.5rem;
     line-height: 1.6;
   }
@@ -124,67 +153,68 @@
     margin-bottom: 0;
   }
   
-  /* Contact Form */
-  .contact-form-container {
-    background-color: #0f172a;
-    padding: 2rem;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    height: 100%;
-  }
-  
-  .contact-form-container h3,
-  .help-info-container h3 {
+  /* Section Titles */
+  .section-title {
     color: #e2e8f0;
+    font-size: 1.8rem;
     font-weight: 600;
     position: relative;
-    padding-bottom: 12px;
+    padding-bottom: 0.5rem;
   }
   
-  .contact-form-container h3::after,
-  .help-info-container h3::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    height: 3px;
-    width: 50px;
-    background-color: #3b82f6;
+  .card-body .section-title {
+    color: #2d3748;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   }
   
+  /* Form Styles */
   .form-control {
-    background-color: #1e293b;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #e2e8f0;
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #333;
+    border-radius: 8px;
     padding: 0.75rem 1rem;
   }
   
   .form-control:focus {
-    background-color: #1e293b;
-    color: #e2e8f0;
+    background-color: #fff;
+    color: #333;
     box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
     border-color: #3b82f6;
   }
   
   .form-label {
-    color: #cbd5e1;
+    color: #4a5568;
     font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+  
+  .save-button {
+    background-color: #3b82f6;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1.5rem;
+    transition: all 0.2s ease;
+  }
+  
+  .save-button:hover {
+    background-color: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
   
   /* Additional Resources */
-  .help-info-container {
-    background-color: #0f172a;
-    padding: 2rem;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    height: 100%;
-  }
-  
   .additional-resource-card {
-    background-color: #1e293b;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: #f8f9fa;
+    border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 8px;
     transition: all 0.2s ease;
+    margin-bottom: 1.5rem;
   }
   
   .additional-resource-card:hover {
@@ -205,18 +235,18 @@
   }
   
   .additional-resource-card .card-title {
-    color: #e2e8f0;
+    color: #333;
     font-size: 1.2rem;
     margin-bottom: 0.5rem;
   }
   
   .additional-resource-card .card-text {
-    color: #94a3b8;
+    color: #4a5568;
     font-size: 0.95rem;
   }
   
   .reach-us-info p {
-    color: #cbd5e1;
+    color: #4a5568;
     line-height: 1.6;
   }
   
@@ -229,7 +259,7 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background-color: #1e293b;
+    background-color: rgba(59, 130, 246, 0.1);
     color: #3b82f6;
     display: flex;
     align-items: center;
@@ -253,14 +283,5 @@
   @media (max-width: 767.98px) {
     .help-support-header {
       padding: 2rem 0;
-    }
-    
-    .contact-form-container,
-    .help-info-container {
-      margin-bottom: 2rem;
-    }
-    
-    .help-info-container {
-      height: auto;
     }
   }

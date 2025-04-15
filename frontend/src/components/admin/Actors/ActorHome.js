@@ -11,7 +11,8 @@ import {
   Button, 
   Badge, 
   Card,
-  Alert
+  Alert,
+  Modal
 } from 'react-bootstrap';
 import { 
   Plus, 
@@ -22,7 +23,8 @@ import {
   Star,
   Globe,
   Calendar,
-  Users
+  Users,
+  AlertTriangle
 } from 'lucide-react';
 import { 
   fetchActors, 
@@ -32,7 +34,7 @@ import {
   selectActorError
 } from '../../../redux/slices/actorSlice';
 import './ActorHome.css';
-
+// Component with inline styles to avoid CSS conflicts
 function ActorHome() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
@@ -54,6 +56,99 @@ function ActorHome() {
       languages: [],
       hasFullProfile: null
     });
+
+    // Styles object - keeps all styles in JavaScript to avoid CSS conflicts
+    const styles = {
+        actorsContainer: {
+            padding: 0,
+            marginBottom: '2rem'
+        },
+        actorsTable: {
+            fontSize: '0.95rem'
+        },
+        tableHeader: {
+            fontWeight: 600,
+            whiteSpace: 'nowrap'
+        },
+        actorImageContainer: {
+            width: '48px',
+            height: '48px',
+            borderRadius: '50%',
+            overflow: 'hidden',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            position: 'relative',
+            backgroundColor: '#f8f9fa',
+            aspectRatio: '1/1'
+        },
+        actorImage: {
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            borderRadius: '50%',
+            position: 'absolute',
+            top: 0,
+            left: 0
+        },
+        actorImagePlaceholder: {
+            width: '48px',
+            height: '48px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#e9ecef',
+            color: '#6c757d',
+            borderRadius: '50%',
+            flexShrink: 0
+        },
+        statusBadge: {
+            fontSize: '0.8rem',
+            padding: '0.35em 0.65em',
+            fontWeight: 500
+        },
+        searchContainer: {
+            maxWidth: '300px',
+            position: 'relative'
+        },
+        searchIcon: {
+            position: 'absolute',
+            left: '10px',
+            top: '50%',
+            transform: 'translateY(-50%)'
+        },
+        searchInput: {
+            paddingLeft: '2rem'
+        },
+        deleteModalImage: {
+            width: '80px',
+            height: '80px',
+            borderRadius: '50%',
+            objectFit: 'cover',
+            marginBottom: '1rem',
+            border: '2px solid #dc3545',
+            opacity: 0.8
+        },
+        deleteActorPreview: {
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            marginBottom: '1.5rem'
+        },
+        paginationSection: {
+            backgroundColor: '#f8f9fa',
+            margin: '0 -1.25rem -1.25rem',
+            padding: '1rem 1.25rem',
+            borderRadius: '0 0 0.375rem 0.375rem'
+        },
+        paginationInfo: {
+            color: '#6c757d'
+        },
+        clickableRow: {
+            cursor: 'pointer'
+        }
+    };
 
     // Fetch actors on mount and when filters/pagination change
     useEffect(() => {
@@ -99,6 +194,11 @@ function ActorHome() {
         navigate(`/admin/actors/edit/${actorId}`);
     };
     
+    // Handle view actor details
+    const handleViewActor = (actorId) => {
+        navigate(`/admin/actors/view/${actorId}`);
+    };
+    
     // Handle delete click
     const handleDeleteClick = (actor, e) => {
         e.stopPropagation();
@@ -118,6 +218,12 @@ function ActorHome() {
                 console.error('Failed to delete actor:', error);
             }
         }
+    };
+
+    // Cancel delete
+    const cancelDelete = () => {
+        setShowDeleteModal(false);
+        setActorToDelete(null);
     };
 
     // Calculate average rating from filmography
@@ -146,7 +252,7 @@ function ActorHome() {
     // Render profile status badge
     const renderProfileStatus = (isProfile) => {
         return (
-            <Badge bg={isProfile ? 'success' : 'warning'} className="status-badge">
+            <Badge bg={isProfile ? 'success' : 'warning'} style={styles.statusBadge}>
                 {isProfile ? 'Complete' : 'Basic'}
             </Badge>
         );
@@ -155,7 +261,7 @@ function ActorHome() {
     if (loading && !actors?.content?.length) {
         return (
             <Container className="py-5 text-center">
-                <Spinner animation="border" role="status" variant="primary">
+                <Spinner animation="border" role="status" variant="primary" style={{ width: '3rem', height: '3rem' }}>
                     <span className="visually-hidden">Loading...</span>
                 </Spinner>
             </Container>
@@ -178,7 +284,7 @@ function ActorHome() {
     }
 
     return (
-        <Container fluid className="actors-container py-4">
+        <Container fluid style={styles.actorsContainer} className="py-4">
             <Card className="shadow-sm border-0">
                 <Card.Body>
                     <Row className="mb-4 align-items-center">
@@ -193,14 +299,14 @@ function ActorHome() {
                         </Col>
                         <Col xs={12} md={6}>
                             <div className="d-flex flex-column flex-md-row gap-2 mt-3 mt-md-0 justify-content-md-end">
-                                <div className="search-container position-relative flex-grow-1 me-md-2">
-                                    <Search className="search-icon position-absolute" size={18} style={{ left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+                                <div style={styles.searchContainer} className="flex-grow-1 me-md-2">
+                                    <Search style={styles.searchIcon} size={18} />
                                     <Form.Control
                                         type="text"
                                         placeholder="Search actors..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="ps-4"
+                                        style={styles.searchInput}
                                     />
                                 </div>
                                 <Button 
@@ -216,16 +322,16 @@ function ActorHome() {
                     </Row>
 
                     <div className="table-responsive">
-                        <Table hover className="actors-table align-middle mb-0">
+                        <Table hover style={styles.actorsTable} className="align-middle mb-0">
                             <thead className="table-light">
                                 <tr>
-                                    <th>Actor</th>
-                                    <th><Globe size={16} className="me-1" /> Languages</th>
-                                    <th><Film size={16} className="me-1" /> Filmography</th>
-                                    <th><Star size={16} className="me-1" /> Rating</th>
-                                    <th><Calendar size={16} className="me-1" /> Career Start</th>
-                                    <th>Status</th>
-                                    <th className="text-end">Actions</th>
+                                    <th style={styles.tableHeader}>Actor</th>
+                                    <th style={styles.tableHeader}><Globe size={16} className="me-1" /> Languages</th>
+                                    <th style={styles.tableHeader}><Film size={16} className="me-1" /> Filmography</th>
+                                    <th style={styles.tableHeader}><Star size={16} className="me-1" /> Rating</th>
+                                    <th style={styles.tableHeader}><Calendar size={16} className="me-1" /> Career Start</th>
+                                    <th style={styles.tableHeader}>Status</th>
+                                    <th style={styles.tableHeader} className="text-end">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -237,15 +343,16 @@ function ActorHome() {
                                     </tr>
                                 ) : (
                                     filteredActors?.map((actor) => (
-                                        <tr key={actor.id}>
+                                        <tr key={actor.id} onClick={() => handleViewActor(actor.id)} style={styles.clickableRow}>
                                             <td>
                                                 <div className="d-flex align-items-center">
                                                     {actor.imageUrl ? (
-                                                        <div className="actor-image-container me-3">
+                                                        <div style={styles.actorImageContainer} className="me-3">
                                                             <img 
                                                                 src={actor.imageUrl}
                                                                 alt={`${actor.name}`}
-                                                                className="actor-image shadow-sm"
+                                                                style={styles.actorImage}
+                                                                className="shadow-sm"
                                                                 onError={(e) => {
                                                                     e.target.onerror = null;
                                                                     e.target.src = '/default-avatar.png';
@@ -253,7 +360,7 @@ function ActorHome() {
                                                             />
                                                         </div>
                                                     ) : (
-                                                        <div className="actor-image-placeholder me-3">
+                                                        <div style={styles.actorImagePlaceholder} className="me-3">
                                                             <Users size={24} />
                                                         </div>
                                                     )}
@@ -280,12 +387,15 @@ function ActorHome() {
                                             </td>
                                             <td>{actor.careerStartDate ? new Date(actor.careerStartDate).getFullYear() : 'N/A'}</td>
                                             <td>{renderProfileStatus(actor.isProfile)}</td>
-                                            <td>
+                                            <td onClick={(e) => e.stopPropagation()}>
                                                 <div className="d-flex justify-content-end gap-2">
                                                     <Button 
                                                         variant="outline-primary"
                                                         size="sm"
-                                                        onClick={() => handleEditActor(actor.id)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleEditActor(actor.id);
+                                                        }}
                                                         className="d-flex align-items-center"
                                                     >
                                                         <Edit size={16} className="me-1" />
@@ -309,78 +419,128 @@ function ActorHome() {
                         </Table>
                     </div>
 
-                    {/* Pagination - could be added here similar to the current ActorHome component */}
-                    {/* Enhanced Pagination */}
-{actors?.totalPages > 1 && (
-    <div className="pagination-section mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
-        <div className="pagination-info text-muted small">
-            Showing page {currentPage + 1} of {actors.totalPages} 
-            ({Math.min((currentPage + 1) * itemsPerPage, actors.totalElements)} of {actors.totalElements} actors)
-        </div>
-        
-        <ul className="pagination pagination-sm mb-0">
-            <li className={`page-item ${currentPage === 0 ? 'disabled' : ''}`}>
-                <button 
-                    className="page-link" 
-                    onClick={() => setCurrentPage(0)}
-                    disabled={currentPage === 0}
-                >
-                    First
-                </button>
-            </li>
-            <li className={`page-item ${currentPage === 0 ? 'disabled' : ''}`}>
-                <button 
-                    className="page-link" 
-                    onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
-                    disabled={currentPage === 0}
-                >
-                    <span aria-hidden="true">&laquo;</span>
-                </button>
-            </li>
-            
-            {/* Numbered Pages */}
-            {[...Array(actors.totalPages).keys()].slice(
-                Math.max(0, currentPage - 2),
-                Math.min(actors.totalPages, currentPage + 3)
-            ).map(page => (
-                <li 
-                    key={page} 
-                    className={`page-item ${currentPage === page ? 'active' : ''}`}
-                >
-                    <button 
-                        className="page-link" 
-                        onClick={() => setCurrentPage(page)}
-                    >
-                        {page + 1}
-                    </button>
-                </li>
-            ))}
-            
-            <li className={`page-item ${currentPage >= actors.totalPages - 1 ? 'disabled' : ''}`}>
-                <button 
-                    className="page-link" 
-                    onClick={() => setCurrentPage(prev => Math.min(actors.totalPages - 1, prev + 1))}
-                    disabled={currentPage >= actors.totalPages - 1}
-                >
-                    <span aria-hidden="true">&raquo;</span>
-                </button>
-            </li>
-            <li className={`page-item ${currentPage >= actors.totalPages - 1 ? 'disabled' : ''}`}>
-                <button 
-                    className="page-link" 
-                    onClick={() => setCurrentPage(actors.totalPages - 1)}
-                    disabled={currentPage >= actors.totalPages - 1}
-                >
-                    Last
-                </button>
-            </li>
-        </ul>
-    </div>
-)}
+                    {/* Pagination */}
+                    {actors?.totalPages > 1 && (
+                        <div style={styles.paginationSection} className="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+                            <div style={styles.paginationInfo} className="small">
+                                Showing page {currentPage + 1} of {actors.totalPages} 
+                                ({Math.min((currentPage + 1) * itemsPerPage, actors.totalElements)} of {actors.totalElements} actors)
+                            </div>
+                            
+                            <ul className="pagination pagination-sm mb-0">
+                                <li className={`page-item ${currentPage === 0 ? 'disabled' : ''}`}>
+                                    <button 
+                                        className="page-link" 
+                                        onClick={() => setCurrentPage(0)}
+                                        disabled={currentPage === 0}
+                                    >
+                                        First
+                                    </button>
+                                </li>
+                                <li className={`page-item ${currentPage === 0 ? 'disabled' : ''}`}>
+                                    <button 
+                                        className="page-link" 
+                                        onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                                        disabled={currentPage === 0}
+                                    >
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </button>
+                                </li>
+                                
+                                {/* Numbered Pages */}
+                                {[...Array(actors.totalPages).keys()].slice(
+                                    Math.max(0, currentPage - 2),
+                                    Math.min(actors.totalPages, currentPage + 3)
+                                ).map(page => (
+                                    <li 
+                                        key={page} 
+                                        className={`page-item ${currentPage === page ? 'active' : ''}`}
+                                    >
+                                        <button 
+                                            className="page-link" 
+                                            onClick={() => setCurrentPage(page)}
+                                        >
+                                            {page + 1}
+                                        </button>
+                                    </li>
+                                ))}
+                                
+                                <li className={`page-item ${currentPage >= actors.totalPages - 1 ? 'disabled' : ''}`}>
+                                    <button 
+                                        className="page-link" 
+                                        onClick={() => setCurrentPage(prev => Math.min(actors.totalPages - 1, prev + 1))}
+                                        disabled={currentPage >= actors.totalPages - 1}
+                                    >
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </button>
+                                </li>
+                                <li className={`page-item ${currentPage >= actors.totalPages - 1 ? 'disabled' : ''}`}>
+                                    <button 
+                                        className="page-link" 
+                                        onClick={() => setCurrentPage(actors.totalPages - 1)}
+                                        disabled={currentPage >= actors.totalPages - 1}
+                                    >
+                                        Last
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    )}
                 </Card.Body>
             </Card>
 
-            {/* Delete Modal - Could be implemented similarly to current ActorHome component */}
+            {/* Delete Confirmation Modal */}
+            <Modal show={showDeleteModal} onHide={cancelDelete} centered className="delete-modal">
+                <Modal.Header closeButton>
+                    <Modal.Title className="text-danger">
+                        <AlertTriangle className="me-2" />
+                        Confirm Deletion
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {actorToDelete && (
+                        <>
+                            <div style={styles.deleteActorPreview}>
+                                {actorToDelete.imageUrl ? (
+                                    <img 
+                                        src={actorToDelete.imageUrl} 
+                                        alt={actorToDelete.name} 
+                                        style={styles.deleteModalImage}
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = '/default-avatar.png';
+                                        }}
+                                    />
+                                ) : (
+                                    <div style={styles.actorImagePlaceholder} className="mb-2">
+                                        <Users size={40} />
+                                    </div>
+                                )}
+                                <h5>{actorToDelete.name}</h5>
+                            </div>
+                            <p className="mb-0 text-center">
+                                Are you sure you want to delete this actor? 
+                                This action cannot be undone.
+                            </p>
+                            {actorToDelete.filmography && actorToDelete.filmography.length > 0 && (
+                                <Alert variant="warning" className="mt-3 mb-0">
+                                    <AlertTriangle size={16} className="me-2" />
+                                    This actor is associated with {actorToDelete.filmography.length} movies.
+                                    Deleting this record may affect movie cast listings.
+                                </Alert>
+                            )}
+                        </>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={cancelDelete}>
+                        Cancel
+                    </Button>
+                    <Button variant="danger" onClick={confirmDelete}>
+                        Delete Actor
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </Container>
     );
 }

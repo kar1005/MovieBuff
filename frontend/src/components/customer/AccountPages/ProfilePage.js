@@ -88,7 +88,6 @@ const CustomerProfilePage = () => {
         },
       });
       
-      console.log('User profile fetched successfully:', userData);
     } catch (error) {
       console.error('Error fetching user profile:', error);
       setStatusMessage({ 

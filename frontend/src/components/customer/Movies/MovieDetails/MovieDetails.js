@@ -1,25 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { useParams,useNavigate } from 'react-router-dom';
-import { Star, Clock, Calendar, Tag, Globe, Video, Share2 } from 'lucide-react';
-import movieService from './../../../../services/movieService';
-import actorService from './../../../../services/actorService';
+import { useParams, useNavigate } from 'react-router-dom';
+import { 
+  Star, 
+  Clock, 
+  Calendar, 
+  Tag, 
+  Globe, 
+  Video, 
+  Share2
+} from 'lucide-react';
+import movieService from '../../../../services/movieService';
+import actorService from '../../../../services/actorService';
+import MovieReviewSection from './MovieReviewSection';
 import './MovieDetails.css';
 
 const MovieDetails = () => {
+  const navigate = useNavigate();
   const { movieId } = useParams();
+  
   const [movie, setMovie] = useState(null);
   const [actors, setActors] = useState([]);
   const [statistics, setStatistics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
 
+  // Fetch movie data
   useEffect(() => {
     const fetchMovieData = async () => {
       try {
         setLoading(true);
         
-        // Fetch movie details using the movieService
+        // Fetch movie details
         const movieData = await movieService.getMovieById(movieId);
         setMovie(movieData);
         
@@ -42,42 +53,29 @@ const MovieDetails = () => {
     fetchMovieData();
   }, [movieId]);
 
-  if (loading) {
-    return <div className="loading-container">Loading movie details...</div>;
-  }
-
-  if (error) {
-    return <div className="error-container">Error: {error}</div>;
-  }
-
-  if (!movie) {
-    return <div className="error-container">Movie not found</div>;
-  }
-
-  // Format duration to hours and minutes
+  // Format helpers
   const formatDuration = (minutes) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${hours}h ${mins}min`;
   };
 
-  // Format date
   const formatReleaseDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
   const handleBookTickets = () => {
-    navigate('/customer/theaters/movie/'+movieId);
+    navigate(`/customer/theaters/movie/${movieId}`);
   };
 
   const handleWatchTrailer = () => {
-    if (movie.trailerUrl) {
+    if (movie?.trailerUrl) {
       window.open(movie.trailerUrl, '_blank');
     }
   };
 
-  const handleActorClick = (actorId) => () => {
+  const handleActorClick = (actorId) => {
     navigate(`/customer/actor/${actorId}`);
   };
 
@@ -89,11 +87,35 @@ const MovieDetails = () => {
         url: window.location.href,
       });
     } else {
-      // Fallback for browsers that don't support Web Share API
       navigator.clipboard.writeText(window.location.href);
       alert('Link copied to clipboard!');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="spinner"></div>
+        <span>Loading movie details...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="error-container">
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  if (!movie) {
+    return (
+      <div className="error-container">
+        <p>Movie not found</p>
+      </div>
+    );
+  }
 
   return (
     <div className="movie-details-container">
@@ -184,7 +206,7 @@ const MovieDetails = () => {
           <h2>Cast</h2>
           <div className="cast-list">
             {actors.map((actor) => (
-              <div key={actor.id} className="cast-member" onClick={handleActorClick(actor.id)}>
+              <div key={actor.id} className="cast-member" onClick={() => handleActorClick(actor.id)}>
                 <img 
                   src={actor.imageUrl || '/api/placeholder/120/120'} 
                   alt={actor.name} 
@@ -243,11 +265,7 @@ const MovieDetails = () => {
                 <button 
                   key={castMember.actorId} 
                   className="filmography-button"
-                  onClick={() => {
-                    // Example navigation, implement based on your routing setup
-                    // navigate(`/actors/${castMember.actorId}/filmography`)
-                    console.log(`View filmography for ${castMember.name}`);
-                  }}
+                  onClick={() => navigate(`/customer/actor/${castMember.actorId}`)}
                 >
                   View {castMember.name}'s Filmography
                 </button>
@@ -258,6 +276,9 @@ const MovieDetails = () => {
             </div>
           </section>
         )}
+        
+        {/* Include Movie Review Section component */}
+        <MovieReviewSection movieId={movieId} />
       </div>
     </div>
   );

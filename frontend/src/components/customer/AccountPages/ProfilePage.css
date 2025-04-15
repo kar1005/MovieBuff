@@ -1,4 +1,4 @@
-/* src/components/customer/ProfilePage/CustomerProfilePage.css */
+/* src/components/customer/ProfilePage/ProfilePage.css */
 
 .profile-page {
     padding: 2rem 0;
@@ -50,7 +50,7 @@
   }
   
   .profile-nav-card .nav-link {
-    color: #cbd5e1;
+    color: #4a5568; /* Darker color instead of light color */
     padding: 0.8rem 1rem;
     border-radius: 8px;
     margin-bottom: 0.25rem;
@@ -58,8 +58,8 @@
   }
   
   .profile-nav-card .nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-    color: #e2e8f0;
+    background-color: rgba(0, 0, 0, 0.05); /* Darker hover background */
+    color: #2d3748;
   }
   
   .profile-nav-card .nav-link.active {
@@ -74,22 +74,23 @@
   
   /* Content Card Styles */
   .content-card {
-    background-color: #1e263a;
+    background-color: #ffffff;
     border: none;
     border-radius: 12px;
     overflow: hidden;
     margin-bottom: 1.5rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    color: #333; /* Ensuring dark text on white background */
   }
   
   .content-header {
-    background-color: #2d3b5a;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     padding: 1rem 1.5rem;
   }
   
   .content-header h5 {
-    color: #e2e8f0;
+    color: #333;
     font-weight: 600;
     margin: 0;
   }
@@ -100,34 +101,34 @@
   
   /* Form Styles */
   .form-control {
-    background-color: #2d3b5a;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #e2e8f0;
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #333;
     border-radius: 8px;
     padding: 0.75rem 1rem;
   }
   
   .form-control:focus {
-    background-color: #344565;
+    background-color: #fff;
     border-color: #3b82f6;
     box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
-    color: #e2e8f0;
+    color: #333;
   }
   
   .form-label {
-    color: #cbd5e1;
+    color: #4a5568;
     font-weight: 500;
     margin-bottom: 0.5rem;
   }
   
   .section-title {
-    color: #e2e8f0;
+    color: #2d3748;
     font-size: 1.1rem;
     font-weight: 600;
     margin-top: 1.5rem;
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   }
   
   .save-button {
@@ -153,13 +154,17 @@
   }
   
   .password-rules h6 {
-    color: #e2e8f0;
+    color: #2d3748;
     margin-bottom: 0.5rem;
   }
   
   .password-rules ul {
     padding-left: 1.25rem;
     margin-bottom: 0;
+  }
+  
+  .password-rules ul li {
+    color: #4a5568;
   }
   
   /* Preference Chips */
@@ -170,7 +175,8 @@
     margin-top: 0.5rem;
   }
   
-  .preference-chip {
+/* Preference Chips (continued) */
+.preference-chip {
     border-radius: 20px;
     padding: 0.4rem 1rem;
     font-size: 0.875rem;
@@ -190,8 +196,9 @@
   
   .booking-item {
     background-color: transparent;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     padding: 1.25rem 0;
+    color: #333;
   }
   
   .booking-item:last-child {
@@ -211,14 +218,14 @@
   }
   
   .booking-title h5 {
-    color: #e2e8f0;
+    color: #2d3748;
     margin: 0 1rem 0 0;
     font-size: 1.1rem;
   }
   
   .booking-number {
     font-size: 0.8rem;
-    color: #94a3b8;
+    color: #718096;
   }
   
   .booking-details {
@@ -233,7 +240,7 @@
   
   .booking-info p {
     margin-bottom: 0.5rem;
-    color: #cbd5e1;
+    color: #4a5568;
     font-size: 0.95rem;
   }
   
@@ -244,8 +251,7 @@
   }
   
   /* Review List */
-/* Review List Styles - Continued */
-.review-list {
+  .review-list {
     max-height: 600px;
     overflow-y: auto;
     padding-right: 0.5rem;
@@ -253,8 +259,9 @@
   
   .review-item {
     background-color: transparent;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     padding: 1.25rem 0;
+    color: #333;
   }
   
   .review-item:last-child {
@@ -274,14 +281,14 @@
   }
   
   .review-title h5 {
-    color: #e2e8f0;
+    color: #2d3748;
     margin: 0 1rem 0 0;
     font-size: 1.1rem;
   }
   
   .review-date {
     font-size: 0.8rem;
-    color: #94a3b8;
+    color: #718096;
   }
   
   .review-rating {
@@ -290,7 +297,7 @@
   }
   
   .review-content {
-    color: #cbd5e1;
+    color: #4a5568;
     margin-bottom: 1rem;
     line-height: 1.6;
   }
@@ -302,7 +309,7 @@
   }
   
   .review-stats {
-    color: #94a3b8;
+    color: #718096;
     font-size: 0.9rem;
   }
   
@@ -313,22 +320,22 @@
     align-items: center;
     justify-content: center;
     padding: 3rem 1rem;
-    color: #94a3b8;
+    color: #718096;
     text-align: center;
   }
   
   .empty-state svg {
     margin-bottom: 1.5rem;
-    color: #64748b;
+    color: #a0aec0;
   }
   
   .empty-state h5 {
-    color: #e2e8f0;
+    color: #2d3748;
     margin-bottom: 0.5rem;
   }
   
   .empty-state p {
-    color: #94a3b8;
+    color: #718096;
     max-width: 300px;
     margin: 0 auto;
   }
@@ -354,25 +361,23 @@
   
   .booking-list::-webkit-scrollbar-track,
   .review-list::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.05);
     border-radius: 4px;
   }
   
   .booking-list::-webkit-scrollbar-thumb,
   .review-list::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.2);
     border-radius: 4px;
   }
   
   .booking-list::-webkit-scrollbar-thumb:hover,
   .review-list::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(0, 0, 0, 0.3);
   }
-
-  /* Add these styles to the existing CSS file */
-
-/* Refresh Button */
-.refresh-button {
+  
+  /* Refresh Button */
+  .refresh-button {
     color: #3b82f6;
     padding: 0;
     font-size: 0.8rem;
@@ -386,7 +391,7 @@
   }
   
   .refresh-button:disabled {
-    color: #64748b;
+    color: #a0aec0;
     cursor: not-allowed;
     text-decoration: none;
   }
@@ -408,31 +413,6 @@
   .Toastify__toast-body {
     color: #ffffff;
     font-weight: 500;
-  }
-  
-  /* Loading State Enhancement */
-  .profile-avatar-card.loading {
-    position: relative;
-  }
-  
-  .profile-avatar-card.loading::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(2px);
-    border-radius: 12px;
-    z-index: 1;
-  }
-  
-  /* Improved Form Fields */
-  .form-control:disabled,
-  .form-control[readonly] {
-    background-color: #223049;
-    opacity: 0.7;
   }
   
   /* Validation Styles */
@@ -468,6 +448,22 @@
       opacity: 1;
       transform: translateY(0);
     }
+  }
+  
+  /* Animation for alerts */
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .status-alert {
+    animation: slideDown 0.3s ease forwards;
   }
   
   /* Responsive adjustments */
@@ -525,20 +521,4 @@
       font-size: 0.8rem;
       padding: 0.35rem 0.8rem;
     }
-  }
-  
-  /* Animation for alerts */
-  @keyframes slideDown {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  .status-alert {
-    animation: slideDown 0.3s ease forwards;
   }
