@@ -196,7 +196,68 @@ const bookingService = {
     } catch (error) {
       throw error.response?.data || 'Failed to fetch booking analytics';
     }
-  }
+  },
+
+  // Get all booked seats for a specific show
+  getBookedSeats(showId) {
+    return axiosInstance.get(`${BASE_URL}/show/${showId}`).data;
+  },
+
+  // Get all reserved (temporarily held) seats for a show
+  getReservedSeats(showId) {
+    return axiosInstance.get(`${BASE_URL}/show/${showId}/reserved-seats`).data;
+  },
+
+  // Reserve a single seat
+  reserveSeat(showId, seatId) {
+    return axiosInstance.post(`${BASE_URL}/reserve`, { 
+      showId, 
+      seatId 
+    }).data;
+  },
+
+  // Release a single reserved seat
+  releaseSeat(showId, seatId) {
+    return axiosInstance.post(`${BASE_URL}/release`, { 
+      showId, 
+      seatId 
+    }).data;
+  },
+  
+  // Release multiple seats at once
+  releaseSeats(showId, seatIds) {
+    return axiosInstance.post(`${BASE_URL}/release-multiple`, { 
+      showId, 
+      seatIds 
+    }).data;
+  },
+  
+  // Create a temporary booking record
+  createTemporaryBooking(showId) {
+    return axiosInstance.post(`${BASE_URL}/create-temporary`, { 
+      showId 
+    }).data;
+  },
+  
+  // Confirm seat reservation - transition from reserved to booked
+  confirmReservation(showId, seatIds, bookingId) {
+    return axiosInstance.post(`${BASE_URL}/confirm`, {
+      showId,
+      seatIds,
+      bookingId
+    }).data;
+  },
+  
+  // Finalize booking after payment
+  finalizeBooking(bookingId, paymentDetails) {
+    return axiosInstance.post(`${BASE_URL}/finalize/${bookingId}`, paymentDetails).data;
+  },
+  
+  // Get booking details
+  getBookingById(bookingId) {
+    return axiosInstance.get(`${BASE_URL}/${bookingId}`).data;
+  },
+
 };
 
 export default bookingService;

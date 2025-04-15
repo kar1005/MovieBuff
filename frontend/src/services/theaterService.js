@@ -192,7 +192,14 @@ export const theaterService = {
     } catch (error) {
       throw error.response?.data || 'Failed to update theater status';
     }
-  }
+  },
+  getScreenLayout(theaterId, screenId) {
+    return axiosInstance.get(`${BASE_URL}/${theaterId}/screens/${screenId}/layout`).data;
+  },
+
+  getTheaterScreens(theaterId) {
+    return axiosInstance.get(`${BASE_URL}/${theaterId}/screens`).data;
+  },
 };
 
 export default theaterService;

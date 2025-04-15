@@ -1,634 +1,373 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams,useNavigate } from 'react-router-dom';
-import { 
-  Clock, 
-  Loader, 
-  AlertCircle, 
-  Check, 
-  X, 
-  ArrowLeft, 
-  Monitor, 
-  Square, 
-  Tag,
-  ChevronDown,
-  Info
-} from 'lucide-react';
-import showService from '../../../../services/showService';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import ShowService from '../../../../services/showService';
+import BookingService from '../../../../services/bookingService';
+import TheaterService from '../../../../services/theaterService';
 import './SeatBooking.css';
 
-const SeatBooking = ({ onBookingComplete, onBack }) => {
-  const showId = useParams();
+const SeatBooking = () => {
+  const { showId } = useParams();
+  const navigate = useNavigate();
   const [show, setShow] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [theater, setTheater] = useState(null);
+  const [screen, setScreen] = useState(null);
   const [selectedSeats, setSelectedSeats] = useState([]);
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
-  const [bookingStatus, setBookingStatus] = useState('selecting'); // selecting, reserving, reserved, payment, success, timeout, error
-  const [paymentProcessing, setPaymentProcessing] = useState(false);
-  const [expandedInfo, setExpandedInfo] = useState(false);
-  const timerRef = useRef(null);
-  const gridRef = useRef(null);
+  const [bookedSeats, setBookedSeats] = useState([]);
+  const [reservedSeats, setReservedSeats] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [timer, setTimer] = useState(300); // 5 minutes timer
+  const [timerActive, setTimerActive] = useState(false);
+  const [totalPrice, setTotalPrice] = useState(0);
+  const [bookingId, setBookingId] = useState(null);
 
-  // Fetch show details including seat availability
+  // Fetch show details, theater details, and booked seats
   useEffect(() => {
     const fetchShowDetails = async () => {
       try {
         setLoading(true);
-        const showData = await showService.getShow(showId);
-        const seatAvailability = await showService.getSeatAvailability(showId);
+        // Get show details
+        const showResponse = await ShowService.getShowById(showId);
+        setShow(showResponse);
         
-        setShow({
-          ...showData,
-          seatAvailability: seatAvailability
-        });
+        // Get theater details
+        const theaterResponse = await TheaterService.getTheaterById(showResponse.theaterId);
+        setTheater(theaterResponse);
+        
+        // Get screen details
+        const screenResponse = await TheaterService.getScreenByNumber(
+          showResponse.theaterId, 
+          showResponse.screenId
+        );
+        setScreen(screenResponse);
+        
+        // Get all booked seats for this show
+        const bookedResponse = await BookingService.getBookedSeats(showId);
+        setBookedSeats(bookedResponse);
+        
+        // Get all reserved seats for this show (temporary holds)
+        const reservedResponse = await BookingService.getReservedSeats(showId);
+        setReservedSeats(reservedResponse);
+        
         setLoading(false);
-      } catch (err) {
-        setError("Failed to load show details. Please try again.");
+      } catch (error) {
+        toast.error('Failed to load show details');
+        console.error(error);
         setLoading(false);
       }
     };
 
     fetchShowDetails();
+    
+    // Set up polling to check for newly booked/reserved seats every 10 seconds
+    const interval = setInterval(async () => {
+      try {
+        const bookedResponse = await BookingService.getBookedSeats(showId);
+        setBookedSeats(bookedResponse);
+        
+        const reservedResponse = await BookingService.getReservedSeats(showId);
+        setReservedSeats(reservedResponse.filter(seat => 
+          !bookedResponse.includes(seat)
+        ));
+      } catch (error) {
+        console.error('Error refreshing seat status:', error);
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, [showId]);
 
-  // Handle timer countdown
+  // Timer logic
   useEffect(() => {
-    if (bookingStatus === 'reserved' && timeLeft > 0) {
-      timerRef.current = setInterval(() => {
-        setTimeLeft(prevTime => {
-          if (prevTime <= 1) {
-            clearInterval(timerRef.current);
-            handleTimeout();
-            return 0;
-          }
-          return prevTime - 1;
-        });
-      }, 1000);
-    }
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [bookingStatus]);
-
-  const handleTimeout = async () => {
-    try {
-      // Release the seats
-      await showService.updateSeatAvailability(showId, selectedSeats, true);
-      setBookingStatus('timeout');
-      setSelectedSeats([]);
-    } catch (err) {
-      setError("An error occurred. Please try again.");
-    }
-  };
-
-  const handleSeatClick = (seat) => {
-    if (bookingStatus !== 'selecting') return;
-    if (seat.status === 'BOOKED' || seat.status === 'UNAVAILABLE' || seat.status === 'BLOCKED') return;
+    let intervalId;
     
-    const seatId = seat.seatId;
+    if (timerActive && timer > 0) {
+      intervalId = setInterval(() => {
+        setTimer(prevTimer => prevTimer - 1);
+      }, 1000);
+    } else if (timer === 0 && selectedSeats.length > 0) {
+      // Timer expired, release the seats
+      handleReleaseSeats();
+    }
+    
+    return () => clearInterval(intervalId);
+  }, [timerActive, timer]);
+
+  // Calculate total price whenever selected seats change
+  useEffect(() => {
+    if (show && selectedSeats.length > 0) {
+      const price = selectedSeats.reduce((total, seatId) => {
+        const seat = show.seats.find(s => s.id === seatId);
+        return total + (seat ? seat.price : 0);
+      }, 0);
+      setTotalPrice(price);
+      
+      // Start timer when seats are selected
+      if (selectedSeats.length > 0 && !timerActive) {
+        setTimerActive(true);
+      }
+    } else {
+      setTotalPrice(0);
+      if (selectedSeats.length === 0) {
+        setTimerActive(false);
+        setTimer(300); // Reset timer
+      }
+    }
+  }, [selectedSeats, show]);
+
+  const handleSeatClick = async (seatId) => {
+    if (bookedSeats.includes(seatId) || reservedSeats.includes(seatId)) {
+      return; // Seat is already booked or reserved
+    }
     
     if (selectedSeats.includes(seatId)) {
-      setSelectedSeats(selectedSeats.filter(id => id !== seatId));
-    } else {
-      setSelectedSeats([...selectedSeats, seatId]);
-    }
-  };
-
-  const getSeatStatus = (seat) => {
-    if (seat.status === 'BOOKED' || seat.status === 'UNAVAILABLE') {
-      return 'booked';
-    }
-    if (seat.status === 'BLOCKED') {
-      return 'blocked';
-    }
-    if (selectedSeats.includes(seat.seatId)) {
-      return 'selected';
-    }
-    return 'available';
-  };
-
-  const calculateTotalPrice = () => {
-    if (!show || !show.pricing || selectedSeats.length === 0) return 0;
-    
-    let total = 0;
-    selectedSeats.forEach(seatId => {
-      // Find seat category from the seat data
-      const seat = show.seatAvailability.seats.find(s => s.seatId === seatId);
-      if (seat) {
-        const pricing = show.pricing[seat.category];
-        if (pricing) {
-          total += pricing.finalPrice;
-        }
-      }
-    });
-    
-    return total;
-  };
-
-  const handleReserveSeats = async () => {
-    if (selectedSeats.length === 0) return;
-    
-    try {
-      setBookingStatus('reserving');
-      // Mark seats as blocked (temporarily unavailable during checkout)
-      await showService.updateSeatAvailability(showId, selectedSeats, false);
-      setBookingStatus('reserved');
-      setTimeLeft(300); // Reset timer to 5 minutes
-    } catch (err) {
-      setError("Sorry, one or more seats are no longer available. Please try again.");
-      setBookingStatus('selecting');
-      // Refresh seat data
-      const seatAvailability = await showService.getSeatAvailability(showId);
-      setShow(prev => ({ ...prev, seatAvailability }));
-      setSelectedSeats([]);
-    }
-  };
-
-  const handlePayment = async () => {
-    try {
-      setPaymentProcessing(true);
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Deselect the seat
+      setSelectedSeats(prevSelected => prevSelected.filter(id => id !== seatId));
       
-      // Update seat status to BOOKED after successful payment
-      await showService.updateSeatAvailability(showId, selectedSeats, false);
-      
-      clearInterval(timerRef.current);
-      setBookingStatus('success');
-      setPaymentProcessing(false);
-      
-      // Call the completion callback
-      if (onBookingComplete) {
-        onBookingComplete({
-          showId,
-          seats: selectedSeats,
-          totalAmount: calculateTotalPrice()
-        });
-      }
-    } catch (err) {
-      setError("Payment failed. Please try again.");
-      setPaymentProcessing(false);
-    }
-  };
-
-  const handleCancelBooking = async () => {
-    if (bookingStatus === 'reserved') {
+      // Release this seat from reservation if it was reserved
       try {
-        // Release the seats
-        await showService.updateSeatAvailability(showId, selectedSeats, true);
-        clearInterval(timerRef.current);
-        setBookingStatus('selecting');
-        setSelectedSeats([]);
-      } catch (err) {
-        setError("An error occurred. Please try again.");
+        await BookingService.releaseSeat(showId, seatId);
+      } catch (error) {
+        console.error('Error releasing seat:', error);
       }
     } else {
-      setSelectedSeats([]);
+      // Select the seat and reserve it
+      try {
+        const response = await BookingService.reserveSeat(showId, seatId);
+        if (response.status === 200) {
+          setSelectedSeats(prevSelected => [...prevSelected, seatId]);
+          setReservedSeats(prevReserved => [...prevReserved, seatId]);
+          
+          // If this is the first seat being selected, create a temporary booking
+          if (selectedSeats.length === 0) {
+            const bookingResponse = await BookingService.createTemporaryBooking(showId);
+            setBookingId(bookingResponse.id);
+          }
+        } else {
+          toast.error('This seat was just taken by another user');
+          // Refresh booked/reserved seats
+          const bookedResponse = await BookingService.getBookedSeats(showId);
+          setBookedSeats(bookedResponse);
+          const reservedResponse = await BookingService.getReservedSeats(showId);
+          setReservedSeats(reservedResponse);
+        }
+      } catch (error) {
+        toast.error('Failed to reserve seat');
+        console.error(error);
+      }
+    }
+  };
+
+  const handleReleaseSeats = async () => {
+    if (selectedSeats.length > 0) {
+      try {
+        await BookingService.releaseSeats(showId, selectedSeats);
+        setSelectedSeats([]);
+        setTimerActive(false);
+        setTimer(300); // Reset timer to 5 minutes
+        toast.info('Your seat selection has expired');
+        
+        // Refresh booked/reserved seats
+        const bookedResponse = await BookingService.getBookedSeats(showId);
+        setBookedSeats(bookedResponse);
+        const reservedResponse = await BookingService.getReservedSeats(showId);
+        setReservedSeats(reservedResponse);
+      } catch (error) {
+        console.error('Error releasing seats:', error);
+      }
+    }
+  };
+
+  const handleProceedToPayment = async () => {
+    if (selectedSeats.length === 0) {
+      toast.warning('Please select at least one seat');
+      return;
+    }
+    
+    try {
+      // Convert selected seats to confirmed reservation
+      const response = await BookingService.confirmReservation(showId, selectedSeats, bookingId);
+      
+      if (response.status === 200) {
+        // Redirect to payment page with booking ID
+        navigate(`/payment/${bookingId}`);
+      } else {
+        toast.error('Some seats were already taken. Please try again.');
+        // Refresh seats
+        const bookedResponse = await BookingService.getBookedSeats(showId);
+        setBookedSeats(bookedResponse);
+        // Remove any seats that are now booked from selection
+        setSelectedSeats(prev => prev.filter(seatId => !bookedResponse.includes(seatId)));
+      }
+    } catch (error) {
+      toast.error('Failed to confirm reservation');
+      console.error(error);
     }
   };
 
   const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
 
-  const getContrastColor = (hexColor) => {
-    // Default to white if no color provided
-    if (!hexColor) return 'white';
-    
-    // Convert hex to RGB
-    const r = parseInt(hexColor.slice(1, 3), 16);
-    const g = parseInt(hexColor.slice(3, 5), 16);
-    const b = parseInt(hexColor.slice(5, 7), 16);
-    
-    // Calculate brightness
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    
-    // Return white for dark backgrounds, black for light backgrounds
-    return brightness > 128 ? 'black' : 'white';
+  const getSeatStatus = (seatId) => {
+    if (bookedSeats.includes(seatId)) return 'booked';
+    if (reservedSeats.includes(seatId) && !selectedSeats.includes(seatId)) return 'reserved';
+    if (selectedSeats.includes(seatId)) return 'selected';
+    return 'available';
   };
 
-  // Function to get seat icon/label based on type
-  const getSeatIcon = (seatType) => {
-    switch(seatType) {
-      case 'RECLINER':
-        return '🛋️';
-      case 'WHEELCHAIR':
-        return '♿';
-      case 'COMPANION':
-        return '👥';
-      case 'VIP':
-        return '⭐';
-      default:
-        return null;
-    }
-  };
-
-  // Function to create grid data from sections and seats
-  const createGridLayout = () => {
-    if (!show || !show.seatAvailability) return { rows: 0, columns: 0, grid: [] };
+  const renderSeats = () => {
+    if (!screen || !show) return null;
     
-    const totalRows = show.seatAvailability.layout?.totalRows || 10;
-    const totalColumns = show.seatAvailability.layout?.totalColumns || 15;
+    // Use the screen.seatMatrix from your actual model
+    const { rows, columns, seatMatrix } = screen;
     
-    // Initialize empty grid
-    const grid = Array(totalRows).fill(null).map(() =>
-      Array(totalColumns).fill(null).map(() => ({
-        type: 'EMPTY',
-        category: null,
-        seatType: null,
-        seatId: null,
-        status: null
-      }))
-    );
+    // Empty array to hold the rows of seats
+    const seatRows = [];
     
-    // Map seats to grid
-    show.seatAvailability.seats.forEach((seat) => {
-      if (seat.row > 0 && seat.row <= totalRows && seat.column > 0 && seat.column <= totalColumns) {
-        const row = seat.row - 1;
-        const col = seat.column - 1;
+    // Loop through each row
+    for (let i = 0; i < rows; i++) {
+      const rowSeats = [];
+      
+      // Add the row label (A, B, C, etc.)
+      rowSeats.push(
+        <div key={`row-label-${i}`} className="row-label">
+          {String.fromCharCode(65 + i)}
+        </div>
+      );
+      
+      // Loop through each column
+      for (let j = 0; j < columns; j++) {
+        const seatValue = seatMatrix[i][j];
         
-        grid[row][col] = {
-          type: 'SEAT',
-          category: seat.category,
-          seatType: seat.type || 'REGULAR',
-          seatId: seat.seatId,
-          status: seat.status,
-          pricing: show.pricing?.[seat.category]?.finalPrice || 0
-        };
-      }
-    });
-    
-    // Map aisles, stairs, exits, gaps if available from layout
-    if (show.seatAvailability.layout) {
-      // Aisles
-      show.seatAvailability.layout.aisles?.forEach((aisle) => {
-        for (let row = aisle.startPosition - 1; row < aisle.endPosition; row++) {
-          const col = aisle.position - 1;
-          if (row >= 0 && row < totalRows && col >= 0 && col < totalColumns) {
-            grid[row][col] = { type: 'AISLE', category: null };
+        // Check what the value represents
+        if (seatValue === 0) {
+          // Empty space
+          rowSeats.push(
+            <div key={`seat-${i}-${j}`} className="seat-placeholder"></div>
+          );
+        } else if (seatValue === -1) {
+          // Aisle
+          rowSeats.push(
+            <div key={`seat-${i}-${j}`} className="seat-aisle"></div>
+          );
+        } else {
+          // This is a seat
+          // Find the seat in the show's seat list
+          const seatId = `${String.fromCharCode(65 + i)}${j + 1}`;
+          const seat = show.seats.find(s => s.seatNumber === seatId);
+          
+          if (seat) {
+            const status = getSeatStatus(seat.id);
+            rowSeats.push(
+              <button
+                key={`seat-${i}-${j}`}
+                className={`seat ${status} ${seat.category.toLowerCase()}`}
+                onClick={() => handleSeatClick(seat.id)}
+                disabled={status === 'booked' || status === 'reserved'}
+                title={`${seat.seatNumber} - ${seat.category} - ₹${seat.price}`}
+              >
+                {j + 1}
+              </button>
+            );
+          } else {
+            // If for some reason there's no matching seat in the show data
+            rowSeats.push(
+              <div key={`seat-${i}-${j}`} className="seat-placeholder"></div>
+            );
           }
         }
-      });
+      }
       
-      // Stairs
-      show.seatAvailability.layout.stairs?.forEach((stair) => {
-        const row = stair.row - 1;
-        const col = stair.column - 1;
-        
-        if (row >= 0 && row < totalRows && col >= 0 && col < totalColumns) {
-          grid[row][col] = { type: 'STAIRS', category: null };
-        }
-      });
-      
-      // Exits
-      show.seatAvailability.layout.exits?.forEach((exit) => {
-        const row = exit.row - 1;
-        const col = exit.column - 1;
-        
-        if (row >= 0 && row < totalRows && col >= 0 && col < totalColumns) {
-          grid[row][col] = { type: 'EXIT', category: null };
-        }
-      });
-      
-      // Gaps
-      show.seatAvailability.layout.seatGaps?.forEach((gap) => {
-        const row = gap.row - 1;
-        const col = gap.column - 1;
-        
-        if (row >= 0 && row < totalRows && col >= 0 && col < totalColumns) {
-          grid[row][col] = { type: 'GAP', category: null };
-        }
-      });
+      // Add the completed row to the seatRows array
+      seatRows.push(
+        <div key={`row-${i}`} className="seat-row">
+          {rowSeats}
+        </div>
+      );
     }
     
-    return { rows: totalRows, columns: totalColumns, grid };
+    return (
+      <div className="seating-layout">
+        {seatRows}
+      </div>
+    );
   };
 
-  // Create the grid layout
-  const gridLayout = show ? createGridLayout() : { rows: 0, columns: 0, grid: [] };
-
-  // Get category colors
-  const getCategoryColors = () => {
-    if (!show || !show.seatAvailability) return {};
-    
-    const categoryColors = {};
-    show.seatAvailability.sections?.forEach(section => {
-      categoryColors[section.categoryName] = section.color || '#9333ea';
-    });
-    
-    return categoryColors;
-  };
-  
-  const categoryColors = getCategoryColors();
-
-  // Render loading state
   if (loading) {
-    return (
-      <div className="theater-booking-loading">
-        <Loader className="animate-spin" size={32} />
-        <p>Loading seat map...</p>
-      </div>
-    );
+    return <div className="loading-container">Loading seat map...</div>;
   }
 
-  // Render error state
-  if (error) {
-    return (
-      <div className="theater-booking-error">
-        <AlertCircle size={32} />
-        <p>{error}</p>
-        <button className="btn btn-retry" onClick={() => window.location.reload()}>
-          Try Again
-        </button>
-      </div>
-    );
+  if (!show || !screen) {
+    return <div className="error-container">Show or screen details not found</div>;
   }
 
-  // Render when show data isn't available
-  if (!show) {
-    return (
-      <div className="theater-booking-error">
-        <p>Show information not available.</p>
-      </div>
-    );
-  }
+  // Get unique categories for the legend
+  const uniqueCategories = [...new Set(show.seats.map(seat => seat.category))];
 
   return (
-    <div className="theater-booking-container">
-      {/* Header */}
-      <div className="theater-booking-header">
-        <div className="header-main">
-          <button className="back-button" onClick={onBack}>
-            <ArrowLeft size={16} />
-            <span>Back</span>
-          </button>
-          <h2>{show.movieTitle}</h2>
-        </div>
-        
-        <div className="header-details">
-          <span>{show.theaterName}</span>
-          <span className="separator">•</span>
-          <span>Screen {show.screenNumber}</span>
-          <span className="separator">•</span>
-          <span>{new Date(show.showTime).toLocaleString('en-US', {
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true
-          })}</span>
-          <span className="separator">•</span>
-          <span>{show.language}</span>
-          <span className="separator">•</span>
-          <span>{show.experience}</span>
-        </div>
-      </div>
-
-      {/* Status Messages */}
-      {bookingStatus === 'reserved' && (
-        <div className="status-alert warning">
-          <Clock size={18} />
-          <span>Complete payment within {formatTime(timeLeft)} or seats will be released</span>
+    <div className="seat-booking-container">
+      <h2>{show.movie.title} - {show.screenTime}</h2>
+      <h3 className="theater-info">{theater ? theater.name : ''} - {screen.screenName}</h3>
+      
+      {timerActive && (
+        <div className="timer-container">
+          <p>Time remaining to complete booking: <span className="timer">{formatTime(timer)}</span></p>
         </div>
       )}
       
-      {bookingStatus === 'success' && (
-        <div className="status-alert success">
-          <Check size={18} />
-          <span>Booking successful! Your tickets have been confirmed.</span>
-        </div>
-      )}
-      
-      {bookingStatus === 'timeout' && (
-        <div className="status-alert error">
-          <X size={18} />
-          <span>Booking timed out. Your selected seats have been released.</span>
-        </div>
-      )}
-
-      <div className="theater-layout-container">
-        {/* Screen */}
-        <div className="theater-screen">
-          <div className="screen-curve"></div>
-          <div className="screen-label">SCREEN</div>
-        </div>
-        
-        {/* Legend */}
-        <div className="seat-legend">
-          <div className="legend-item">
-            <div className="legend-box available"></div>
-            <span>Available</span>
-          </div>
-          <div className="legend-item">
-            <div className="legend-box selected"></div>
-            <span>Selected</span>
-          </div>
-          <div className="legend-item">
-            <div className="legend-box booked"></div>
-            <span>Booked</span>
-          </div>
-          <div className="legend-item">
-            <div className="legend-box blocked"></div>
-            <span>Reserved</span>
-          </div>
-        </div>
-        
-        {/* Category Info */}
-        <div className="category-list">
-          {show.seatAvailability.sections?.map((section) => (
-            <div 
-              key={section.categoryName} 
-              className="category-badge"
-              style={{ 
-                backgroundColor: section.color || '#9333ea',
-                color: getContrastColor(section.color)
-              }}
-            >
-              {section.categoryName}: ₹{section.basePrice}
-            </div>
-          ))}
-        </div>
-        
-        {/* Seat Types Legend (toggleable) */}
-        <div className="seat-types-container">
-          <button 
-            className={`toggle-info-btn ${expandedInfo ? 'active' : ''}`}
-            onClick={() => setExpandedInfo(!expandedInfo)}
-          >
-            <Info size={14} />
-            <span>Seat Types</span>
-            <ChevronDown size={14} className={expandedInfo ? 'rotated' : ''} />
-          </button>
-          
-          {expandedInfo && (
-            <div className="seat-types-legend">
-              <div className="legend-item">
-                <div className="legend-box seat-regular">A1</div>
-                <span>Regular</span>
-              </div>
-              <div className="legend-item">
-                <div className="legend-box seat-recliner">🛋️</div>
-                <span>Recliner</span>
-              </div>
-              <div className="legend-item">
-                <div className="legend-box seat-wheelchair">♿</div>
-                <span>Wheelchair</span>
-              </div>
-              <div className="legend-item">
-                <div className="legend-box seat-companion">👥</div>
-                <span>Companion</span>
-              </div>
-              <div className="legend-item">
-                <div className="legend-box seat-vip">⭐</div>
-                <span>VIP</span>
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {/* Grid Layout */}
-        <div className="theater-grid-wrapper" ref={gridRef}>
-          <div className="theater-grid">
-            {/* Column Numbers */}
-            <div className="grid-columns-header">
-              <div className="grid-row-label"></div>
-              {Array.from({ length: gridLayout.columns }).map((_, index) => (
-                <div key={`col-${index}`} className="grid-column-label">
-                  {index + 1}
-                </div>
-              ))}
-            </div>
-            
-            {/* Grid with Row Labels */}
-            {gridLayout.grid.map((row, rowIndex) => (
-              <div key={`row-${rowIndex}`} className="grid-row">
-                <div className="grid-row-label">
-                  {String.fromCharCode(65 + rowIndex)}
-                </div>
-                {row.map((cell, colIndex) => {
-                  if (cell.type === 'EMPTY') {
-                    return (
-                      <div key={`${rowIndex}-${colIndex}`} className="grid-cell empty"></div>
-                    );
-                  }
-                  
-                  if (cell.type === 'AISLE') {
-                    return (
-                      <div key={`${rowIndex}-${colIndex}`} className="grid-cell aisle">≡</div>
-                    );
-                  }
-                  
-                  if (cell.type === 'STAIRS') {
-                    return (
-                      <div key={`${rowIndex}-${colIndex}`} className="grid-cell stairs">↑</div>
-                    );
-                  }
-                  
-                  if (cell.type === 'EXIT') {
-                    return (
-                      <div key={`${rowIndex}-${colIndex}`} className="grid-cell exit">EXIT</div>
-                    );
-                  }
-                  
-                  if (cell.type === 'GAP') {
-                    return (
-                      <div key={`${rowIndex}-${colIndex}`} className="grid-cell gap">◦</div>
-                    );
-                  }
-                  
-                  if (cell.type === 'SEAT') {
-                    const status = getSeatStatus(cell);
-                    const seatColor = categoryColors[cell.category];
-                    const seatIcon = getSeatIcon(cell.seatType);
-                    
-                    return (
-                      <div
-                        key={`${rowIndex}-${colIndex}`}
-                        className={`grid-cell seat ${status}`}
-                        style={status === 'available' ? {
-                          backgroundColor: seatColor,
-                          color: getContrastColor(seatColor)
-                        } : {}}
-                        onClick={() => handleSeatClick(cell)}
-                        title={`${cell.seatId} - ${cell.category} - ₹${cell.pricing}`}
-                      >
-                        <div className="seat-content">
-                          <span className="seat-id">{cell.seatId}</span>
-                          {seatIcon && <span className="seat-type-icon">{seatIcon}</span>}
-                        </div>
-                      </div>
-                    );
-                  }
-                  
-                  return null;
-                })}
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="screen-container">
+        <div className="screen">SCREEN</div>
       </div>
-
-      {/* Booking Summary */}
+      
+      <div className="seats-legend">
+        <div className="legend-item">
+          <div className="seat-example available"></div>
+          <span>Available</span>
+        </div>
+        <div className="legend-item">
+          <div className="seat-example selected"></div>
+          <span>Selected</span>
+        </div>
+        <div className="legend-item">
+          <div className="seat-example booked"></div>
+          <span>Booked</span>
+        </div>
+        <div className="legend-item">
+          <div className="seat-example reserved"></div>
+          <span>Reserved</span>
+        </div>
+        
+        {/* Category legends */}
+        {uniqueCategories.map(category => (
+          <div key={`legend-${category}`} className="legend-item">
+            <div className={`seat-example category ${category.toLowerCase()}`}></div>
+            <span>{category}</span>
+          </div>
+        ))}
+      </div>
+      
+      {renderSeats()}
+      
       <div className="booking-summary">
         <h3>Booking Summary</h3>
-        <div className="summary-row">
-          <span>Selected Seats:</span>
-          <span className="summary-value">{selectedSeats.length > 0 ? selectedSeats.join(', ') : 'None'}</span>
-        </div>
-        <div className="summary-row total">
-          <span>Total Amount:</span>
-          <span className="summary-value">₹{calculateTotalPrice()}</span>
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="booking-actions">
-        <button
-          className="btn btn-cancel"
-          onClick={handleCancelBooking}
-          disabled={bookingStatus === 'success' || bookingStatus === 'payment' || bookingStatus === 'reserving'}
-        >
-          Cancel
-        </button>
+        <p>Selected Seats: {selectedSeats.length > 0 ? 
+          selectedSeats.map(seatId => {
+            const seat = show.seats.find(s => s.id === seatId);
+            return seat ? seat.seatNumber : '';
+          }).join(', ') : 'None'}
+        </p>
+        <p>Total Price: ₹{totalPrice}</p>
         
-        {bookingStatus === 'selecting' ? (
-          <button
-            className="btn btn-reserve"
-            onClick={handleReserveSeats}
-            disabled={selectedSeats.length === 0}
-          >
-            Reserve Seats
-          </button>
-        ) : bookingStatus === 'reserved' ? (
-          <button
-            className="btn btn-payment"
-            onClick={handlePayment}
-            disabled={paymentProcessing}
-          >
-            {paymentProcessing ? 'Processing...' : 'Proceed to Payment'}
-          </button>
-        ) : bookingStatus === 'success' ? (
-          <button
-            className="btn btn-view"
-            onClick={() => window.location.href = '/bookings'}
-          >
-            View Bookings
-          </button>
-        ) : bookingStatus === 'timeout' ? (
-          <button
-            className="btn btn-retry"
-            onClick={() => {
-              setBookingStatus('selecting');
-              setError(null);
-            }}
-          >
-            Try Again
-          </button>
-        ) : null}
+        <button 
+          className="payment-button"
+          onClick={handleProceedToPayment}
+          disabled={selectedSeats.length === 0}
+        >
+          Proceed to Payment
+        </button>
       </div>
     </div>
   );

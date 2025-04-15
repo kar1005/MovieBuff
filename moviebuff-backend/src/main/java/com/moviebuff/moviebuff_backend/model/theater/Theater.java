@@ -1,20 +1,19 @@
 // src/main/java/com/moviebuff/model/theater/Theater.java
 package com.moviebuff.moviebuff_backend.model.theater;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-// import lombok.EqualsAndHashCode;
-import lombok.experimental.SuperBuilder;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Data
 @SuperBuilder
@@ -136,7 +135,7 @@ public enum SeatType {
         private String color;
     }
 
-    @Data
+@Data
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor

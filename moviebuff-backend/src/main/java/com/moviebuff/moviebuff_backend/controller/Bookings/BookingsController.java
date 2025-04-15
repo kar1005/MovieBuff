@@ -4,8 +4,17 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.moviebuff.moviebuff_backend.model.booking.Booking;
 import com.moviebuff.moviebuff_backend.service.booking.IBookingService;
@@ -14,8 +23,8 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/bookings")
-@CrossOrigin(origins = "*")
 public class BookingsController {
+
     @Autowired
     private IBookingService bookingService;
 
@@ -114,7 +123,15 @@ public class BookingsController {
         Boolean sms = notificationOptions.getOrDefault("sms", false);
         return ResponseEntity.ok(bookingService.sendTicketNotification(id, email, sms));
     }
-    
+
+    // Check in a booking at the theater
+    @GetMapping("/check-in/{bookingNumber}")
+    public ResponseEntity<Booking> checkInBooking(@PathVariable String bookingNumber) {
+        Booking booking = bookingService.checkInBooking(bookingNumber);
+        return ResponseEntity.ok(booking);
+    }
+
+    // Get booking analytics
     @GetMapping("/analytics")
     public ResponseEntity<Map<String, Object>> getBookingAnalytics(
             @RequestParam(required = false) String startDate,
@@ -123,9 +140,74 @@ public class BookingsController {
             @RequestParam(required = false) String theaterId) {
         return ResponseEntity.ok(bookingService.getBookingAnalytics(startDate, endDate, movieId, theaterId));
     }
+
+    // Get all booked seats for a specific show
+    @GetMapping("/show/{showId}/booked-seats")
+    public ResponseEntity<List<Map<String, Object>>> getBookedSeats(@PathVariable String showId) {
+        List<Map<String, Object>> bookedSeats = bookingService.getBookedSeats(showId);
+        return ResponseEntity.ok(bookedSeats);
+    }
+
+    // Get all reserved (temporarily held) seats for a show
+    @GetMapping("/show/{showId}/reserved-seats")
+    public ResponseEntity<List<Map<String, Object>>> getReservedSeats(@PathVariable String showId) {
+        List<Map<String, Object>> reservedSeats = bookingService.getReservedSeats(showId);
+        return ResponseEntity.ok(reservedSeats);
+    }
+
+    // Reserve a single seat
+    @PostMapping("/reserve")
+    public ResponseEntity<Map<String, Object>> reserveSeat(@RequestBody Map<String, String> reservationData) {
+        String showId = reservationData.get("showId");
+        String seatId = reservationData.get("seatId");
+        Map<String, Object> result = bookingService.reserveSeat(showId, seatId);
+        return ResponseEntity.ok(result);
+    }
     
-    @GetMapping("/check-in/{bookingNumber}")
-    public ResponseEntity<Booking> checkInBooking(@PathVariable String bookingNumber) {
-        return ResponseEntity.ok(bookingService.checkInBooking(bookingNumber));
+    // Release a single reserved seat
+    @PostMapping("/release")
+    public ResponseEntity<Map<String, Object>> releaseSeat(@RequestBody Map<String, String> releaseData) {
+        String showId = releaseData.get("showId");
+        String seatId = releaseData.get("seatId");
+        Map<String, Object> result = bookingService.releaseSeat(showId, seatId);
+        return ResponseEntity.ok(result);
+    }
+    
+    // Release multiple seats at once
+    @PostMapping("/release-multiple")
+    public ResponseEntity<Map<String, Object>> releaseSeats(@RequestBody Map<String, Object> releaseData) {
+        String showId = (String) releaseData.get("showId");
+        @SuppressWarnings("unchecked")
+        List<String> seatIds = (List<String>) releaseData.get("seatIds");
+        Map<String, Object> result = bookingService.releaseSeats(showId, seatIds);
+        return ResponseEntity.ok(result);
+    }
+    
+    // Create a temporary booking record
+    @PostMapping("/create-temporary")
+    public ResponseEntity<Booking> createTemporaryBooking(@RequestBody Map<String, String> bookingData) {
+        String showId = bookingData.get("showId");
+        Booking tempBooking = bookingService.createTemporaryBooking(showId);
+        return new ResponseEntity<>(tempBooking, HttpStatus.CREATED);
+    }
+    
+    // Confirm seat reservation - transition from reserved to booked
+    @PostMapping("/confirm-reservation")
+    public ResponseEntity<Booking> confirmReservation(@RequestBody Map<String, Object> reservationData) {
+        String showId = (String) reservationData.get("showId");
+        String bookingId = (String) reservationData.get("bookingId");
+        @SuppressWarnings("unchecked")
+        List<String> seatIds = (List<String>) reservationData.get("seatIds");
+        Booking booking = bookingService.confirmReservation(showId, seatIds, bookingId);
+        return ResponseEntity.ok(booking);
+    }
+    
+    // Finalize booking after payment
+    @PostMapping("/finalize/{bookingId}")
+    public ResponseEntity<Booking> finalizeBooking(
+            @PathVariable String bookingId,
+            @RequestBody Map<String, Object> paymentDetails) {
+        Booking finalizedBooking = bookingService.finalizeBooking(bookingId, paymentDetails);
+        return ResponseEntity.ok(finalizedBooking);
     }
 }

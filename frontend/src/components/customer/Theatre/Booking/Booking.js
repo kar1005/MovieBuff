@@ -8,7 +8,6 @@ const Booking = () => {
 
   return (
     <div className="booking-page">
-      <h1>Select Your Seats</h1>
       <SeatBooking showId={showId} />
     </div>
   );

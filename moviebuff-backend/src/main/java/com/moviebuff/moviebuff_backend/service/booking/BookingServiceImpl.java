@@ -13,9 +13,11 @@ import com.moviebuff.moviebuff_backend.repository.interfaces.show.IShowRepositor
 import com.moviebuff.moviebuff_backend.repository.interfaces.theater.ITheaterRepository;
 import com.moviebuff.moviebuff_backend.service.coupon.ICouponService;
 // import com.moviebuff.moviebuff_backend.service.Email.EmailService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 // import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -30,6 +32,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import org.springframework.data.mongodb.core.query.Query;
 
 @Service
 @RequiredArgsConstructor
@@ -839,4 +843,442 @@ public class BookingServiceImpl implements IBookingService {
         
         showRepository.save(show);
     }
+
+    @Override
+    public List<Map<String, Object>> getReservedSeats(String showId) {
+        // Verify the show exists
+        Optional<Show> showOptional = showRepository.findById(showId);
+        if (!showOptional.isPresent()) {
+            throw new ResourceNotFoundException("Show not found with id: " + showId);
+        }
+        
+        // Get current timestamp to check for expired reservations
+        LocalDateTime now = LocalDateTime.now();
+        
+        // Create a query to find active temporary reservations
+        Query query = new Query();
+        query.addCriteria(Criteria.where("showId").is(showId));
+        query.addCriteria(Criteria.where("status").in(
+            Booking.BookingStatus.INITIATED.toString(), 
+            Booking.BookingStatus.PAYMENT_PENDING.toString()
+        ));
+        query.addCriteria(Criteria.where("reservationExpiry").gt(now));
+        
+        // Execute the query
+        List<Booking> activeBookings = mongoTemplate.find(query, Booking.class);
+        
+        // Extract all reserved seats from these bookings
+        List<Map<String, Object>> reservedSeats = new ArrayList<>();
+        
+        for (Booking booking : activeBookings) {
+            // Get all seats for this booking
+            if (booking.getSeats() != null) {
+                for (Booking.BookingSeat seat : booking.getSeats()) {
+                    Map<String, Object> seatInfo = new HashMap<>();
+                    
+                    // Add seat information
+                    seatInfo.put("seatId", seat.getSeatId());
+                    seatInfo.put("row", seat.getRow());
+                    seatInfo.put("column", seat.getColumn());
+                    seatInfo.put("category", seat.getCategory());
+                    
+                    // Add booking information
+                    seatInfo.put("bookingId", booking.getId());
+                    seatInfo.put("reservedAt", booking.getCreatedAt());
+                    
+                    reservedSeats.add(seatInfo);
+                }
+            }
+        }
+        
+        return reservedSeats;
+    }
+
+    @Override
+    public List<Map<String, Object>> getBookedSeats(String showId) {
+        // Verify the show exists
+        Optional<Show> showOptional = showRepository.findById(showId);
+        if (!showOptional.isPresent()) {
+            throw new ResourceNotFoundException("Show not found with id: " + showId);
+        }
+        
+        // Create a query to find confirmed bookings for this show
+        Query query = new Query();
+        query.addCriteria(Criteria.where("showId").is(showId));
+        query.addCriteria(Criteria.where("status").is(
+            Booking.BookingStatus.CONFIRMED.toString()
+        ));
+        
+        // Execute the query
+        List<Booking> confirmedBookings = mongoTemplate.find(query, Booking.class);
+        
+        // Extract all booked seats from these bookings
+        List<Map<String, Object>> bookedSeats = new ArrayList<>();
+        
+        for (Booking booking : confirmedBookings) {
+            // Get all seats for this booking
+            if (booking.getSeats() != null) {
+                for (Booking.BookingSeat seat : booking.getSeats()) {
+                    Map<String, Object> seatInfo = new HashMap<>();
+                    
+                    // Add seat information
+                    seatInfo.put("seatId", seat.getSeatId());
+                    seatInfo.put("row", seat.getRow());
+                    seatInfo.put("column", seat.getColumn());
+                    seatInfo.put("category", seat.getCategory());
+                    
+                    // Add booking information
+                    seatInfo.put("bookingId", booking.getId());
+                    seatInfo.put("bookingNumber", booking.getBookingNumber());
+                    
+                    bookedSeats.add(seatInfo);
+                }
+            }
+        }
+        
+        return bookedSeats;
+    }
+
+     @Override
+    @Transactional
+    public Booking finalizeBooking(String bookingId, Map<String, Object> paymentDetails) {
+        // // Step 1: Find and validate the booking
+        // Booking booking = bookingRepository.findById(bookingId)
+        //     .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + bookingId));
+        
+        // // Step 2: Check if booking is in the correct state to be finalized
+        // if (booking.getStatus() != BookingStatus.PENDING_PAYMENT) {
+        //     throw new InvalidBookingStateException(
+        //         "Booking with id: " + bookingId + 
+        //         " cannot be finalized. Current status: " + booking.getStatus());
+        // }
+        
+        // // Step 3: Validate payment details
+        // String paymentIntentId = (String) paymentDetails.get("paymentIntentId");
+        // String paymentMethod = (String) paymentDetails.get("paymentMethod");
+        // Double amount = Double.valueOf(paymentDetails.get("amount").toString());
+        
+        // if (paymentIntentId == null || paymentMethod == null || amount == null) {
+        //     throw new PaymentProcessingException("Invalid payment details provided");
+        // }
+        
+        // // Step 4: Verify payment with payment gateway (if needed)
+        // boolean paymentVerified = paymentService.verifyPayment(paymentIntentId, amount);
+        // if (!paymentVerified) {
+        //     throw new PaymentProcessingException("Payment verification failed for intent: " + paymentIntentId);
+        // }
+        
+        // // Step 5: Create and save payment record
+        // Payment payment = new Payment();
+        // payment.setPaymentIntentId(paymentIntentId);
+        // payment.setPaymentMethod(paymentMethod);
+        // payment.setAmount(amount);
+        // payment.setStatus(PaymentStatus.COMPLETED);
+        // payment.setBooking(booking);
+        // payment.setTransactionDate(LocalDateTime.now());
+        // payment.setTransactionId(UUID.randomUUID().toString());
+        // payment = paymentRepository.save(payment);
+        
+        // // Step 6: Update booking status and details
+        // booking.setStatus(BookingStatus.CONFIRMED);
+        // booking.setBookingNumber(bookingNumberGenerator.generateBookingNumber());
+        // booking.setConfirmationDate(LocalDateTime.now());
+        // booking.setPayment(payment);
+        
+        // // Step 7: Save the updated booking
+        // Booking finalizedBooking = bookingRepository.save(booking);
+        
+        // // Step 8: Send confirmation email with ticket details
+        // try {
+        //     emailService.sendBookingConfirmation(finalizedBooking);
+        // } catch (Exception e) {
+        //     // Log the error but don't fail the transaction
+        //     System.err.println("Failed to send confirmation email: " + e.getMessage());
+        // }
+        
+        // return finalizedBooking;
+        Booking book;
+        return bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + bookingId));   
+    }
+    @Override
+    public Map<String, Object> reserveSeat(String showId, String seatId) {
+        Show show = showRepository.findById(showId)
+                .orElseThrow(() -> new ResourceNotFoundException("Show not found with id: " + showId));
+        
+        // Find the seat in the show's seat status list
+        Optional<Show.SeatStatus> seatStatus = show.getSeatStatus().stream()
+                .filter(s -> s.getSeatId().equals(seatId))
+                .findFirst();
+        
+        if (!seatStatus.isPresent()) {
+            throw new ResourceNotFoundException("Seat not found with id: " + seatId);
+        }
+        
+        // Check if the seat is available
+        if (seatStatus.get().getStatus() != Show.SeatAvailability.AVAILABLE) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Seat is not available");
+            response.put("currentStatus", seatStatus.get().getStatus());
+            return response;
+        }
+        
+        // Block the seat
+        seatStatus.get().setStatus(Show.SeatAvailability.BLOCKED);
+        seatStatus.get().setLastUpdated(LocalDateTime.now());
+        
+        // Update availability counters and show status
+        show.updateAvailabilityCounters();
+        show.updateShowStatus();
+        
+        // Save the updated show
+        showRepository.save(show);
+        
+        // Return success response
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Seat reserved successfully");
+        response.put("showId", showId);
+        response.put("seatId", seatId);
+        response.put("reservationTime", LocalDateTime.now());
+        
+        return response;
+    }
+    @Override
+    public Map<String, Object> releaseSeat(String showId, String seatId) {
+        Show show = showRepository.findById(showId)
+                .orElseThrow(() -> new ResourceNotFoundException("Show not found with id: " + showId));
+        
+        // Find the seat in the show's seat status list
+        Optional<Show.SeatStatus> seatStatus = show.getSeatStatus().stream()
+                .filter(s -> s.getSeatId().equals(seatId))
+                .findFirst();
+        
+        if (!seatStatus.isPresent()) {
+            throw new ResourceNotFoundException("Seat not found with id: " + seatId);
+        }
+        
+        // Check if the seat is blocked (only blocked seats can be released)
+        if (seatStatus.get().getStatus() != Show.SeatAvailability.BLOCKED) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Seat is not in a blocked state");
+            response.put("currentStatus", seatStatus.get().getStatus());
+            return response;
+        }
+        
+        // Release the seat
+        seatStatus.get().setStatus(Show.SeatAvailability.AVAILABLE);
+        seatStatus.get().setLastUpdated(LocalDateTime.now());
+        seatStatus.get().setBookingId(null);
+        
+        // Update availability counters and show status
+        show.updateAvailabilityCounters();
+        show.updateShowStatus();
+        
+        // Save the updated show
+        showRepository.save(show);
+        
+        // Return success response
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Seat released successfully");
+        response.put("showId", showId);
+        response.put("seatId", seatId);
+        response.put("releaseTime", LocalDateTime.now());
+        
+        return response;
+    }
+    @Override
+    public Map<String, Object> releaseSeats(String showId, List<String> seatIds) {
+        Show show = showRepository.findById(showId)
+                .orElseThrow(() -> new ResourceNotFoundException("Show not found with id: " + showId));
+        
+        List<String> releasedSeats = new ArrayList<>();
+        List<String> failedSeats = new ArrayList<>();
+        
+        for (String seatId : seatIds) {
+            // Find the seat in the show's seat status list
+            Optional<Show.SeatStatus> seatStatus = show.getSeatStatus().stream()
+                    .filter(s -> s.getSeatId().equals(seatId))
+                    .findFirst();
+            
+            if (!seatStatus.isPresent()) {
+                failedSeats.add(seatId);
+                continue;
+            }
+            
+            // Only release seats that are in BLOCKED state
+            if (seatStatus.get().getStatus() == Show.SeatAvailability.BLOCKED) {
+                seatStatus.get().setStatus(Show.SeatAvailability.AVAILABLE);
+                seatStatus.get().setLastUpdated(LocalDateTime.now());
+                seatStatus.get().setBookingId(null);
+                releasedSeats.add(seatId);
+            } else {
+                failedSeats.add(seatId);
+            }
+        }
+        
+        // Update availability counters and show status if any seats were released
+        if (!releasedSeats.isEmpty()) {
+            show.updateAvailabilityCounters();
+            show.updateShowStatus();
+            showRepository.save(show);
+        }
+        
+        // Return response with results
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", !releasedSeats.isEmpty());
+        response.put("releasedSeats", releasedSeats);
+        response.put("failedSeats", failedSeats);
+        response.put("showId", showId);
+        response.put("releaseTime", LocalDateTime.now());
+        
+        return response;
+    }
+    @Override
+    public Booking createTemporaryBooking(String showId) {
+        // Validate the show
+        Show show = showRepository.findById(showId)
+                .orElseThrow(() -> new ResourceNotFoundException("Show not found with id: " + showId));
+        
+        // Create a temporary booking object
+        Booking tempBooking = new Booking();
+        tempBooking.setShowId(showId);
+        tempBooking.setBookingNumber(generateBookingNumber());
+        tempBooking.setStatus(Booking.BookingStatus.INITIATED);
+        tempBooking.setCreatedAt(LocalDateTime.now());
+        tempBooking.setUpdatedAt(LocalDateTime.now());
+        
+        // Get movie and theater details for the booking
+        Movie movie = movieRepository.findById(show.getMovieId())
+                .orElseThrow(() -> new ResourceNotFoundException("Movie not found"));
+        
+        Theater theater = theaterRepository.findById(show.getTheaterId())
+                .orElseThrow(() -> new ResourceNotFoundException("Theater not found"));
+        
+        // Set basic details
+        tempBooking.setMovieId(movie.getId());
+        tempBooking.setMovieTitle(movie.getTitle());
+        tempBooking.setTheaterId(theater.getId());
+        tempBooking.setTheaterName(theater.getName());
+        tempBooking.setShowTime(show.getShowTime());
+        tempBooking.setExperience(show.getExperience());
+        tempBooking.setLanguage(show.getLanguage());
+        
+        // Set empty lists and initial values
+        tempBooking.setSeats(new ArrayList<>());
+        tempBooking.setTotalSeats(0);
+        tempBooking.setSubtotalAmount(0.0);
+        tempBooking.setDiscountAmount(0.0);
+        tempBooking.setAdditionalCharges(0.0);
+        tempBooking.setTotalAmount(0.0);
+        
+        // Set ticket status
+        tempBooking.setTicketStatus(Booking.TicketFulfillmentStatus.PENDING);
+        
+        return bookingRepository.save(tempBooking);
+    }
+
+    @Override
+    public Booking confirmReservation(String showId, List<String> seatIds, String bookingId) {
+        // Get the booking
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + bookingId));
+        
+        // Validate booking status
+        if (booking.getStatus() != Booking.BookingStatus.INITIATED) {
+            throw new BadRequestException("Booking is not in INITIATED status");
+        }
+        
+        // Validate show
+        Show show = showRepository.findById(showId)
+                .orElseThrow(() -> new ResourceNotFoundException("Show not found with id: " + showId));
+        
+        // Get seat information from the show
+        List<Booking.BookingSeat> bookingSeats = new ArrayList<>();
+        double subtotal = 0.0;
+        
+        for (String seatId : seatIds) {
+            // Find seat in the show's seat status
+            Optional<Show.SeatStatus> seatStatus = show.getSeatStatus().stream()
+                    .filter(s -> s.getSeatId().equals(seatId))
+                    .findFirst();
+            
+            if (!seatStatus.isPresent()) {
+                throw new ResourceNotFoundException("Seat not found with id: " + seatId);
+            }
+            
+            // Check if seat is in BLOCKED status
+            if (seatStatus.get().getStatus() != Show.SeatAvailability.BLOCKED) {
+                throw new BadRequestException("Seat " + seatId + " is not in BLOCKED status");
+            }
+            
+            // Find seat details from the show's layout
+            Theater theater = theaterRepository.findById(show.getTheaterId())
+                .orElseThrow(() -> new ResourceNotFoundException("Theater not found"));
+
+            // Find the screen
+            Theater.Screen screen = theater.getScreens().stream()
+                .filter(s -> s.getScreenNumber().equals(show.getScreenNumber()))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Screen not found"));
+
+            Theater.ScreenLayout layout = screen.getLayout().stream()
+                .filter(s -> s.getScreenNumber().equals(show.getScreenNumber()))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Screen not found"));
+
+            // Find the seat
+            Optional<Theater.Seat> seatDetails = screen.getSeat().stream()
+                .filter(s -> s.getSeatId().equals(seatId))
+                .findFirst();
+            
+            if (!seatDetails.isPresent()) {
+                throw new ResourceNotFoundException("Seat details not found for id: " + seatId);
+            }
+            
+            // Get pricing for this seat category
+            String category = seatDetails.get().getCategoryName();
+            Show.PricingTier pricing = show.getPricing().get(category);
+            if (pricing == null) {
+                throw new BadRequestException("Invalid seat category: " + category);
+            }
+            
+            // Create booking seat
+            Booking.BookingSeat bookingSeat = new Booking.BookingSeat();
+            bookingSeat.setSeatId(seatId);
+            bookingSeat.setRow(seatDetails.get().getRow());
+            bookingSeat.setColumn(seatDetails.get().getColumn());
+            bookingSeat.setCategory(category);
+            bookingSeat.setBasePrice(pricing.getBasePrice());
+            bookingSeat.setFinalPrice(pricing.getFinalPrice());
+            
+            bookingSeats.add(bookingSeat);
+            subtotal += pricing.getFinalPrice();
+            
+            // Update seat status to link it to this booking
+            seatStatus.get().setBookingId(bookingId);
+        }
+        
+        // Update booking with seat and pricing information
+        booking.setSeats(bookingSeats);
+        booking.setTotalSeats(bookingSeats.size());
+        booking.setSubtotalAmount(subtotal);
+        
+        // Calculate additional charges (e.g., convenience fee)
+        double additionalCharges = subtotal * 0.05; // 5% convenience fee
+        booking.setAdditionalCharges(additionalCharges);
+        
+        // Calculate total amount
+        booking.setTotalAmount(subtotal + additionalCharges);
+        
+        // Update booking status
+        booking.setStatus(Booking.BookingStatus.PAYMENT_PENDING);
+        booking.setUpdatedAt(LocalDateTime.now());
+        
+        return bookingRepository.save(booking);
+    }
+
 }
