@@ -1207,18 +1207,23 @@ public class BookingServiceImpl implements IBookingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Theater not found"));
 
             // Find the screen
-            Theater.Screen screen = theater.getScreens().stream()
-                .filter(s -> s.getScreenNumber().equals(show.getScreenNumber()))
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Screen not found"));
+            // Theater.Screen screen = theater.getScreens().stream()
+            //     .filter(s -> s.getScreenNumber().equals(show.getScreenNumber()))
+            //     .findFirst()
+            //     .orElseThrow(() -> new ResourceNotFoundException("Screen not found"));
 
-            Theater.ScreenLayout layout = screen.getLayout().stream()
-                .filter(s -> s.getScreenNumber().equals(show.getScreenNumber()))
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Screen not found"));
+            // Theater.ScreenLayout layout = screen.getLayout().stream()
+            //     .filter(s -> s.getScreenNumber().equals(show.getScreenNumber()))
+            //     .findFirst()
+            //     .orElseThrow(() -> new ResourceNotFoundException("Screen not found"));
+
+            List<Theater.Section> allSections = theater.getScreens().stream()
+                .filter(screen -> screen.getLayout() != null && screen.getLayout().getSections() != null)
+                .flatMap(screen -> screen.getLayout().getSections().stream())
+                .collect(Collectors.toList());
 
             // Find the seat
-            Optional<Theater.Seat> seatDetails = screen.getSeat().stream()
+            Optional<Theater.Seat> seatDetails = allSections.getSeats().stream()
                 .filter(s -> s.getSeatId().equals(seatId))
                 .findFirst();
             
