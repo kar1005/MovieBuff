@@ -2,8 +2,8 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import Header from './Header';
-import Footer from './Footer';
+import Header from '../Header/Header';
+import Footer from '../Footer/Footer';
 import './CustomerLayout.css';
 
 const CustomerLayout = ({ children }) => {

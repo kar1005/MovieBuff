@@ -47,12 +47,29 @@ export const getShowById = createAsyncThunk(
     }
   }
 );
-
+export const getShowsByTheaterAndDate = createAsyncThunk(
+  "shows/getByTheaterAndDate",
+  async ({ theaterId, date }, { rejectWithValue }) => {
+    try {
+      return await showService.getShowsByTheaterAndDate(theaterId, date);
+    } catch (error) {
+      return rejectWithValue(error.toString());
+    }
+  }
+);
 export const getShowsByTheater = createAsyncThunk(
   "shows/getByTheater",
-  async (theaterId, { rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
     try {
-      return await showService.getShowsByTheater(theaterId);
+      // Handle both legacy string parameter and new object parameter
+      if (typeof params === 'string') {
+        // Legacy case: just theaterId as string
+        return await showService.getShowsByTheater(params);
+      } else {
+        // New case: object with theaterId and includePastShows
+        const { theaterId, includePastShows = false } = params;
+        return await showService.getShowsByTheater(theaterId, includePastShows);
+      }
     } catch (error) {
       return rejectWithValue(error.toString());
     }
@@ -132,6 +149,19 @@ export const getSeatAvailability = createAsyncThunk(
   async (showId, { rejectWithValue }) => {
     try {
       return await showService.getSeatAvailability(showId);
+    } catch (error) {
+      return rejectWithValue(error.toString());
+    }
+  }
+);
+export const refreshShowStatus = createAsyncThunk(
+  "shows/refreshStatus",
+  async (showId, { rejectWithValue, dispatch }) => {
+    try {
+      await showService.refreshShowStatus(showId);
+      // After refreshing the status, fetch the updated show
+      dispatch(getShowById(showId));
+      return showId;
     } catch (error) {
       return rejectWithValue(error.toString());
     }
@@ -256,6 +286,18 @@ const showSlice = createSlice({
         }
       })
       .addCase(updateShow.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(getShowsByTheaterAndDate.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getShowsByTheaterAndDate.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.showsByTheater = action.payload;
+      })
+      .addCase(getShowsByTheaterAndDate.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       })
@@ -481,6 +523,17 @@ const showSlice = createSlice({
         console.log('----------------------------------------------IM CALLED: ');
         
         state.showsByScreen = action.payload;
+      })
+      .addCase(refreshShowStatus.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(refreshShowStatus.fulfilled, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(refreshShowStatus.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
       });
   }
 });

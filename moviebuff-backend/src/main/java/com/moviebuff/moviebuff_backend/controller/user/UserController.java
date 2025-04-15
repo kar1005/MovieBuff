@@ -67,36 +67,78 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable String id, @RequestBody User user) {
+    public ResponseEntity<User> updateUser(@PathVariable String id, @RequestBody User userRequest) {
         // Check if the user exists
-        if (!userRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        
-        // Get the existing user to preserve data not in request
-        User existingUser = userRepository.findById(id).orElse(null);
-        if (existingUser == null) {
-            return ResponseEntity.notFound().build();
-        }
-        
-        // Set the ID to ensure we're updating the right record
-        user.setId(id);
-        
-        // Only update password if provided in request
-        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
-        } else {
-            // Preserve existing password if not provided
-            user.setPassword(existingUser.getPassword());
-        }
-        
-        // Ensure role is preserved if not provided
-        if (user.getRole() == null) {
-            user.setRole(existingUser.getRole());
-        }
-        
-        User updatedUser = userRepository.save(user);
-        return ResponseEntity.ok(updatedUser);
+        return userRepository.findById(id)
+                .map(existingUser -> {
+                    // Selectively update fields that are present in the request
+                    if (userRequest.getUsername() != null) {
+                        existingUser.setUsername(userRequest.getUsername());
+                    }
+                    if (userRequest.getEmail() != null) {
+                        existingUser.setEmail(userRequest.getEmail());
+                    }
+                    if (userRequest.getPhoneNumber() != null) {
+                        existingUser.setPhoneNumber(userRequest.getPhoneNumber());
+                    }
+                    
+                    // Handle password separately for security
+                    if (userRequest.getPassword() != null && !userRequest.getPassword().isEmpty()) {
+                        existingUser.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+                    }
+                    
+                    // Update address if provided
+                    if (userRequest.getAddress() != null) {
+                        // If address is provided, update each field selectively
+                        if (existingUser.getAddress() == null) {
+                            existingUser.setAddress(new User.Address());
+                        }
+                        
+                        if (userRequest.getAddress().getStreet() != null) {
+                            existingUser.getAddress().setStreet(userRequest.getAddress().getStreet());
+                        }
+                        if (userRequest.getAddress().getCity() != null) {
+                            existingUser.getAddress().setCity(userRequest.getAddress().getCity());
+                        }
+                        if (userRequest.getAddress().getState() != null) {
+                            existingUser.getAddress().setState(userRequest.getAddress().getState());
+                        }
+                        if (userRequest.getAddress().getZipCode() != null) {
+                            existingUser.getAddress().setZipCode(userRequest.getAddress().getZipCode());
+                        }
+                        if (userRequest.getAddress().getCoordinates() != null) {
+                            existingUser.getAddress().setCoordinates(userRequest.getAddress().getCoordinates());
+                        }
+                    }
+                    
+                    // Update preferences if provided
+                    if (userRequest.getPreferences() != null) {
+                        // If preferences are provided, update each field selectively
+                        if (existingUser.getPreferences() == null) {
+                            existingUser.setPreferences(new User.UserPreferences());
+                        }
+                        
+                        if (userRequest.getPreferences().getFavoriteGenres() != null) {
+                            existingUser.getPreferences().setFavoriteGenres(userRequest.getPreferences().getFavoriteGenres());
+                        }
+                        if (userRequest.getPreferences().getPreferredLanguages() != null) {
+                            existingUser.getPreferences().setPreferredLanguages(userRequest.getPreferences().getPreferredLanguages());
+                        }
+                        if (userRequest.getPreferences().getPreferredTheaters() != null) {
+                            existingUser.getPreferences().setPreferredTheaters(userRequest.getPreferences().getPreferredTheaters());
+                        }
+                    }
+                    
+                    // Update role only if specified and current user is an admin (you might want to add role-based security here)
+                    if (userRequest.getRole() != null) {
+                        existingUser.setRole(userRequest.getRole());
+                    }
+                    
+                    // Save the updated user
+                    User updatedUser = userRepository.save(existingUser);
+                    return ResponseEntity.ok(updatedUser);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
 

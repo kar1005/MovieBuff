@@ -16,6 +16,8 @@
 
 .stats-card:hover {
   background-color: #f8f9fa;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
 }
 
 .feature-icon {
@@ -36,46 +38,31 @@
   border-radius: 20px;
   margin: 0.25rem;
   transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
 }
 
 .amenity-badge:hover {
   background-color: #e9ecef;
 }
 
-.floating-button {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
+.cursor-pointer {
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.floating-button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-}
-
-.custom-toast {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.cursor-pointer:hover {
+  transform: translateY(-3px);
 }
 
 .hover-shadow {
   transition: all 0.3s ease;
+  border: none;
 }
 
 .hover-shadow:hover {
   transform: translateY(-3px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
-}
-
-.cursor-pointer {
-  cursor: pointer;
-}
-
-.tmanager .card-body {
-  padding: 2rem;
 }
 
 .badge-primary {
@@ -89,44 +76,113 @@
   border: 1px solid #dee2e6;
 }
 
-/* Modal Styles */
-.modal-content {
+/* Card Styles */
+.card {
   border-radius: 12px;
-  border: none;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
-.modal-header {
-  border-bottom: 1px solid #f0f0f0;
-  padding: 1.5rem;
+.card-header {
+  background-color: transparent;
+  border-bottom: none;
+  padding: 1.25rem 1.5rem 0.75rem;
 }
 
-.modal-body {
-  padding: 1.5rem;
+.card-body {
+  padding: 1.25rem 1.5rem 1.5rem;
 }
 
-.modal-footer {
-  border-top: 1px solid #f0f0f0;
-  padding: 1.5rem;
+/* Progress Bar Styles */
+.progress {
+  height: 10px;
+  background-color: #f0f0f0;
 }
 
-/* Form Styles */
-.form-control:focus {
-  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+.progress-bar {
+  border-radius: 10px;
+}
+
+/* Button Styles */
+.btn {
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.btn-outline-primary {
+  border-color: #0d6efd;
+  color: #0d6efd;
+}
+
+.btn-outline-primary:hover {
+  background-color: #0d6efd;
+  color: white;
+}
+
+.btn-outline-danger {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-outline-success {
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.btn-outline-success:hover {
+  background-color: #10b981;
+  color: white;
+}
+
+/* Show Items Styling */
+.show-item {
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.show-item:hover {
+  background-color: #f8f9fa;
 }
 
 /* Responsive Styles */
 @media (max-width: 768px) {
-  .tmanager .card-body {
+  .feature-icon {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .card-body {
     padding: 1rem;
   }
   
-  .stats-card {
-    margin-bottom: 1rem;
+  h3 {
+    font-size: 1.5rem;
   }
   
-  .floating-button {
-    width: 50px;
-    height: 50px;
+  h4 {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .feature-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .amenity-badge {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
   }
 }

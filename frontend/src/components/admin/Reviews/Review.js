@@ -1,497 +1,812 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Table, Button, Badge, Spinner, Modal, Tabs, Tab, Alert } from 'react-bootstrap';
-import { Star, Flag, CheckCircle, XCircle, Filter, ChevronDown, Search, AlertTriangle, Eye } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getAllReviews, getMovieReviews, moderateReview } from '../../../redux/slices/reviewSlice';
-import { getAllMovies } from '../../../redux/slices/movieSlice';
-import './Reviews.css'
-function Reviews() {
-    const dispatch = useDispatch();
-    const [isLoading, setIsLoading] = useState(true);
-    const [selectedMovie, setSelectedMovie] = useState('all');
-    const [selectedStatus, setSelectedStatus] = useState('all');
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedReview, setSelectedReview] = useState(null);
-    const [showModal, setShowModal] = useState(false);
-    const [moderationNote, setModerationNote] = useState('');
-    const [moderationStatus, setModerationStatus] = useState('');
-    const [notificationMessage, setNotificationMessage] = useState('');
-    const [notificationType, setNotificationType] = useState('');
+import { 
+  Star, 
+  CheckCircle, 
+  XCircle, 
+  Filter, 
+  Search, 
+  Eye, 
+  ArrowLeft, 
+  ArrowRight,
+  AlertCircle,
+  Check,
+  ChevronDown,
+  Info,
+  Film
+} from 'lucide-react';
+import { 
+  getAllReviews, 
+  moderateReview, 
+  getReviewById 
+} from '../../../redux/slices/reviewSlice';
+import { getMovieById, getAllMovies } from '../../../redux/slices/movieSlice';
+import { getUserById  } from '../../../redux/slices/userSlice';
+import './Reviews.css';
+
+const Reviews = () => {
+  const dispatch = useDispatch();
+  const { reviews, isLoading, error } = useSelector((state) => state.reviews);
+  const { user } = useSelector((state) => state.auth);
+  const { movies } = useSelector((state) => state.movies);
+
+  // State
+  const [filteredReviews, setFilteredReviews] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('FLAGGED'); // Default to show flagged reviews
+  const [filterMovie, setFilterMovie] = useState('');
+  const [filterRating, setFilterRating] = useState('');
+  const [movieSearchTerm, setMovieSearchTerm] = useState('');
+  const [filteredMovies, setFilteredMovies] = useState([]);
+  const [showMovieDropdown, setShowMovieDropdown] = useState(false);
+  const [currentReview, setCurrentReview] = useState(null);
+  const [moderationNote, setModerationNote] = useState('');
+  const [showReviewDetails, setShowReviewDetails] = useState(false);
+  const [page, setPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+  const [currentReportExpanded, setCurrentReportExpanded] = useState(null);
+  const [movieDetailsMap, setMovieDetailsMap] = useState({});
+  const [userDisplayNames, setUserDisplayNames] = useState({});
+  const [userFetchInProgress, setUserFetchInProgress] = useState({});
+
+  // Fetch all reviews and movies when component mounts
+  useEffect(() => {
+    dispatch(getAllReviews());
+    dispatch(getAllMovies({ filters: {}, page: 0, size: 100 })); // Fetch movies with a high limit to get most of them
+  }, [dispatch]);
+
+  // Build movie details map when movies array changes
+  useEffect(() => {
+    if (!movies || !movies.length) return;
     
-    // Get reviews and movies from Redux store
-    const { reviews, movieReviews, error: reviewError } = useSelector(state => state.reviews);
-    const { movies, error: movieError } = useSelector(state => state.movies);
-    
-    // Fetch initial data
-    useEffect(() => {
-        const fetchData = async () => {
-            setIsLoading(true);
-            try {
-                await Promise.all([
-                    dispatch(getAllMovies({ filters: {} })),
-                    dispatch(getAllReviews({}))
-                ]);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            } finally {
-                setIsLoading(false);
-            }
+    const detailsMap = {};
+    movies.forEach(movie => {
+      if (movie && movie.id) {
+        detailsMap[movie.id] = {
+          title: movie.title || 'Unknown Title',
+          posterUrl: movie.posterUrl || '',
+          releaseDate: movie.releaseDate || null,
+          rating: movie.rating || null
         };
-        
-        fetchData();
-    }, [dispatch]);
+      }
+    });
     
-    // Filter by movie ID when selectedMovie changes
-    useEffect(() => {
-        if (selectedMovie && selectedMovie !== 'all') {
-            dispatch(getMovieReviews({ movieId: selectedMovie, status: selectedStatus !== 'all' ? selectedStatus : undefined }));
-        }
-    }, [selectedMovie, selectedStatus, dispatch]);
+    setMovieDetailsMap(detailsMap);
+    setFilteredMovies(movies);
+  }, [movies]);
+
+  // Filter reviews when reviews array, filter status, or search term changes
+  useEffect(() => {
+    if (!reviews || !Array.isArray(reviews)) return;
+
+    let filtered = [...reviews];
+
+    // Filter by status
+    if (filterStatus) {
+      filtered = filtered.filter(review => review.status === filterStatus);
+    }
+
+    // Filter by movie
+    if (filterMovie) {
+      filtered = filtered.filter(review => review.movieId === filterMovie);
+    }
+
+    // Filter by rating
+    if (filterRating) {
+      const rating = parseInt(filterRating, 10);
+      filtered = filtered.filter(review => review.rating === rating);
+    }
+
+    // Filter by search term (in content or user display name)
+    if (searchTerm) {
+      const lowerSearchTerm = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        review => 
+          (review.content?.toLowerCase().includes(lowerSearchTerm) || false) ||
+          (review.userDisplayName?.toLowerCase().includes(lowerSearchTerm) || false)
+      );
+    }
+
+    setFilteredReviews(filtered);
+    setPage(1); // Reset to first page when filters change
     
-    // Function to handle opening the moderation modal
-    const handleOpenModal = (review) => {
-        setSelectedReview(review);
-        setModerationNote(review.moderationNotes || '');
-        setModerationStatus(review.status || 'APPROVED');
-        setShowModal(true);
-    };
+    // Collect unique user IDs to potentially fetch their display names if needed
+    const userIds = [...new Set(filtered.map(review => review.userId).filter(Boolean))];
     
-    // Function to handle review moderation
-    const handleModerateReview = async () => {
-        if (!selectedReview) return;
-        
-        try {
-            await dispatch(moderateReview({
-                id: selectedReview.id,
-                moderationData: {
-                    moderatedBy: 'admin', // Should be the real admin ID or username
-                    moderationNotes: moderationNote,
-                    status: moderationStatus
-                }
-            }));
-            
-            setShowModal(false);
-            setNotificationType('success');
-            setNotificationMessage(`Review status changed to ${moderationStatus}`);
-            
-            // Refresh reviews based on current filters
-            if (selectedMovie !== 'all') {
-                dispatch(getMovieReviews({ movieId: selectedMovie, status: selectedStatus !== 'all' ? selectedStatus : undefined }));
-            } else {
-                dispatch(getAllReviews({}));
-            }
-        } catch (error) {
-            console.error('Error moderating review:', error);
-            setNotificationType('danger');
-            setNotificationMessage('Failed to update review status');
-        }
-    };
+    // For this example, we'll just use the existing userDisplayName,
+    // but in a real app you might want to fetch user details here
+    const displayNames = {};
+    filtered.forEach(review => {
+      if (review.userId && review.userDisplayName) {
+        displayNames[review.userId] = review.userDisplayName;
+      }
+    });
     
-    // Filter reviews based on search term and selected status
-    const filteredReviews = () => {
-        let filteredData = selectedMovie === 'all' ? reviews : movieReviews;
-        
-        if (!filteredData) return [];
-        
-        // Filter by status if not 'all'
-        if (selectedStatus !== 'all') {
-            filteredData = filteredData.filter(review => review.status === selectedStatus);
-        }
-        
-        // Filter by search term
-        if (searchTerm.trim()) {
-            const term = searchTerm.toLowerCase();
-            filteredData = filteredData.filter(review => 
-                review.content?.toLowerCase().includes(term) || 
-                review.userDisplayName?.toLowerCase().includes(term)
-            );
-        }
-        
-        return filteredData;
-    };
+    setUserDisplayNames(displayNames);
     
-    // Get flagged (reported) reviews
-    const flaggedReviews = () => {
-        let allReviews = selectedMovie === 'all' ? reviews : movieReviews;
-        if (!allReviews) return [];
-        
-        return allReviews.filter(review => 
-            review.reportCount > 0 || review.status === 'FLAGGED'
-        );
-    };
+  }, [reviews, filterStatus, filterMovie, filterRating, searchTerm]);
+
+  // Filter movies when search term changes
+  useEffect(() => {
+    if (!movies || !Array.isArray(movies)) return;
     
-    // Get the movie title by ID
-    const getMovieTitle = (movieId) => {
-        if (!movies) return 'Unknown Movie';
-        const movie = movies.find(m => m.id === movieId);
-        return movie ? movie.title : 'Unknown Movie';
-    };
-    
-    // Render star rating
-    const renderStarRating = (rating) => {
-        const stars = [];
-        const fullStars = Math.floor(rating);
-        const hasHalfStar = rating % 1 >= 0.5;
-        
-        for (let i = 1; i <= 5; i++) {
-            if (i <= fullStars) {
-                stars.push(<Star key={i} className="text-warning" fill="#ffc107" size={16} />);
-            } else if (i === fullStars + 1 && hasHalfStar) {
-                stars.push(<Star key={i} className="text-warning" fill="#ffc107" strokeWidth={0} size={16} style={{ clipPath: 'inset(0 50% 0 0)' }} />);
-            } else {
-                stars.push(<Star key={i} className="text-muted" size={16} />);
-            }
-        }
-        
-        return <div className="d-flex">{stars}</div>;
-    };
-    
-    // Render status badge
-    const renderStatusBadge = (status) => {
-        let badgeColor = 'secondary';
-        
-        switch(status) {
-            case 'APPROVED':
-                badgeColor = 'success';
-                break;
-            case 'PENDING':
-                badgeColor = 'warning';
-                break;
-            case 'REJECTED':
-                badgeColor = 'danger';
-                break;
-            case 'FLAGGED':
-                badgeColor = 'danger';
-                break;
-            default:
-                badgeColor = 'secondary';
-        }
-        
-        return <Badge bg={badgeColor}>{status}</Badge>;
-    };
-    
-    if (isLoading) {
-        return (
-            <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
-                <Spinner animation="border" variant="primary" />
-            </div>
-        );
+    if (movieSearchTerm.trim() === '') {
+      setFilteredMovies(movies);
+      return;
     }
     
-    return (
-        <Container fluid className="py-4">
-            <Row className="mb-4">
-                <Col>
-                    <h2 className="mb-1">Review Management</h2>
-                    <p className="text-muted">Monitor and moderate user reviews</p>
-                </Col>
-            </Row>
-            
-            {notificationMessage && (
-                <Alert 
-                    variant={notificationType} 
-                    dismissible 
-                    onClose={() => setNotificationMessage('')}
-                    className="mb-4"
-                >
-                    {notificationMessage}
-                </Alert>
-            )}
-            
-            <Card className="mb-4">
-                <Card.Header>
-                    <Row className="align-items-center">
-                        <Col md={4}>
-                            <div className="d-flex align-items-center">
-                                <Filter size={18} className="me-2 text-primary" />
-                                <span className="fw-medium">Filters</span>
-                            </div>
-                        </Col>
-                        <Col md={8}>
-                            <div className="d-flex gap-3 justify-content-md-end">
-                                <Form.Group className="mb-0" style={{ minWidth: '200px' }}>
-                                    <Form.Select 
-                                        size="sm" 
-                                        value={selectedMovie}
-                                        onChange={(e) => setSelectedMovie(e.target.value)}
-                                    >
-                                        <option value="all">All Movies</option>
-                                        {movies && movies.map(movie => (
-                                            <option key={movie.id} value={movie.id}>{movie.title}</option>
-                                        ))}
-                                    </Form.Select>
-                                </Form.Group>
-                                
-                                <Form.Group className="mb-0" style={{ minWidth: '150px' }}>
-                                    <Form.Select 
-                                        size="sm" 
-                                        value={selectedStatus}
-                                        onChange={(e) => setSelectedStatus(e.target.value)}
-                                    >
-                                        <option value="all">All Statuses</option>
-                                        <option value="APPROVED">Approved</option>
-                                        <option value="PENDING">Pending</option>
-                                        <option value="REJECTED">Rejected</option>
-                                        <option value="FLAGGED">Flagged</option>
-                                    </Form.Select>
-                                </Form.Group>
-                                
-                                <Form.Group className="mb-0 position-relative" style={{ minWidth: '200px' }}>
-                                    <Form.Control
-                                        size="sm"
-                                        type="text"
-                                        placeholder="Search reviews..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
-                                    <Search size={14} className="position-absolute" style={{ right: '10px', top: '7px', opacity: 0.5 }} />
-                                </Form.Group>
-                            </div>
-                        </Col>
-                    </Row>
-                </Card.Header>
-            </Card>
-            
-            <Tabs defaultActiveKey="all" className="mb-4">
-                <Tab eventKey="all" title={<div className="d-flex align-items-center"><Eye size={16} className="me-2" />All Reviews</div>}>
-                    <Card>
-                        <Card.Body className="p-0">
-                            {filteredReviews().length > 0 ? (
-                                <Table responsive hover className="mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>User</th>
-                                            <th>Movie</th>
-                                            <th>Rating</th>
-                                            <th>Review</th>
-                                            <th>Date</th>
-                                            <th>Status</th>
-                                            <th>Reports</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {filteredReviews().map(review => (
-                                            <tr key={review.id}>
-                                                <td>{review.userDisplayName || 'Anonymous'}</td>
-                                                <td>{getMovieTitle(review.movieId)}</td>
-                                                <td>{renderStarRating(review.rating)}</td>
-                                                <td>
-                                                    <div style={{ maxWidth: '300px', maxHeight: '60px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal' }}>
-                                                        {review.content}
-                                                    </div>
-                                                </td>
-                                                <td>{new Date(review.createdAt).toLocaleDateString()}</td>
-                                                <td>{renderStatusBadge(review.status)}</td>
-                                                <td>
-                                                    {review.reportCount > 0 && (
-                                                        <Badge bg="danger" pill>
-                                                            {review.reportCount}
-                                                        </Badge>
-                                                    )}
-                                                </td>
-                                                <td>
-                                                    <Button 
-                                                        variant="outline-primary" 
-                                                        size="sm"
-                                                        onClick={() => handleOpenModal(review)}
-                                                    >
-                                                        Moderate
-                                                    </Button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </Table>
-                            ) : (
-                                <div className="text-center py-5">
-                                    <p className="mb-0 text-muted">No reviews found matching your criteria</p>
-                                </div>
-                            )}
-                        </Card.Body>
-                    </Card>
-                </Tab>
-                
-                <Tab eventKey="flagged" title={<div className="d-flex align-items-center"><Flag size={16} className="me-2" />Flagged Reviews</div>}>
-                    <Card>
-                        <Card.Body className="p-0">
-                            {flaggedReviews().length > 0 ? (
-                                <Table responsive hover className="mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>User</th>
-                                            <th>Movie</th>
-                                            <th>Rating</th>
-                                            <th>Review</th>
-                                            <th>Reports</th>
-                                            <th>Report Reasons</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {flaggedReviews().map(review => (
-                                            <tr key={review.id}>
-                                                <td>{review.userDisplayName || 'Anonymous'}</td>
-                                                <td>{getMovieTitle(review.movieId)}</td>
-                                                <td>{renderStarRating(review.rating)}</td>
-                                                <td>
-                                                    <div style={{ maxWidth: '250px', maxHeight: '60px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal' }}>
-                                                        {review.content}
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <Badge bg="danger" pill>
-                                                        {review.reportCount || 0}
-                                                    </Badge>
-                                                </td>
-                                                <td>
-                                                    {review.reports && review.reports.length > 0 ? (
-                                                        <div style={{ maxWidth: '150px' }}>
-                                                            {review.reports.slice(0, 2).map((report, index) => (
-                                                                <Badge bg="secondary" className="me-1 mb-1" key={index}>
-                                                                    {report.reason}
-                                                                </Badge>
-                                                            ))}
-                                                            {review.reports.length > 2 && (
-                                                                <Badge bg="secondary" pill>
-                                                                    +{review.reports.length - 2}
-                                                                </Badge>
-                                                            )}
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-muted">No details</span>
-                                                    )}
-                                                </td>
-                                                <td>{renderStatusBadge(review.status)}</td>
-                                                <td>
-                                                    <Button 
-                                                        variant="outline-primary" 
-                                                        size="sm"
-                                                        onClick={() => handleOpenModal(review)}
-                                                    >
-                                                        Moderate
-                                                    </Button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </Table>
-                            ) : (
-                                <div className="text-center py-5">
-                                    <AlertTriangle size={48} className="text-muted mb-3" />
-                                    <p className="mb-0 text-muted">No flagged reviews found</p>
-                                </div>
-                            )}
-                        </Card.Body>
-                    </Card>
-                </Tab>
-            </Tabs>
-            
-            {/* Moderation Modal */}
-            <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Review Moderation</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {selectedReview && (
-                        <>
-                            <div className="mb-3">
-                                <div className="text-muted mb-1">User</div>
-                                <div className="fw-medium">{selectedReview.userDisplayName || 'Anonymous'}</div>
-                            </div>
-                            
-                            <div className="mb-3">
-                                <div className="text-muted mb-1">Movie</div>
-                                <div className="fw-medium">{getMovieTitle(selectedReview.movieId)}</div>
-                            </div>
-                            
-                            <div className="mb-3">
-                                <div className="text-muted mb-1">Rating</div>
-                                <div>{renderStarRating(selectedReview.rating)}</div>
-                            </div>
-                            
-                            <div className="mb-3">
-                                <div className="text-muted mb-1">Review Content</div>
-                                <Card className="bg-light">
-                                    <Card.Body className="py-2">
-                                        {selectedReview.content}
-                                    </Card.Body>
-                                </Card>
-                            </div>
-                            
-                            {selectedReview.reports && selectedReview.reports.length > 0 && (
-                                <div className="mb-3">
-                                    <div className="text-muted mb-1">Report Reasons</div>
-                                    <div>
-                                        {selectedReview.reports.map((report, index) => (
-                                            <div key={index} className="mb-1">
-                                                <Badge bg="danger" className="me-2">{report.reason}</Badge>
-                                                <small className="text-muted">{new Date(report.reportedAt).toLocaleString()}</small>
-                                                {report.additionalDetails && (
-                                                    <p className="small text-muted mt-1 mb-2">{report.additionalDetails}</p>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                            
-                            <Form.Group className="mb-3">
-                                <Form.Label>Moderation Status</Form.Label>
-                                <Form.Select 
-                                    value={moderationStatus}
-                                    onChange={(e) => setModerationStatus(e.target.value)}
-                                >
-                                    <option value="APPROVED">Approved</option>
-                                    <option value="PENDING">Pending</option>
-                                    <option value="REJECTED">Rejected</option>
-                                </Form.Select>
-                            </Form.Group>
-                            
-                            <Form.Group className="mb-3">
-                                <Form.Label>Moderation Notes</Form.Label>
-                                <Form.Control 
-                                    as="textarea" 
-                                    rows={3}
-                                    value={moderationNote}
-                                    onChange={(e) => setModerationNote(e.target.value)}
-                                    placeholder="Add notes about why this review was approved or rejected..."
-                                />
-                            </Form.Group>
-                        </>
-                    )}
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowModal(false)}>
-                        Cancel
-                    </Button>
-                    <Button 
-                        variant={moderationStatus === 'APPROVED' ? 'success' : 
-                                 moderationStatus === 'REJECTED' ? 'danger' : 'warning'}
-                        onClick={handleModerateReview}
-                    >
-                        {moderationStatus === 'APPROVED' ? (
-                            <>
-                                <CheckCircle size={16} className="me-1" />
-                                Approve
-                            </>
-                        ) : moderationStatus === 'REJECTED' ? (
-                            <>
-                                <XCircle size={16} className="me-1" />
-                                Reject
-                            </>
-                        ) : (
-                            <>
-                                <AlertTriangle size={16} className="me-1" />
-                                Mark as Pending
-                            </>
-                        )}
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-        </Container>
+    const lowerSearchTerm = movieSearchTerm.toLowerCase();
+    const filtered = movies.filter(movie => 
+      movie.title?.toLowerCase().includes(lowerSearchTerm) || false
     );
-}
+    
+    setFilteredMovies(filtered);
+  }, [movies, movieSearchTerm]);
+
+  // Get unique movie IDs and names for display
+  const uniqueMovieOptions = Array.isArray(reviews) ? 
+    [...new Set(reviews.map(review => review.movieId))]
+      .filter(id => id)  // Remove null/undefined
+      .map(id => ({
+        id,
+        title: movieDetailsMap[id]?.title || id  // Fall back to ID if title not found
+      }))
+    : [];
+
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  // Handle filter status change
+  const handleStatusFilterChange = (e) => {
+    setFilterStatus(e.target.value);
+  };
+
+  // Handle filter rating change
+  const handleRatingFilterChange = (e) => {
+    setFilterRating(e.target.value);
+  };
+
+  // Handle movie search input change
+  const handleMovieSearchChange = (e) => {
+    setMovieSearchTerm(e.target.value);
+    setShowMovieDropdown(true);
+  };
+
+  // Handle movie selection from dropdown
+  const handleMovieSelect = (movieId) => {
+    setFilterMovie(movieId);
+    setMovieSearchTerm(movieDetailsMap[movieId]?.title || '');
+    setShowMovieDropdown(false);
+  };
+
+  // Clear movie filter
+  const clearMovieFilter = () => {
+    setFilterMovie('');
+    setMovieSearchTerm('');
+  };
+
+  // View review details
+  const handleViewReview = (review) => {
+    // If this is the first time viewing details for this movie, fetch its data
+    if (review.movieId && !movieDetailsMap[review.movieId]?.title) {
+      dispatch(getMovieById(review.movieId));
+    }
+    
+    setCurrentReview(review);
+    setModerationNote('');
+    setShowReviewDetails(true);
+  };
+
+  // Close review details
+  const handleCloseReviewDetails = () => {
+    setShowReviewDetails(false);
+    setCurrentReview(null);
+    setModerationNote('');
+  };
+
+  // Handle moderation action (approve or reject)
+  const handleModerateReview = (action) => {
+    if (!currentReview || !currentReview.id) {
+      setNotification({
+        show: true,
+        message: "Error: Cannot moderate review - review information is missing",
+        type: 'error'
+      });
+      return;
+    }
+    
+    const status = action === 'approve' ? 'APPROVED' : 'REJECTED';
+    
+    // Make sure user and user.id exist before using them
+    const moderatorId = user && user.id ? user.id : 'admin'; // Fallback to 'admin' if user.id doesn't exist
+    
+    const moderationData = {
+      moderatedBy: moderatorId,
+      moderationNotes: moderationNote || 'No notes provided',
+      status
+    };
+
+    console.log("Moderating review:", currentReview.id);
+    console.log("Moderation data:", moderationData);
+    
+    dispatch(moderateReview({
+      id: currentReview.id,
+      moderationData
+    }))
+    .unwrap()
+    .then(() => {
+      setNotification({
+        show: true,
+        message: `Review ${status === 'APPROVED' ? 'approved' : 'rejected'} successfully`,
+        type: 'success'
+      });
+      
+      // Refresh the review list
+      dispatch(getAllReviews());
+      
+      // Update movie rating if a review's status changed
+      if (currentReview.movieId) {
+        dispatch(getMovieById(currentReview.movieId));
+      }
+      
+      // Close the details view
+      handleCloseReviewDetails();
+      
+      // Auto-hide notification after 5 seconds
+      setTimeout(() => {
+        setNotification({ show: false, message: '', type: '' });
+      }, 5000);
+    })
+    .catch((err) => {
+      console.error("Error moderating review:", err);
+      setNotification({
+        show: true,
+        message: `Error: ${err?.message || 'Failed to process moderation'}`,
+        type: 'error'
+      });
+      
+      // Auto-hide notification after 5 seconds
+      setTimeout(() => {
+        setNotification({ show: false, message: '', type: '' });
+      }, 5000);
+    });
+  };
+
+  // Toggle report details expansion
+  const toggleReportDetails = (reportIndex) => {
+    if (currentReportExpanded === reportIndex) {
+      setCurrentReportExpanded(null);
+    } else {
+      setCurrentReportExpanded(reportIndex);
+    }
+  };
+
+  // Close notification
+  const closeNotification = () => {
+    setNotification({ show: false, message: '', type: '' });
+  };
+
+  // Pagination
+  const totalPages = Math.ceil(filteredReviews.length / itemsPerPage);
+  const startIndex = (page - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentPageReviews = filteredReviews.slice(startIndex, endIndex);
+
+  const goToNextPage = () => {
+    if (page < totalPages) {
+      setPage(page + 1);
+    }
+  };
+
+  const goToPrevPage = () => {
+    if (page > 1) {
+      setPage(page - 1);
+    }
+  };
+
+  // Get movie title from ID
+  const getMovieTitle = (movieId) => {
+    return movieId ? (movieDetailsMap[movieId]?.title || movieId) : 'Unknown Movie';
+  };
+
+  // Get user display name
+// Update the getUserDisplayName function
+const getUserDisplayName = (userId, fallbackName) => {
+  if (!userId) return fallbackName || 'Unknown User';
+  
+  // If we have the display name cached, return it
+  if (userDisplayNames[userId]) {
+    return userDisplayNames[userId];
+  }
+  
+  // If not, fetch the user details
+  if (!userFetchInProgress[userId]) {
+    // Prevent multiple fetches for the same user
+    userFetchInProgress[userId] = true;
+    
+    // Dispatch action to fetch user details
+    dispatch(getUserById(userId))
+      .then(response => {
+        // Update the display names with the fetched username
+        setUserDisplayNames(prev => ({
+          ...prev,
+          [userId]: response.payload.username || response.payload.displayName || fallbackName
+        }));
+        userFetchInProgress[userId] = false;
+      })
+      .catch(error => {
+        console.error(`Failed to fetch user details for ${userId}:`, error);
+        userFetchInProgress[userId] = false;
+      });
+  }
+  
+  // Return fallback or userId while fetching
+  return fallbackName || userId;
+};
+
+  // Render star rating
+  const renderStarRating = (rating) => {
+    rating = rating || 0; // Ensure rating is a number
+    return (
+      <div className="star-rating">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            size={16}
+            fill={star <= rating ? '#FFC107' : 'none'}
+            stroke={star <= rating ? '#FFC107' : '#ccc'}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div className="review-management-container">
+      <h1>Review Management</h1>
+      
+      {/* Notification banner */}
+      {notification.show && (
+        <div className={`notification-banner ${notification.type}`}>
+          {notification.type === 'success' ? (
+            <Check size={20} />
+          ) : (
+            <AlertCircle size={20} />
+          )}
+          <span>{notification.message}</span>
+          <button className="close-notification" onClick={closeNotification}>×</button>
+        </div>
+      )}
+      
+      {isLoading ? (
+        <div className="loading-message">
+          <div className="spinner"></div>
+          <span>Loading reviews...</span>
+        </div>
+      ) : error ? (
+        <div className="error-message">
+          <AlertCircle size={20} />
+          <span>{error}</span>
+        </div>
+      ) : (
+        <>
+          {!showReviewDetails ? (
+            <>
+              <div className="filter-controls">
+                <div className="search-box">
+                  <Search size={18} />
+                  <input
+                    type="text"
+                    placeholder="Search in reviews..."
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                  />
+                </div>
+                
+                <div className="filters">
+                  <div className="filter-item">
+                    <Filter size={18} />
+                    <select value={filterStatus} onChange={handleStatusFilterChange}>
+                      <option value="">All Statuses</option>
+                      <option value="APPROVED">Approved</option>
+                      <option value="PENDING">Pending</option>
+                      <option value="FLAGGED">Flagged</option>
+                      <option value="REJECTED">Rejected</option>
+                    </select>
+                  </div>
+                  
+                  <div className="filter-item">
+                    <Star size={18} />
+                    <select value={filterRating} onChange={handleRatingFilterChange}>
+                      <option value="">All Ratings</option>
+                      <option value="5">5 Stars</option>
+                      <option value="4">4 Stars</option>
+                      <option value="3">3 Stars</option>
+                      <option value="2">2 Stars</option>
+                      <option value="1">1 Star</option>
+                    </select>
+                  </div>
+                  
+                  <div className="filter-item movie-filter">
+                    <Film size={18} />
+                    <div className="movie-search-container">
+                      <input
+                        type="text"
+                        placeholder="Search for a movie..."
+                        value={movieSearchTerm}
+                        onChange={handleMovieSearchChange}
+                        onFocus={() => setShowMovieDropdown(true)}
+                        onBlur={() => setTimeout(() => setShowMovieDropdown(false), 200)}
+                      />
+                      {filterMovie && (
+                        <button 
+                          className="clear-filter-button"
+                          onClick={clearMovieFilter}
+                        >
+                          &times;
+                        </button>
+                      )}
+                      
+                      {showMovieDropdown && filteredMovies.length > 0 && (
+                        <div className="movie-dropdown">
+                          {filteredMovies.map(movie => (
+                            <div 
+                              key={movie.id} 
+                              className="movie-option"
+                              onClick={() => handleMovieSelect(movie.id)}
+                            >
+                              {movie.posterUrl && (
+                                <img 
+                                  src={movie.posterUrl} 
+                                  alt={movie.title} 
+                                  className="movie-thumbnail" 
+                                />
+                              )}
+                              <span>{movie.title}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="review-stats">
+                <div className="stat-item">
+                  <h4>Total Flagged</h4>
+                  <p>{Array.isArray(reviews) ? reviews.filter(review => review.status === 'FLAGGED').length : 0}</p>
+                </div>
+                <div className="stat-item">
+                  <h4>Total Pending</h4>
+                  <p>{Array.isArray(reviews) ? reviews.filter(review => review.status === 'PENDING').length : 0}</p>
+                </div>
+                <div className="stat-item">
+                  <h4>Total Approved</h4>
+                  <p>{Array.isArray(reviews) ? reviews.filter(review => review.status === 'APPROVED').length : 0}</p>
+                </div>
+                <div className="stat-item">
+                  <h4>Total Rejected</h4>
+                  <p>{Array.isArray(reviews) ? reviews.filter(review => review.status === 'REJECTED').length : 0}</p>
+                </div>
+              </div>
+              
+              <div className="reviews-table-container">
+                {currentPageReviews.length === 0 ? (
+                  <div className="no-reviews-message">
+                    <Info size={24} />
+                    <p>No reviews found matching your filters.</p>
+                  </div>
+                ) : (
+                  <table className="reviews-table">
+                    <thead>
+                      <tr>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>User</th>
+                        <th>Rating</th>
+                        <th>Content</th>
+                        <th>Movie</th>
+                        <th>Reports</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {currentPageReviews.map(review => (
+                        <tr key={review.id} className={`status-${review.status.toLowerCase()}`}>
+                          <td data-label="Status">
+                            <span className={`status-badge ${review.status.toLowerCase()}`}>
+                              {review.status}
+                            </span>
+                          </td>
+                          <td data-label="Date">
+                            {review.createdAt ? new Date(review.createdAt).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            }) : 'Unknown Date'}
+                          </td>
+                          <td data-label="User">{review.userDisplayName || 'Unknown User'}</td>
+                          <td data-label="Rating">{renderStarRating(review.rating)}</td>
+                          <td data-label="Content" className="review-content-cell">
+                            {review.content && review.content.length > 100
+                              ? `${review.content.substring(0, 100)}...`
+                              : review.content || 'No content'}
+                          </td>
+                          <td data-label="Movie" className="movie-cell">
+                            {review.movieId && movieDetailsMap[review.movieId] ? (
+                              <div className="movie-info-preview">
+                                {movieDetailsMap[review.movieId].posterUrl && (
+                                  <img 
+                                    src={movieDetailsMap[review.movieId].posterUrl} 
+                                    alt={movieDetailsMap[review.movieId].title || 'Movie poster'}
+                                    className="movie-thumbnail" 
+                                  />
+                                )}
+                                <span>{getMovieTitle(review.movieId)}</span>
+                              </div>
+                            ) : (
+                              <span>Unknown Movie</span>
+                            )}
+                          </td>
+                          <td data-label="Reports">
+                            {review.reportCount ? (
+                              <span className="report-count">{review.reportCount}</span>
+                            ) : (
+                              '0'
+                            )}
+                          </td>
+                          <td data-label="Actions">
+                            <button
+                              className="view-button"
+                              onClick={() => handleViewReview(review)}
+                            >
+                              <Eye size={18} />
+                              View
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+                
+                {filteredReviews.length > itemsPerPage && (
+                  <div className="pagination">
+                    <button
+                      className="pagination-button"
+                      onClick={goToPrevPage}
+                      disabled={page === 1}
+                    >
+                      <ArrowLeft size={16} />
+                      Previous
+                    </button>
+                    <span className="page-info">
+                      Page {page} of {totalPages}
+                    </span>
+                    <button
+                      className="pagination-button"
+                      onClick={goToNextPage}
+                      disabled={page === totalPages}
+                    >
+                      Next
+                      <ArrowRight size={16} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="review-details-container">
+              <button
+                className="back-button"
+                onClick={handleCloseReviewDetails}
+              >
+                <ArrowLeft size={16} />
+                Back to List
+              </button>
+              
+              {currentReview && (
+                <div className="review-details">
+                  <h2>Review Details</h2>
+                  
+                  {currentReview.movieId && movieDetailsMap[currentReview.movieId] && (
+                    <div className="movie-info-card">
+                      <div className="movie-poster">
+                        {movieDetailsMap[currentReview.movieId].posterUrl ? (
+                          <img 
+                            src={movieDetailsMap[currentReview.movieId].posterUrl} 
+                            alt={movieDetailsMap[currentReview.movieId].title || 'Movie poster'} 
+                          />
+                        ) : (
+                          <div className="poster-placeholder">No poster available</div>
+                        )}
+                      </div>
+                      <div className="movie-details">
+                        <h3>{movieDetailsMap[currentReview.movieId].title || 'Unknown Movie'}</h3>
+                        {movieDetailsMap[currentReview.movieId]?.rating && (
+                          <div className="movie-rating">
+                            <Star fill="#FFC107" stroke="#FFC107" size={18} />
+                            <span>{movieDetailsMap[currentReview.movieId].rating.average}/10</span>
+                            <span className="vote-count">
+                              ({movieDetailsMap[currentReview.movieId].rating.count} votes)
+                            </span>
+                          </div>
+                        )}
+                        {movieDetailsMap[currentReview.movieId]?.releaseDate && (
+                          <div className="movie-release-date">
+                            Released: {new Date(movieDetailsMap[currentReview.movieId].releaseDate).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="review-info">
+                    <div className="review-info-item">
+                      <h3>Status</h3>
+                      <span className={`status-badge ${currentReview.status.toLowerCase()}`}>
+                        {currentReview.status}
+                      </span>
+                    </div>
+                    
+                    <div className="review-info-item">
+                      <h3>User</h3>
+                      <p>{currentReview.userDisplayName || 'Unknown User'}</p>
+                    </div>
+                    
+                    <div className="review-info-item">
+                      <h3>Rating</h3>
+                      {renderStarRating(currentReview.rating)}
+                    </div>
+                    
+                    <div className="review-info-item">
+                      <h3>Date</h3>
+                      <p>
+                        {currentReview.createdAt ? new Date(currentReview.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) : 'Unknown Date'}
+                      </p>
+                    </div>
+                    
+                    <div className="review-info-item">
+                      <h3>Movie</h3>
+                      <p>{getMovieTitle(currentReview.movieId)}</p>
+                    </div>
+                    
+                    {currentReview.moderatedBy && (
+                      <div className="review-info-item">
+                        <h3>Moderated By</h3>
+                        <p>{getUserDisplayName(currentReview.moderatedBy, currentReview.moderatedBy)}</p>
+                      </div>
+                    )}
+                    
+                    {currentReview.moderationNotes && (
+                      <div className="review-info-item">
+                        <h3>Moderation Notes</h3>
+                        <p>{currentReview.moderationNotes}</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="review-content-full">
+                    <h3>Review Content</h3>
+                    <div className="content-box">
+                      {currentReview.content || 'No content provided'}
+                    </div>
+                  </div>
+                  
+                  {currentReview.reports && currentReview.reports.length > 0 && (
+  <div className="review-reports">
+    <h3>Reports ({currentReview.reports.length})</h3>
+    
+    <div className="reports-list">
+      {currentReview.reports.map((report, index) => (
+        <div className="report-item" key={index}>
+          <div 
+            className="report-header" 
+            onClick={() => toggleReportDetails(index)}
+          >
+            <div className="report-reason">
+              <span className="report-label">Reason:</span>
+              <span className="report-reason-value">
+                {report.reason && typeof report.reason === 'string' ? 
+                  report.reason.replace(/_/g, ' ').charAt(0) + 
+                  report.reason.replace(/_/g, ' ').slice(1).toLowerCase() : 
+                  'Unknown Reason'}
+              </span>
+            </div>
+            
+            <div className="report-meta">
+              <span className="report-date">
+                {report.reportedAt ? new Date(report.reportedAt).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric'
+                }) : 'Unknown Date'}
+              </span>
+              <ChevronDown 
+                size={16} 
+                className={currentReportExpanded === index ? 'chevron-rotated' : ''}
+              />
+            </div>
+          </div>
+          
+          {currentReportExpanded === index && (
+            <div className="report-details">
+              <div className="report-detail-item">
+                <span className="report-label">Reported By:</span>
+                {/* THIS IS THE PART YOU NEED TO MODIFY */}
+                <span>{getUserDisplayName(report.userId)}</span>
+              </div>
+              
+              {report.additionalDetails && (
+                <div className="report-detail-item">
+                  <span className="report-label">Details:</span>
+                  <span>{report.additionalDetails}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+                  
+                  <div className="moderation-form">
+                    <h3>Moderation</h3>
+                    
+                    <div className="form-group">
+                      <label htmlFor="moderation-notes">Moderation Notes</label>
+                      <textarea
+                        id="moderation-notes"
+                        placeholder="Add notes about your moderation decision..."
+                        value={moderationNote}
+                        onChange={(e) => setModerationNote(e.target.value)}
+                        rows={4}
+                      ></textarea>
+                    </div>
+                    
+                    <div className="moderation-actions">
+                      <button
+                        className="approve-button"
+                        onClick={() => handleModerateReview('approve')}
+                        disabled={!currentReview.id}
+                      >
+                        <CheckCircle size={16} />
+                        Approve Review
+                      </button>
+                      
+                      <button
+                        className="reject-button"
+                        onClick={() => handleModerateReview('reject')}
+                        disabled={!currentReview.id}
+                      >
+                        <XCircle size={16} />
+                        Reject Review
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
 
 export default Reviews;

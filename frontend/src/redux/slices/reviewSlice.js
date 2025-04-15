@@ -1,6 +1,7 @@
 // src/redux/slices/reviewSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import reviewService from "../../services/reviewService";
+import movieService from "../../services/movieService";
 
 // Async thunks for review operations
 export const getAllReviews = createAsyncThunk(
@@ -49,20 +50,35 @@ export const getMovieReviews = createAsyncThunk(
 
 export const createReview = createAsyncThunk(
   "reviews/create",
-  async (reviewData, { rejectWithValue }) => {
+  async (reviewData, { dispatch, rejectWithValue }) => {
     try {
-      return await reviewService.createReview(reviewData);
+      const result = await reviewService.createReview(reviewData);
+      
+      // After creating the review, update the movie rating
+      if (result && reviewData.status === 'APPROVED') {
+        await recalculateAndUpdateMovieRating(reviewData.movieId, dispatch);
+      }
+      
+      return result;
     } catch (error) {
       return rejectWithValue(error.toString());
     }
   }
 );
 
+
 export const updateReview = createAsyncThunk(
   "reviews/update",
-  async ({ id, reviewData }, { rejectWithValue }) => {
+  async ({ id, reviewData }, { dispatch, rejectWithValue }) => {
     try {
-      return await reviewService.updateReview(id, reviewData);
+      const result = await reviewService.updateReview(id, reviewData);
+      
+      // After updating the review, update the movie rating
+      if (result && reviewData.movieId && reviewData.status === 'APPROVED') {
+        await recalculateAndUpdateMovieRating(reviewData.movieId, dispatch);
+      }
+      
+      return result;
     } catch (error) {
       return rejectWithValue(error.toString());
     }
@@ -71,9 +87,19 @@ export const updateReview = createAsyncThunk(
 
 export const deleteReview = createAsyncThunk(
   "reviews/delete",
-  async (id, { rejectWithValue }) => {
+  async (id, { dispatch, getState, rejectWithValue }) => {
     try {
+      // Get the review before deleting it to know which movie to update
+      const reviewToDelete = await reviewService.getReviewById(id);
+      const movieId = reviewToDelete?.movieId;
+      
       await reviewService.deleteReview(id);
+      
+      // After deleting the review, update the movie rating
+      if (movieId && reviewToDelete.status === 'APPROVED') {
+        await recalculateAndUpdateMovieRating(movieId, dispatch);
+      }
+      
       return id;
     } catch (error) {
       return rejectWithValue(error.toString());
@@ -81,19 +107,24 @@ export const deleteReview = createAsyncThunk(
   }
 );
 
+
 export const moderateReview = createAsyncThunk(
   "reviews/moderate",
-  async ({ id, moderationData }, { rejectWithValue }) => {
+  async ({ id, moderationData }, { dispatch, rejectWithValue }) => {
     try {
-      return await reviewService.moderateReview(id, moderationData.moderatedBy, 
-                                               moderationData.moderationNotes, 
-                                               moderationData.status);
+      const result = await reviewService.moderateReview(id, moderationData);
+      
+      // After moderating the review, update the movie rating if status changed
+      if (result && result.movieId) {
+        await recalculateAndUpdateMovieRating(result.movieId, dispatch);
+      }
+      
+      return result;
     } catch (error) {
       return rejectWithValue(error.toString());
     }
   }
 );
-
 export const markHelpful = createAsyncThunk(
   "reviews/markHelpful",
   async ({ id, userId }, { rejectWithValue }) => {
@@ -137,6 +168,47 @@ export const getReviewStats = createAsyncThunk(
     }
   }
 );
+
+export const updateMovieRating = createAsyncThunk(
+  "reviews/updateMovieRating",
+  async ({ movieId, newAverage, newCount }, { rejectWithValue }) => {
+    try {
+      return await movieService.updateMovieRating(movieId, {
+        average: newAverage,
+        count: newCount
+      });
+    } catch (error) {
+      return rejectWithValue(error.toString());
+    }
+  }
+);
+
+const recalculateAndUpdateMovieRating = async (movieId, dispatch, getState) => {
+  try {
+    // Get all approved reviews for this movie
+    const response = await reviewService.getMovieReviews(movieId, 'APPROVED');
+    const approvedReviews = response;
+    
+    // Calculate the new average rating
+    let newAverage = 0;
+    const newCount = approvedReviews.length;
+    
+    if (newCount > 0) {
+      const sum = approvedReviews.reduce((acc, review) => acc + review.rating, 0);
+      newAverage = parseFloat((sum / newCount).toFixed(1));
+    }
+    
+    // Update the movie rating
+    await dispatch(updateMovieRating({
+      movieId,
+      newAverage,
+      newCount
+    }));
+    
+  } catch (error) {
+    console.error('Failed to update movie rating:', error);
+  }
+};
 
 const initialState = {
   reviews: [],

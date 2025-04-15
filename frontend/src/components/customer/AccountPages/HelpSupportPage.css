@@ -1,0 +1,287 @@
+/* src/components/customer/HelpSupport/HelpSupportPage.css */
+
+.help-support-page {
+    padding: 2rem 0;
+    min-height: calc(100vh - 65px);
+    background-color: #161b29;
+    color: #e2e8f0;
+  }
+  
+  .help-support-header {
+    background-color: #0f172a;
+    padding: 4rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+  }
+  
+  .help-support-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50px;
+    background: linear-gradient(to top, #1a1f2d, transparent);
+  }
+  
+  .help-support-header h1 {
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #ffffff;
+  }
+  
+  .help-support-header .lead {
+    font-size: 1.2rem;
+    color: #94a3b8;
+  }
+  
+  /* Contact Cards */
+  .contact-card {
+    background-color: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .contact-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  }
+  
+  .contact-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: rgba(59, 130, 246, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    color: #3b82f6;
+  }
+  
+  .contact-card .card-title {
+    color: #e2e8f0;
+    font-weight: 600;
+  }
+  
+  .contact-card .card-text {
+    color: #94a3b8;
+  }
+  
+  .contact-link {
+    display: block;
+    color: #3b82f6;
+    font-weight: 500;
+    text-decoration: none;
+    margin-top: 10px;
+  }
+  
+  .contact-link:hover {
+    text-decoration: underline;
+  }
+  
+  /* Content Card Styles */
+  .content-card {
+    background-color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    color: #333; /* Ensuring dark text on white background */
+  }
+  
+  .content-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 1rem 1.5rem;
+  }
+  
+  .content-header h5 {
+    color: #333;
+    font-weight: 600;
+    margin: 0;
+  }
+  
+  .content-card .card-body {
+    padding: 1.5rem;
+  }
+  
+  /* FAQ Accordion */
+  .faq-accordion {
+    margin-bottom: 1rem;
+  }
+  
+  .faq-accordion .accordion-item {
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    margin-bottom: 10px;
+    overflow: hidden;
+    border-radius: 8px;
+  }
+  
+  .faq-accordion .accordion-button {
+    background-color: #f8f9fa;
+    color: #333;
+    padding: 1rem 1.5rem;
+    font-weight: 500;
+    position: relative;
+    transition: all 0.2s ease;
+  }
+  
+  .faq-accordion .accordion-button:not(.collapsed) {
+    background-color: #e9ecef;
+    color: #333;
+    box-shadow: none;
+  }
+  
+  .faq-accordion .accordion-button::after {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23333'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+  }
+  
+  .faq-accordion .accordion-body {
+    background-color: #fff;
+    color: #4a5568;
+    padding: 1.5rem;
+    line-height: 1.6;
+  }
+  
+  .faq-accordion .accordion-body p:last-child,
+  .faq-accordion .accordion-body ul:last-child,
+  .faq-accordion .accordion-body ol:last-child {
+    margin-bottom: 0;
+  }
+  
+  /* Section Titles */
+  .section-title {
+    color: #e2e8f0;
+    font-size: 1.8rem;
+    font-weight: 600;
+    position: relative;
+    padding-bottom: 0.5rem;
+  }
+  
+  .card-body .section-title {
+    color: #2d3748;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Form Styles */
+  .form-control {
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #333;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+  }
+  
+  .form-control:focus {
+    background-color: #fff;
+    color: #333;
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+    border-color: #3b82f6;
+  }
+  
+  .form-label {
+    color: #4a5568;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+  
+  .save-button {
+    background-color: #3b82f6;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1.5rem;
+    transition: all 0.2s ease;
+  }
+  
+  .save-button:hover {
+    background-color: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Additional Resources */
+  .additional-resource-card {
+    background-color: #f8f9fa;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    margin-bottom: 1.5rem;
+  }
+  
+  .additional-resource-card:hover {
+    transform: translateX(5px);
+    border-color: rgba(59, 130, 246, 0.5);
+  }
+  
+  .resource-icon {
+    background-color: rgba(59, 130, 246, 0.1);
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #3b82f6;
+    flex-shrink: 0;
+  }
+  
+  .additional-resource-card .card-title {
+    color: #333;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .additional-resource-card .card-text {
+    color: #4a5568;
+    font-size: 0.95rem;
+  }
+  
+  .reach-us-info p {
+    color: #4a5568;
+    line-height: 1.6;
+  }
+  
+  .social-links {
+    display: flex;
+    gap: 15px;
+  }
+  
+  .social-link {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+  
+  .social-link:hover {
+    background-color: #3b82f6;
+    color: #ffffff;
+    transform: scale(1.1);
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 991.98px) {
+    .help-support-header {
+      padding: 3rem 0;
+    }
+  }
+  
+  @media (max-width: 767.98px) {
+    .help-support-header {
+      padding: 2rem 0;
+    }
+  }

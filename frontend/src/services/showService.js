@@ -49,11 +49,33 @@ const showService = {
       throw error.response?.data || `Failed to fetch show with ID ${id}`;
     }
   },
-
-  // Get shows by theater
-  getShowsByTheater: async (theaterId) => {
+  getShowsByTheaterAndDate: async (theaterId, date) => {
     try {
-      const response = await axiosInstance.get(`${BASE_URL}/theater/${theaterId}`);
+      // Format date as ISO string (YYYY-MM-DD)
+      const formattedDate = date instanceof Date 
+        ? date.toISOString().split('T')[0] 
+        : date;
+        
+      const response = await axiosInstance.get(`${BASE_URL}/theater/${theaterId}/date/${formattedDate}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || `Failed to fetch shows for theater ${theaterId} on date ${date}`;
+    }
+  },
+  refreshShowStatus: async (showId) => {
+    try {
+      await axiosInstance.post(`${BASE_URL}/${showId}/refresh-status`);
+      return true;
+    } catch (error) {
+      throw error.response?.data || `Failed to refresh status for show ${showId}`;
+    }
+  },
+  // Get shows by theater
+  getShowsByTheater: async (theaterId, includePastShows = false) => {
+    try {
+      const response = await axiosInstance.get(`${BASE_URL}/theater/${theaterId}`, {
+        params: { includePastShows }
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data || `Failed to fetch shows for theater ${theaterId}`;

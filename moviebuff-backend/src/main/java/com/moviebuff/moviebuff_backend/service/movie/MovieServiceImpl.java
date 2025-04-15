@@ -13,14 +13,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
-
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import com.moviebuff.moviebuff_backend.dto.request.MovieRequest;
 import com.moviebuff.moviebuff_backend.dto.response.MovieResponse;
 import com.moviebuff.moviebuff_backend.exception.ResourceNotFoundException;
+import com.moviebuff.moviebuff_backend.model.booking.Booking;
 import com.moviebuff.moviebuff_backend.model.movie.Movie;
+import com.moviebuff.moviebuff_backend.model.review.Review;
 import com.moviebuff.moviebuff_backend.repository.interfaces.movie.MovieRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -199,20 +202,241 @@ public class MovieServiceImpl implements IMovieService {
     }
 
     @Override
-    @Cacheable(value = "movie-statistics", key = "#id")
-    public Map<String, Object> getMovieStatistics(String id) {
+@Cacheable(value = "movie-statistics", key = "#id")
+public Map<String, Object> getMovieStatistics(String id) {
+    // Handle "all" special case for overall dashboard
+    boolean isOverallStats = "all".equalsIgnoreCase(id);
+    
+    Map<String, Object> statistics = new HashMap<>();
+    
+    if (!isOverallStats) {
+        // For specific movie
         Movie movie = movieRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Movie not found with id: " + id));
-
-        Map<String, Object> statistics = new HashMap<>();
+                
         statistics.put("basic", movie.getStatistics());
         statistics.put("rating", movie.getRating());
-
-        // Add more detailed statistics here based on shows and bookings data
-        // This would require additional repository calls and calculations
-
-        return statistics;
+        statistics.put("movieId", movie.getId());
+        statistics.put("title", movie.getTitle());
     }
+    
+    // Time-based aggregation - for revenue trends
+    LocalDate today = LocalDate.now();
+    LocalDate thirtyDaysAgo = today.minusDays(30);
+    
+    Criteria timeCriteria;
+    if (isOverallStats) {
+        timeCriteria = Criteria.where("showTime").gte(thirtyDaysAgo.atStartOfDay());
+    } else {
+        timeCriteria = Criteria.where("movieId").is(id)
+                      .and("showTime").gte(thirtyDaysAgo.atStartOfDay());
+    }
+    
+    // Daily revenue chart data
+    Aggregation revenueByDayAgg = Aggregation.newAggregation(
+        Aggregation.match(timeCriteria),
+        Aggregation.match(Criteria.where("status").is(Booking.BookingStatus.CONFIRMED)),
+        Aggregation.project()
+            .andExpression("dateToString('%Y-%m-%d', showTime)").as("date")
+            .and("totalAmount").as("amount"),
+        Aggregation.group("date")
+            .sum("amount").as("revenue")
+            .count().as("bookings"),
+        Aggregation.sort(Sort.Direction.ASC, "_id")
+    );
+    
+    AggregationResults<Map> revenueByDayResults = mongoTemplate.aggregate(
+        revenueByDayAgg, Booking.class, Map.class);
+    
+    List<Map<String, Object>> revenueTrend = new ArrayList<>();
+    revenueByDayResults.getMappedResults().forEach(result -> {
+        Map<String, Object> entry = new HashMap<>();
+        entry.put("date", result.get("_id"));
+        entry.put("revenue", result.get("revenue"));
+        entry.put("bookings", result.get("bookings"));
+        revenueTrend.add(entry);
+    });
+    
+    statistics.put("revenueTrend", revenueTrend);
+    
+    // Rating distribution (1-5 stars)
+    Aggregation ratingDistAgg = Aggregation.newAggregation(
+        Aggregation.match(isOverallStats ? new Criteria() : Criteria.where("movieId").is(id)),
+        Aggregation.group("rating")
+            .count().as("count"),
+        Aggregation.sort(Sort.Direction.ASC, "_id")
+    );
+    
+    AggregationResults<Map> ratingResults = mongoTemplate.aggregate(
+        ratingDistAgg, Review.class, Map.class);
+    
+    Map<String, Long> ratingDistribution = new HashMap<>();
+    for (int i = 1; i <= 5; i++) {
+        ratingDistribution.put(String.valueOf(i), 0L);
+    }
+    
+    ratingResults.getMappedResults().forEach(result -> {
+        Integer rating = (Integer) result.get("_id");
+        Long count = ((Number) result.get("count")).longValue();
+        ratingDistribution.put(String.valueOf(rating), count);
+    });
+    
+    statistics.put("ratingDistribution", ratingDistribution);
+    
+    // Theater performance for this movie
+    if (!isOverallStats) {
+        Aggregation theaterPerfAgg = Aggregation.newAggregation(
+            Aggregation.match(Criteria.where("movieId").is(id)
+                             .and("status").is(Booking.BookingStatus.CONFIRMED)),
+            Aggregation.group("theaterId", "theaterName")
+                .sum("totalAmount").as("revenue")
+                .count().as("bookings"),
+            Aggregation.sort(Sort.Direction.DESC, "revenue"),
+            Aggregation.limit(5)
+        );
+        
+        AggregationResults<Map> theaterResults = mongoTemplate.aggregate(
+            theaterPerfAgg, Booking.class, Map.class);
+        
+        List<Map<String, Object>> topTheaters = new ArrayList<>();
+        theaterResults.getMappedResults().forEach(result -> {
+            Map<String, Object> theater = new HashMap<>();
+            theater.put("id", ((Map)result.get("_id")).get("theaterId"));
+            theater.put("name", ((Map)result.get("_id")).get("theaterName"));
+            theater.put("revenue", result.get("revenue"));
+            theater.put("bookings", result.get("bookings"));
+            topTheaters.add(theater);
+        });
+        
+        statistics.put("topTheaters", topTheaters);
+    }
+    
+    // City-wise distribution
+    Aggregation cityAgg = Aggregation.newAggregation(
+        Aggregation.match(isOverallStats ? 
+                         Criteria.where("status").is(Booking.BookingStatus.CONFIRMED) : 
+                         Criteria.where("movieId").is(id).and("status").is(Booking.BookingStatus.CONFIRMED)),
+        Aggregation.group("theaterCity")
+            .sum("totalAmount").as("revenue")
+            .count().as("bookings"),
+        Aggregation.sort(Sort.Direction.DESC, "bookings"),
+        Aggregation.limit(10)
+    );
+    
+    AggregationResults<Map> cityResults = mongoTemplate.aggregate(
+        cityAgg, Booking.class, Map.class);
+    
+    List<Map<String, Object>> cityStats = new ArrayList<>();
+    cityResults.getMappedResults().forEach(result -> {
+        Map<String, Object> city = new HashMap<>();
+        city.put("city", result.get("_id"));
+        city.put("revenue", result.get("revenue"));
+        city.put("bookings", result.get("bookings"));
+        cityStats.add(city);
+    });
+    
+    statistics.put("cityStats", cityStats);
+    
+    // Overall performance metrics
+    if (isOverallStats) {
+        // Get the top 5 performing movies
+        Aggregation topMoviesAgg = Aggregation.newAggregation(
+            Aggregation.match(Criteria.where("status").is(Booking.BookingStatus.CONFIRMED)),
+            Aggregation.group("movieId", "movieTitle")
+                .sum("totalAmount").as("revenue")
+                .count().as("bookings"),
+            Aggregation.sort(Sort.Direction.DESC, "revenue"),
+            Aggregation.limit(5)
+        );
+        
+        AggregationResults<Map> topMoviesResults = mongoTemplate.aggregate(
+            topMoviesAgg, Booking.class, Map.class);
+        
+        List<Map<String, Object>> topMovies = new ArrayList<>();
+        topMoviesResults.getMappedResults().forEach(result -> {
+            Map<String, Object> movie = new HashMap<>();
+            movie.put("id", ((Map)result.get("_id")).get("movieId"));
+            movie.put("title", ((Map)result.get("_id")).get("movieTitle"));
+            movie.put("revenue", result.get("revenue"));
+            movie.put("bookings", result.get("bookings"));
+            
+            // Get rating
+            Movie m = movieRepository.findById((String)((Map)result.get("_id")).get("movieId")).orElse(null);
+            if (m != null && m.getRating() != null) {
+                movie.put("rating", m.getRating().getAverage());
+            } else {
+                movie.put("rating", 0);
+            }
+            
+            topMovies.add(movie);
+        });
+        
+        statistics.put("topMovies", topMovies);
+        
+        // Genre distribution
+        List<Movie> allMovies = movieRepository.findAll();
+        Map<String, Integer> genreCounts = new HashMap<>();
+        
+        for (Movie m : allMovies) {
+            if (m.getGenres() != null) {
+                for (String genre : m.getGenres()) {
+                    genreCounts.put(genre, genreCounts.getOrDefault(genre, 0) + 1);
+                }
+            }
+        }
+        
+        // Convert to list for sorting
+        List<Map<String, Object>> genreDistribution = new ArrayList<>();
+        genreCounts.forEach((genre, count) -> {
+            Map<String, Object> entry = new HashMap<>();
+            entry.put("genre", genre);
+            entry.put("count", count);
+            genreDistribution.add(entry);
+        });
+        
+        // Sort and limit to top 10
+        genreDistribution.sort((a, b) -> ((Integer)b.get("count")).compareTo((Integer)a.get("count")));
+        statistics.put("genreDistribution", genreDistribution.size() > 10 ? 
+                      genreDistribution.subList(0, 10) : genreDistribution);
+    }
+    
+    // For growth calculations, get previous period data
+    LocalDate sixtyDaysAgo = today.minusDays(60);
+    
+    Criteria prevPeriodCriteria;
+    if (isOverallStats) {
+        prevPeriodCriteria = Criteria.where("showTime").gte(sixtyDaysAgo.atStartOfDay())
+                            .lt(thirtyDaysAgo.atStartOfDay());
+    } else {
+        prevPeriodCriteria = Criteria.where("movieId").is(id)
+                            .and("showTime").gte(sixtyDaysAgo.atStartOfDay())
+                            .lt(thirtyDaysAgo.atStartOfDay());
+    }
+    
+    // Previous period revenue
+    Aggregation prevRevenueAgg = Aggregation.newAggregation(
+        Aggregation.match(prevPeriodCriteria),
+        Aggregation.match(Criteria.where("status").is(Booking.BookingStatus.CONFIRMED)),
+        Aggregation.group().sum("totalAmount").as("prevRevenue")
+    );
+    
+    AggregationResults<Map> prevRevenueResults = mongoTemplate.aggregate(
+        prevRevenueAgg, Booking.class, Map.class);
+    
+    double prevRevenue = prevRevenueResults.getMappedResults().isEmpty() ? 
+                        0.0 : ((Number) prevRevenueResults.getMappedResults().get(0).get("prevRevenue")).doubleValue();
+    
+    // Calculate growth rates
+    double currentRevenue = statistics.containsKey("totalRevenue") ? 
+                          (double)statistics.get("totalRevenue") : 0.0;
+    
+    double revenueGrowth = prevRevenue > 0 ? 
+                         ((currentRevenue - prevRevenue) / prevRevenue) * 100 : 0.0;
+    
+    statistics.put("revenueGrowth", Math.round(revenueGrowth));
+    
+    return statistics;
+}
 
     @Override
     public List<MovieResponse> getMoviesByActor(String actorId) {

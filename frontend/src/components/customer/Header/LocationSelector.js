@@ -260,6 +260,7 @@ function LocationSelector() {
   
   return (
     <>
+          <div className="location-wrapper">
       <Button 
         variant="outline-light" 
         onClick={handleShow} 
@@ -436,6 +437,7 @@ function LocationSelector() {
           )}
         </Modal.Footer>
       </Modal>
+      </div>
     </>
   );
 }

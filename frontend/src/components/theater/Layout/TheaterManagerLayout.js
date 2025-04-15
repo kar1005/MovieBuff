@@ -7,7 +7,7 @@ import {
   fetchTheaterStats 
 } from '../../../redux/slices/theaterSlice';
 import { checkSubscriptionStatus } from '../../../redux/slices/subscriptionSlice';
-import { logout } from '../../../redux/slices/authSlice';
+// import { logout } from '../../../redux/slices/authSlice';
 import { 
   LayoutDashboard, 
   Settings, 
@@ -36,15 +36,36 @@ const TheaterManagerLayout = ({ children }) => {
 
   // Authentication and data fetching
   useEffect(() => {
-    if (!isAuthenticated) {
+    const token = localStorage.getItem('token');
+    const userRole = localStorage.getItem('userRole');
+    
+    // First check localStorage directly (works on page refresh)
+    if (!token) {
       navigate('/login');
-    } else if (user?.role !== 'THEATER_MANAGER') {
+      return;
+    }
+    
+    // Then check Redux state (this may not be initialized yet on refresh)
+    if (!isAuthenticated && !token) {
+      navigate('/login');
+      return;
+    }
+    
+    // Check role from localStorage first, then from Redux state
+    if ((userRole && userRole !== 'THEATER_MANAGER') || 
+        (user?.role && user.role !== 'THEATER_MANAGER')) {
       navigate('/');
-    } else {
-      dispatch(fetchManagerTheaters(user.id));
-      dispatch(checkSubscriptionStatus(user.id));
+      return;
+    }
+    
+    // If we get here, we're authenticated as a theater manager
+    const managerId = localStorage.getItem('userId') || user?.id;
+    if (managerId) {
+      dispatch(fetchManagerTheaters(managerId));
+      dispatch(checkSubscriptionStatus(managerId));
     }
   }, [isAuthenticated, user, dispatch, navigate]);
+  
 
   // Fetch theater stats
   useEffect(() => {
@@ -111,8 +132,8 @@ const TheaterManagerLayout = ({ children }) => {
   }, []);
 
   const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
+    // dispatch(logout());
+    navigate('/logout');
   };
 
   const menuItems = [

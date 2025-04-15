@@ -78,37 +78,41 @@ public class TheaterMapper {
 
     // Helper method to calculate theater statistics
     private TheaterResponse.TheaterStats calculateTheaterStats(Theater theater) {
-
         int totalSeats = 0;
         int availableSeats = 0;
         int activeScreens = 0;
-
+    
         if (theater.getScreens() != null) {
-
             for (Theater.Screen screen : theater.getScreens()) {
-
-                // if (Boolean.TRUE.equals(screen.getIsActive())) {
-
                 activeScreens++;
                 if (screen.getTotalSeats() != null) {
-
                     totalSeats += screen.getTotalSeats();
                 }
                 if (screen.getAvailableSeats() != null) {
                     availableSeats += screen.getAvailableSeats();
                 }
-                // }
             }
         }
-
+    
         double occupancyRate = totalSeats > 0 ? ((double) (totalSeats - availableSeats) / totalSeats) * 100 : 0.0;
-
-        return new TheaterResponse.TheaterStats(
-                totalSeats,
-                availableSeats,
-                activeScreens,
-                0, // totalShowsToday will be set by service layer
-                occupancyRate);
+    
+        // Create a new TheaterStats with all required fields
+        TheaterResponse.TheaterStats stats = new TheaterResponse.TheaterStats();
+        stats.setTotalSeats(totalSeats);
+        stats.setAvailableSeats(availableSeats);
+        stats.setActiveScreens(activeScreens);
+        stats.setTotalShowsToday(0); // totalShowsToday will be set by service layer
+        stats.setOccupancyRate(occupancyRate);
+        
+        // Set default values for the new fields
+        stats.setTotalScreens(theater.getTotalScreens());
+        stats.setTotalCapacity(totalSeats);
+        stats.setActiveShows(0);
+        stats.setTopMovie("");
+        stats.setMonthlyRevenue(0.0);
+        stats.setMonthlyBookings(0L);
+        
+        return stats;
     }
 
     // Convert LocationDTO to TheaterLocation

@@ -39,6 +39,17 @@ export const deleteTheaterManager = createAsyncThunk(
   }
 );
 
+export const getUserById = createAsyncThunk(
+  'users/getUserById',
+  async (id, { rejectWithValue }) => {
+    try {
+      return await userService.getUserById(id);
+    } catch (error) {
+      return rejectWithValue(error.toString());
+    }
+  }
+);
+
 // Initial state
 const initialState = {
   customers: [],

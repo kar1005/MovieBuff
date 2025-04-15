@@ -9,6 +9,8 @@ import {
   fetchMovieById,
   selectMovies,
 } from "../../../redux/slices/adminSlice";
+import LanguageSelector from "../common/LanguageSelector";
+
 import actorService from "../../../services/actorService";
 import "./EditMovie.css";
 import cloudinaryService from "../../../services/cloudinaryService";
@@ -553,15 +555,18 @@ const EditMovie = () => {
                 </div>
 
                 <div className="form-group">
-                  <label>Languages (comma-separated)</label>
-                  <input
-                    type="text"
-                    value={formData.languages.join(", ")}
-                    onChange={(e) => handleArrayInput(e, "languages")}
-                    className="form-input"
-                    required
-                  />
-                </div>
+  <label>Languages</label>
+  <LanguageSelector
+    selectedLanguages={formData.languages.map(lang => ({ code: lang.toLowerCase(), name: lang }))}
+    onChange={(selected) => {
+      const languages = selected.map(lang => lang.name);
+      setFormData(prev => ({
+        ...prev,
+        languages
+      }));
+    }}
+  />
+</div>
 
                 <div className="form-group">
                   <label>Genres (comma-separated)</label>

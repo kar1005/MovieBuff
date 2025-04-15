@@ -34,8 +34,19 @@ export const authService = {
   },
 
   logout: async () => {
-    localStorage.removeItem('token');
-    return await axiosInstance.post(`${API_URL}/logout`);
+    try {
+      const response = await axiosInstance.post(`${API_URL}/logout`);
+      
+      // Clear token even if the server response fails
+      localStorage.removeItem('token');
+      
+      return response.data;
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Ensure token is removed even if request fails
+      localStorage.removeItem('token');
+      throw error;
+    }
   },
 
   getCurrentUser: async () => {

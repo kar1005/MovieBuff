@@ -1,43 +1,103 @@
 /* src/components/customer/Header/LocationSelector.css */
 
 /* Location button styling */
+.navbar .location-wrapper,
+.location-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  margin-right: 10px !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.navbar .location-selector-button,
 .location-selector-button {
-  display: flex;
-  align-items: center;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  padding: 6px 12px;
-  background-color: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  transition: all 0.2s ease;
-  height: 34px;
-  color: white;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 20px !important;
+  font-size: 0.85rem !important;
+  padding: 5px 12px !important;
+  background-color: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  transition: all 0.2s ease !important;
+  min-height: 34px !important;
+  color: white !important;
+  line-height: 1 !important;
 }
 
+.navbar .location-selector-button:hover,
 .location-selector-button:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.5);
-  color: #eab308;
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: #eab308 !important;
 }
 
+.navbar .location-selector-button:focus,
+.navbar .location-selector-button:active,
 .location-selector-button:focus,
 .location-selector-button:active {
-  box-shadow: none;
-  border-color: rgba(255, 255, 255, 0.5);
-  color: white;
+  box-shadow: none !important;
+  outline: none !important;
+  border-color: rgba(234, 179, 8, 0.5) !important;
 }
 
+.navbar .location-icon,
 .location-icon {
-  margin-right: 6px;
-  flex-shrink: 0;
-  color: #eab308;
+  margin-right: 6px !important;
+  flex-shrink: 0 !important;
+  color: #eab308 !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
+.navbar .location-text,
 .location-text {
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  max-width: 80px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-weight: 500 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+@media (max-width: 767.98px) {
+  .navbar .location-wrapper,
+  .location-wrapper {
+    margin-right: 8px !important;
+  }
+  
+  .navbar .location-selector-button,
+  .location-selector-button {
+    padding: 4px 10px !important;
+    min-height: 32px !important;
+    font-size: 0.8rem !important;
+  }
+  
+  .navbar .location-text,
+  .location-text {
+    max-width: 70px !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .navbar .location-wrapper,
+  .location-wrapper {
+    margin-right: 6px !important;
+  }
+  
+  .navbar .location-selector-button,
+  .location-selector-button {
+    padding: 4px 8px !important;
+    min-height: 30px !important;
+    font-size: 0.75rem !important;
+  }
+  
+  .navbar .location-text,
+  .location-text {
+    max-width: 60px !important;
+  }
 }
 
 /* Location Modal styling */
@@ -49,15 +109,14 @@
   background-color: #f8f9fa;
 }
 
-.location-modal .location-modal-header {
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
-  padding: 16px 20px;
+.location-modal .modal-header {
+  padding: 16px 20px !important;
+  border-bottom: 1px solid #e9ecef !important;
 }
 
 .location-modal .modal-title {
-  font-weight: 600;
-  color: #333;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
 }
 
 .location-modal .modal-body {
@@ -96,6 +155,20 @@
   height: 40px;
 }
 
+.location-modal .text-center.my-4 {
+  padding: 30px 0 !important;
+}
+
+.location-modal .text-center.my-4 .text-muted {
+  font-size: 1rem !important;
+  color: #6c757d !important;
+}
+
+/* Loading spinner for cities */
+.location-modal .single-spinner-container {
+  padding: 30px 0 !important;
+}
+
 .single-spinner {
   width: 30px;
   height: 30px;
@@ -123,51 +196,56 @@
 /* City search styling */
 .city-search-wrapper {
   position: relative;
+  margin-bottom: 15px !important;
+  width: 100%;
 }
 
 .city-search-input {
   border-radius: 8px;
-  padding: 8px 40px 8px 40px;
-  height: 42px;
+  padding: 10px 40px 10px 40px !important;
+  height: 46px !important;
   border: 1px solid #ced4da;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   width: 100%;
+  font-size: 1rem !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .city-search-input:focus {
-  border-color: #eab308;
-  box-shadow: 0 0 0 0.2rem rgba(234, 179, 8, 0.25);
-  outline: none;
+  border-color: #eab308 !important;
+  box-shadow: 0 0 0 0.25rem rgba(234, 179, 8, 0.25) !important;
+  outline: none !important;
 }
 
 .search-icon-city {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #6c757d;
-  pointer-events: none;
-  z-index: 1;
+  position: absolute !important;
+  left: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  color: #6c757d !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
 }
 
 .loading-indicator {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: absolute !important;
+  right: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 2 !important;
 }
 
 .loading-spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(108, 117, 125, 0.2);
-  border-top: 2px solid #6c757d;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+  display: inline-block !important;
+  width: 18px !important;
+  height: 18px !important;
+  border: 2px solid rgba(108, 117, 125, 0.2) !important;
+  border-top: 2px solid #6c757d !important;
+  border-radius: 50% !important;
+  animation: spin 1s linear infinite !important;
 }
 
 .location-modal .popular-cities-heading {
@@ -211,21 +289,50 @@
 
 /* All Cities styling */
 .location-modal .all-cities-container {
-  max-height: 60vh;
+  max-height: 65vh;
   overflow: hidden;
+  padding: 5px 0;
 }
 
 .location-modal .all-cities-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 10px;
-  max-height: calc(60vh - 70px);
-  overflow-y: auto;
-  padding-right: 10px;
-  margin-right: -10px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
+  gap: 12px !important;
+  max-height: calc(65vh - 100px) !important;
+  overflow-y: auto !important;
+  padding: 5px 10px 5px 0 !important;
+  margin-right: -10px !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent !important;
 }
+.location-modal .all-cities-grid .city-button {
+  text-align: center !important;
+  padding: 10px 15px !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+  background-color: #f8f9fa !important;
+  border: 1px solid #e9ecef !important;
+  font-size: 0.95rem !important;
+  font-weight: 500 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 44px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: #333 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+.location-modal .all-cities-grid .city-button:hover {
+  background-color: #eab308 !important;
+  color: #000 !important;
+  border-color: #eab308 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
 
 .location-modal .all-cities-grid::-webkit-scrollbar {
   width: 6px;
@@ -320,9 +427,10 @@
 }
 
 @media (max-width: 576px) {
+  .navbar .location-selector-button,
   .location-selector-button {
-    font-size: 0.8rem;
-    padding: 5px 10px;
+    font-size: 0.8rem !important;
+    padding: 5px 10px !important;
   }
   
   .location-modal .popular-cities-grid {

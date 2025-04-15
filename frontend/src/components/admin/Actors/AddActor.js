@@ -16,9 +16,9 @@ import {
 import { Upload, Image as ImageIcon, Plus, X } from 'lucide-react';
 import { createActor, selectActorLoading, selectActorError } from '../../../redux/slices/actorSlice';
 import cloudinaryService from '../../../services/cloudinaryService';
+import LanguageSelector from '../common/LanguageSelector';
 import './AddActor.css';
 
-const LANGUAGES = ['Hindi', 'English', 'Tamil', 'Telugu', 'Malayalam', 'Kannada', 'Bengali'];
 const AWARDS = [
   'National Film Award',
   'Filmfare Award',
@@ -104,10 +104,9 @@ const AddActor = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handle language selection
-  const handleLanguageChange = (e) => {
-    const value = Array.from(e.target.selectedOptions, option => option.value);
-    setFormData(prev => ({ ...prev, languages: value }));
+  // Handle language selection with the new component
+  const handleLanguageChange = (selectedLangs) => {
+    setFormData(prev => ({ ...prev, languages: selectedLangs.map(lang => lang.name) }));
     setValidationErrors(prev => ({ ...prev, languages: '' }));
   };
 
@@ -329,23 +328,12 @@ const AddActor = () => {
 
                 <Form.Group className="mb-3">
                   <Form.Label>Languages*</Form.Label>
-                  <Form.Select
-                    multiple
-                    name="languages"
-                    value={formData.languages}
+                  <LanguageSelector
+                    selectedLanguages={formData.languages.map(lang => ({ name: lang, code: lang.toLowerCase().substring(0, 2) }))}
                     onChange={handleLanguageChange}
                     isInvalid={!!validationErrors.languages}
-                  >
-                    {LANGUAGES.map(lang => (
-                      <option key={lang} value={lang}>{lang}</option>
-                    ))}
-                  </Form.Select>
-                  <Form.Text className="text-muted">
-                    Hold Ctrl/Cmd to select multiple languages
-                  </Form.Text>
-                  <Form.Control.Feedback type="invalid">
-                    {validationErrors.languages}
-                  </Form.Control.Feedback>
+                    errorMessage={validationErrors.languages}
+                  />
                 </Form.Group>
 
                 <Form.Group className="mb-3">

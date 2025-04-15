@@ -34,5 +34,38 @@ public class TheaterResponse {
         private Integer activeScreens;
         private Integer totalShowsToday;
         private Double occupancyRate;
-    }
+        
+        // Add these new fields to match your implementation
+        private Integer totalScreens;
+        private Integer totalCapacity;
+        private Integer activeShows;
+        private String topMovie;
+        private Double monthlyRevenue;
+        private Long monthlyBookings;
+        
+        // These setter methods are needed based on the error messages
+        public void setTotalScreens(Integer totalScreens) {
+            this.totalScreens = totalScreens;
+        }
+    
+        public void setTotalCapacity(int totalCapacity) {
+            this.totalCapacity = totalCapacity;
+        }
+    
+        public void setActiveShows(int activeShows) {
+            this.activeShows = activeShows;
+        }
+    
+        public void setTopMovie(String topMovie) {
+            this.topMovie = topMovie;
+        }
+    
+        public void setMonthlyRevenue(double monthlyRevenue) {
+            this.monthlyRevenue = monthlyRevenue;
+        }
+    
+        public void setMonthlyBookings(long monthlyBookings) {
+            this.monthlyBookings = monthlyBookings;
+        }    
+}
 }
