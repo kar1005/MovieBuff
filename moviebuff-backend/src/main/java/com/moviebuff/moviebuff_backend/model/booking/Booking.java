@@ -70,6 +70,10 @@ public class Booking {
     private Boolean emailSent;
     private Boolean smsSent;
     private LocalDateTime lastNotificationSentAt;
+
+    private String reservationToken;
+    private String reservationId;
+    private LocalDateTime reservationExpiry;
     
     // Audit fields
     @CreatedDate

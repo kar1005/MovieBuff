@@ -1,6 +1,8 @@
 // src/services/paymentService.js
 import axiosInstance from './axiosConfig';
 
+const BASE_URL = '/payments';
+
 const paymentService = {
   // Subscription payments
   initiateSubscriptionPayment: async (subscriptionId, amount, currency = 'INR') => {
@@ -25,89 +27,112 @@ const paymentService = {
     }
   },
 
-  // Booking payments - can be extended when you implement direct payment for bookings
-  initiateBookingPayment: async (bookingId, amount, paymentMethod) => {
+  // Initiate payment for a booking
+  initiateBookingPayment: async (bookingId, amount, currency = 'INR') => {
     try {
-      const response = await axiosInstance.post('/bookings/payment/initiate', {
-        bookingId,
-        amount,
-        paymentMethod
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || 'Failed to initiate booking payment';
-    }
-  },
-  
-  verifyBookingPayment: async (paymentData) => {
-    try {
-      const response = await axiosInstance.post('/bookings/payment/verify', paymentData);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || 'Failed to verify booking payment';
-    }
-  },
-  
-  // General payment methods that can be used across the application
-  getPaymentHistory: async (userId, type) => {
-    try {
-      const params = { userId };
-      if (type) params.type = type;
+      // Log the values being sent
+      console.log('Initiating payment with:', { bookingId, amount, currency });
       
-      const response = await axiosInstance.get('/payments/history', { params });
+      // We'll use the endpoint from the logs: /api/payments/booking/initiate
+      const response = await axiosInstance.post('/payments/booking/initiate', {
+        bookingId,
+        amount: parseFloat(amount), // Ensure amount is a number
+        currency
+      });
+      
+      console.log('Payment initiation response:', response.data);
       return response.data;
     } catch (error) {
-      throw error.response?.data || 'Failed to fetch payment history';
+      console.error('Payment initiation error:', error);
+      
+      // Log the full error object for debugging
+      console.log('Full error:', error);
+      
+      // Extract detailed error information
+      const errorData = error.response?.data;
+      const errorStatus = error.response?.status;
+      const errorMessage = 
+        errorData?.message || 
+        errorData?.error || 
+        error.message ||
+        'Failed to initiate payment';
+      
+      // Create a detailed error object
+      const enhancedError = new Error(errorMessage);
+      enhancedError.status = errorStatus;
+      enhancedError.data = errorData;
+      
+      throw enhancedError;
     }
   },
 
-  getPaymentDetails: async (paymentId) => {
+  // Verify payment after completion
+  verifyBookingPayment: async (verificationData) => {
     try {
-      const response = await axiosInstance.get(`/payments/${paymentId}`);
+      // Ensure all required verification fields are present
+      const requiredFields = ['razorpayOrderId', 'razorpayPaymentId', 'razorpaySignature', 'bookingId'];
+      requiredFields.forEach(field => {
+        if (!verificationData[field]) {
+          throw new Error(`Missing required field: ${field}`);
+        }
+      });
+
+      const response = await axiosInstance.post('/payments/booking/verify', verificationData);
       return response.data;
     } catch (error) {
-      throw error.response?.data || `Failed to fetch payment details for ${paymentId}`;
+      console.error('Payment verification error:', error);
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message ||
+                          'Failed to verify payment';
+      throw new Error(errorMessage);
     }
   },
-  
-  // Refund processing
-  processRefund: async (paymentId, amount, reason) => {
+
+  // Process refund if needed
+  processRefund: async (bookingId, amount, reason = 'Customer requested refund') => {
     try {
-      const response = await axiosInstance.post('/payments/refund', {
-        paymentId,
-        amount,
+      const response = await axiosInstance.post('/payments/booking/refund', {
+        bookingId,
+        amount: parseFloat(amount),
         reason
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data || 'Failed to process refund';
+      console.error('Refund processing error:', error);
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          'Failed to process refund';
+      throw new Error(errorMessage);
     }
   },
-  
-  // Payment gateway specific methods
+
+  // Get available payment gateways
   getPaymentGateways: async () => {
     try {
       const response = await axiosInstance.get('/payments/gateways');
       return response.data;
     } catch (error) {
-      throw error.response?.data || 'Failed to fetch payment gateways';
+      console.error('Error fetching payment gateways:', error);
+      throw new Error('Failed to fetch payment gateways');
     }
   },
-  
-  // Payment analytics for admin
-  getPaymentAnalytics: async (startDate, endDate, type) => {
+
+  // Get payment analytics (admin function)
+  getPaymentAnalytics: async (startDate, endDate) => {
     try {
       const params = {};
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
-      if (type) params.type = type;
       
       const response = await axiosInstance.get('/payments/analytics', { params });
       return response.data;
     } catch (error) {
-      throw error.response?.data || 'Failed to fetch payment analytics';
+      console.error('Error fetching payment analytics:', error);
+      throw new Error('Failed to fetch payment analytics');
     }
   }
+
 };
 
 export default paymentService;

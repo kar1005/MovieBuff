@@ -21,6 +21,8 @@ import MovieDetails from './Movies/MovieDetails/MovieDetails';
 import ActorDetails from './Movies/ActorDetails/ActorDetails';
 import CustomerProfilePage from './AccountPages/ProfilePage';
 import HelpSupportPage from './AccountPages/HelpSupportPage';
+import Payment from './Theatre/Booking/Payment/Payment';
+import BookingConfirmation from './Theatre/Booking/BookingConfirmation/BookingConfirmation';
 // import ReviewsPage from './Reviews/ReviewsPage';
 // import ActorProfile from './Actor/ActorProfile';
 
@@ -41,10 +43,13 @@ const CustomerApp = () => {
         <Route path="/theaters" element={<TheaterList/>} />
         <Route path="/theaters/movie/:id" element={<TheatreListOnMovies/>} />
         <Route path="/theater/:theatreId" element={<TheatreDetails />} />
-        <Route path="/booking/:showId" element={<Booking />} />
         <Route path="/movie-detail/:movieId" element={<MovieDetails />} /> 
-        <Route path="/actor/:showId" element={<ActorDetails />} />
+        <Route path="/actor/:id" element={<ActorDetails />} />
         {/* Booking Routes  */}
+        <Route path="/booking/:showId" element={<Booking />} />
+        <Route path="/payment/:bookingId" element={<Payment />} />
+        <Route path="/booking-confirmed/:bookingId" element={<BookingConfirmation />} />
+        {/* <Route path="/user/bookings" element={<UserBookings />} /> */}
         {/* <Route path="/booking/:showId" element={<BookingPage />} />
         <Route path="/booking/confirm/:bookingId" element={<BookingConfirmation />} />
         <Route path="/booking/history" element={<BookingHistory />} />

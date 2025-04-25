@@ -36,10 +36,22 @@ public interface IBookingService {
     // Seat Booking
     List<Map<String, Object>> getBookedSeats(String showId);
     List<Map<String, Object>> getReservedSeats(String showId);
+
+    Map<String, Object> reserveSeats(String showId, List<String> seatIds);
     Map<String, Object> reserveSeat(String showId, String seatId);
+    
     Map<String, Object> releaseSeat(String showId, String seatId);
     Map<String, Object> releaseSeats(String showId, List<String> seatIds);
+
+    void expireReservations(String showId);
+    void scheduleReservationExpiry(String reservationId, int timeoutMinutes);
+    
+    Map<String, Boolean> checkSeatAvailability(String showId, List<String> seatIds);
+    Map<String, Object> getReservationByToken(String token);
+
     Booking createTemporaryBooking(String showId);
     Booking confirmReservation(String showId, List<String> seatIds, String bookingId);
     Booking finalizeBooking(String bookingId, Map<String, Object> paymentDetails);
+    void expireAllReservations();
+    
 }

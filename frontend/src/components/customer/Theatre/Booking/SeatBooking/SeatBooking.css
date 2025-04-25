@@ -1,0 +1,262 @@
+/* src/components/customer/booking/seat-booking/SeatBooking.css */
+
+.seat-booking-container {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Timer banner */
+.timer-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: #fef2f2;
+  color: #b91c1c;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+/* Screen */
+.screen-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.screen {
+  width: 80%;
+  max-width: 600px;
+  height: 40px;
+  background-color: #94a3b8;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.875rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  gap: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Seat legend */
+.seat-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.seat-example {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid #e2e8f0;
+}
+
+.seat-example.available {
+  background-color: #f8fafc;
+}
+
+.seat-example.selected {
+  background-color: #3b82f6;
+  border-color: #1d4ed8;
+}
+
+.seat-example.booked {
+  background-color: #cbd5e1;
+  border-color: #94a3b8;
+}
+
+.seat-example.reserved {
+  background-color: #fef2f2;
+  border-color: #ef4444;
+}
+
+.seat-example.category {
+  background-color: #f8fafc;
+}
+
+/* Seating layout */
+.seating-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+  overflow-x: auto;
+  padding: 1rem 0;
+}
+
+.seating-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.seat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.row-label {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #475569;
+}
+
+.seat {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  border: 2px solid #e2e8f0;
+  background-color: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.seat:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.seat.selected {
+  background-color: #3b82f6;
+  border-color: #1d4ed8;
+  color: white;
+}
+
+.seat.booked {
+  background-color: #cbd5e1;
+  border-color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.seat.reserved {
+  background-color: #fef2f2;
+  border-color: #ef4444;
+  cursor: not-allowed;
+}
+
+.seat:disabled {
+  cursor: not-allowed;
+}
+
+.seat-aisle {
+  width: 10px;
+  height: 30px;
+}
+
+.seat-gap {
+  width: 30px;
+  height: 30px;
+}
+
+/* Booking summary */
+.booking-summary {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.booking-summary h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  color: #0f172a;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.summary-item .label {
+  color: #64748b;
+}
+
+.summary-item .value {
+  font-weight: 500;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.summary-item.total {
+  border-top: 1px solid #e2e8f0;
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  font-weight: 600;
+  font-size: 1.125rem;
+}
+
+.btn-proceed {
+  width: 100%;
+  background-color: #0f766e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  transition: background-color 0.2s;
+}
+
+.btn-proceed:hover {
+  background-color: #0e6b63;
+}
+
+.btn-proceed:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .seat {
+    width: 24px;
+    height: 24px;
+    font-size: 0.625rem;
+  }
+  
+  .seat-aisle {
+    width: 8px;
+  }
+  
+  .seat-gap {
+    width: 24px;
+  }
+  
+  .seat-legend {
+    gap: 1rem;
+    font-size: 0.75rem;
+  }
+  
+  .seat-example {
+    width: 16px;
+    height: 16px;
+  }
+}

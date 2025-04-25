@@ -199,65 +199,168 @@ const bookingService = {
   },
 
   // Get all booked seats for a specific show
-  getBookedSeats(showId) {
-    return axiosInstance.get(`${BASE_URL}/show/${showId}`).data;
+  getBookedSeats: async (showId) => {
+    try {
+      const response = await axiosInstance.get(`${BASE_URL}/show/${showId}/booked-seats`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || `Failed to fetch booked seats for show ${showId}`;
+    }
   },
 
   // Get all reserved (temporarily held) seats for a show
-  getReservedSeats(showId) {
-    return axiosInstance.get(`${BASE_URL}/show/${showId}/reserved-seats`).data;
+  getReservedSeats: async (showId) => {
+    try {
+      const response = await axiosInstance.get(`${BASE_URL}/show/${showId}/reserved-seats`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || `Failed to fetch reserved seats for show ${showId}`;
+    }
   },
 
   // Reserve a single seat
-  reserveSeat(showId, seatId) {
-    return axiosInstance.post(`${BASE_URL}/reserve`, { 
-      showId, 
-      seatId 
-    }).data;
+  reserveSeat: async (showId, seatId) => {
+    try {
+      const response = await axiosInstance.post(`${BASE_URL}/reserve`, { 
+        showId, 
+        seatId 
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || `Failed to reserve seat ${seatId} for show ${showId}`;
+    }
+  },
+
+  // Reserve multiple seats at once
+  reserveSeats: async (showId, seatIds) => {
+    try {
+      const response = await axiosInstance.post(`${BASE_URL}/reserve-multiple`, { 
+        showId, 
+        seatIds 
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || `Failed to reserve seats for show ${showId}`;
+    }
   },
 
   // Release a single reserved seat
-  releaseSeat(showId, seatId) {
-    return axiosInstance.post(`${BASE_URL}/release`, { 
-      showId, 
-      seatId 
-    }).data;
+  releaseSeat: async (showId, seatId) => {
+    try {
+      const response = await axiosInstance.post(`${BASE_URL}/release`, { 
+        showId, 
+        seatId 
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || `Failed to release seat ${seatId} for show ${showId}`;
+    }
   },
   
   // Release multiple seats at once
-  releaseSeats(showId, seatIds) {
-    return axiosInstance.post(`${BASE_URL}/release-multiple`, { 
-      showId, 
-      seatIds 
-    }).data;
+  releaseSeats: async (showId, seatIds) => {
+    try {
+      const response = await axiosInstance.post(`${BASE_URL}/release-multiple`, { 
+        showId, 
+        seatIds 
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || `Failed to release seats for show ${showId}`;
+    }
   },
   
   // Create a temporary booking record
-  createTemporaryBooking(showId) {
-    return axiosInstance.post(`${BASE_URL}/create-temporary`, { 
-      showId 
-    }).data;
+  createTemporaryBooking: async (showId) => {
+    try {
+      const response = await axiosInstance.post(`${BASE_URL}/create-temporary`, { 
+        showId 
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || `Failed to create temporary booking for show ${showId}`;
+    }
   },
   
   // Confirm seat reservation - transition from reserved to booked
-  confirmReservation(showId, seatIds, bookingId) {
-    return axiosInstance.post(`${BASE_URL}/confirm`, {
-      showId,
-      seatIds,
-      bookingId
-    }).data;
+  confirmReservation: async (showId, seatIds, bookingId) => {
+    try {
+      const response = await axiosInstance.post(`${BASE_URL}/confirm-reservation`, {
+        showId,
+        seatIds,
+        bookingId
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || `Failed to confirm reservation for booking ${bookingId}`;
+    }
   },
   
   // Finalize booking after payment
-  finalizeBooking(bookingId, paymentDetails) {
-    return axiosInstance.post(`${BASE_URL}/finalize/${bookingId}`, paymentDetails).data;
-  },
-  
-  // Get booking details
-  getBookingById(bookingId) {
-    return axiosInstance.get(`${BASE_URL}/${bookingId}`).data;
+  finalizeBooking: async (bookingId, paymentDetails) => {
+    try {
+      const response = await axiosInstance.post(`${BASE_URL}/finalize/${bookingId}`, paymentDetails);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || `Failed to finalize booking ${bookingId}`;
+    }
   },
 
+  // Check seat availability before attempting to reserve
+  checkSeatAvailability: async (showId, seatIds) => {
+    try {
+      const response = await axiosInstance.post(`${BASE_URL}/check-availability`, {
+        showId,
+        seatIds
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || `Failed to check seat availability for show ${showId}`;
+    }
+  },
+
+  // Get reservation details by token
+  getReservationByToken: async (token) => {
+    try {
+      const response = await axiosInstance.get(`${BASE_URL}/reservation/${token}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || `Failed to get reservation with token ${token}`;
+    }
+  },
+
+  // Manually expire reservations for a show (admin operation)
+  expireReservations: async (showId) => {
+    try {
+      const response = await axiosInstance.post(`${BASE_URL}/expire-reservations/${showId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || `Failed to expire reservations for show ${showId}`;
+    }
+  },
+
+  // Schedule reservation expiry
+  scheduleReservationExpiry: async (reservationId, timeoutMinutes) => {
+    try {
+      const response = await axiosInstance.post(`${BASE_URL}/schedule-expiry`, {
+        reservationId,
+        timeoutMinutes
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || `Failed to schedule expiry for reservation ${reservationId}`;
+    }
+  },
+
+  // Admin endpoint to manually expire all reservations
+  expireAllReservations: async () => {
+    try {
+      const response = await axiosInstance.post(`${BASE_URL}/expire-all-reservations`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || 'Failed to expire all reservations';
+    }
+  }
 };
 
 export default bookingService;

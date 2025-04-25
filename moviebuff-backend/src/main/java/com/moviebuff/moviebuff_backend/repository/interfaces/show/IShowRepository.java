@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface IShowRepository extends MongoRepository<Show, String> {
@@ -59,4 +60,19 @@ List<Show> findByTheaterIdAndShowTimeBetween(String theaterId, LocalDateTime sta
     
     @Query(value = "{'movieId': ?0, 'showTime': {$gt: ?1}}", count = true)
     long countUpcomingShowsByMovie(String movieId, LocalDateTime now);
+
+
+
+        // Find a show with specific seat IDs to check their status
+        @Query("{'id': ?0, 'seatStatus.seatId': {$in: ?1}}")
+        Optional<Show> findShowWithSpecificSeats(String showId, List<String> seatIds);
+        
+        // Update seat status in a show
+        @Query(value = "{'id': ?0, 'seatStatus.seatId': ?1}", 
+               fields = "{'seatStatus.$': 1}")
+        Optional<Show> findSeatInShow(String showId, String seatId);
+        
+        // Find shows with seats that have been blocked for longer than the timeout period
+        @Query("{'seatStatus.status': 'BLOCKED', 'seatStatus.lastUpdated': {$lt: ?0}}")
+        List<Show> findShowsWithExpiredBlockedSeats(LocalDateTime expiryTime);
 }

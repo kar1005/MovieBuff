@@ -210,4 +210,55 @@ public class BookingsController {
         Booking finalizedBooking = bookingService.finalizeBooking(bookingId, paymentDetails);
         return ResponseEntity.ok(finalizedBooking);
     }
+
+
+    // Reserve multiple seats at once
+    @PostMapping("/reserve-multiple")
+    public ResponseEntity<Map<String, Object>> reserveSeats(@RequestBody Map<String, Object> reservationData) {
+        String showId = (String) reservationData.get("showId");
+        @SuppressWarnings("unchecked")
+        List<String> seatIds = (List<String>) reservationData.get("seatIds");
+        Map<String, Object> result = bookingService.reserveSeats(showId, seatIds);
+        return ResponseEntity.ok(result);
+    }
+
+    // Check seat availability
+    @PostMapping("/check-availability")
+    public ResponseEntity<Map<String, Boolean>> checkSeatAvailability(@RequestBody Map<String, Object> requestData) {
+        String showId = (String) requestData.get("showId");
+        @SuppressWarnings("unchecked")
+        List<String> seatIds = (List<String>) requestData.get("seatIds");
+        Map<String, Boolean> availability = bookingService.checkSeatAvailability(showId, seatIds);
+        return ResponseEntity.ok(availability);
+    }
+
+    // Get reservation details by token
+    @GetMapping("/reservation/{token}")
+    public ResponseEntity<Map<String, Object>> getReservationByToken(@PathVariable String token) {
+        Map<String, Object> reservation = bookingService.getReservationByToken(token);
+        return ResponseEntity.ok(reservation);
+    }
+
+    // Manually expire reservations for a show (admin operation)
+    @PostMapping("/expire-reservations/{showId}")
+    public ResponseEntity<Void> expireReservations(@PathVariable String showId) {
+        bookingService.expireReservations(showId);
+        return ResponseEntity.ok().build();
+    }
+
+    // Schedule reservation expiry
+    @PostMapping("/schedule-expiry")
+    public ResponseEntity<Void> scheduleReservationExpiry(@RequestBody Map<String, Object> expiryData) {
+        String reservationId = (String) expiryData.get("reservationId");
+        Integer timeoutMinutes = (Integer) expiryData.get("timeoutMinutes");
+        bookingService.scheduleReservationExpiry(reservationId, timeoutMinutes);
+        return ResponseEntity.ok().build();
+    }
+
+    // Admin endpoint to manually expire all reservations
+    @PostMapping("/expire-all-reservations")
+    public ResponseEntity<Void> expireAllReservations() {
+        bookingService.expireAllReservations();
+        return ResponseEntity.ok().build();
+    }
 }

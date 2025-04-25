@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import SeatBooking from './SeatBooking';
+import SeatBooking from './SeatBooking/SeatBooking';
 
 const Booking = () => {
   // Get showId from URL params
