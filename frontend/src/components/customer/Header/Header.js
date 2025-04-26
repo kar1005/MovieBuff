@@ -313,12 +313,12 @@ const Header = () => {
                     align="end"
                   >
                     <NavDropdown.Item as={Link} to="/customer/profile">My Profile</NavDropdown.Item>
-                    <NavDropdown.Item as={Link} to="/customer/booking/history">
+                    {/* <NavDropdown.Item as={Link} to="/customer/booking/history">
                       <Ticket size={16} className="me-2" /> My Bookings
                     </NavDropdown.Item>
                     <NavDropdown.Item as={Link} to="/customer/reviews">
                       <MessageSquare size={16} className="me-2" /> My Reviews
-                    </NavDropdown.Item>
+                    </NavDropdown.Item> */}
                     <NavDropdown.Divider />
                     <NavDropdown.Item as={Link} to="/customer/help-support">
                       <HelpCircle size={16} className="me-2" /> Help & Support

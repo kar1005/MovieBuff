@@ -1,7 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { Clock, CreditCard, Info, Monitor, Users, ArrowLeft } from 'lucide-react';
+import { 
+  Clock, 
+  CreditCard, 
+  AlertTriangle, 
+  Monitor, 
+  Users, 
+  ArrowLeft, 
+  Tag, 
+  Ticket, 
+  Armchair,
+  Users2,
+  Crown
+} from 'lucide-react';
 import showService from '../../../../../services/showService';
 import bookingService from '../../../../../services/bookingService';
 import theaterService from '../../../../../services/theaterService';
@@ -42,14 +54,12 @@ const SeatBooking = () => {
         // Get movie details if available
         if (showData.movieId) {
           try {
-            // Use the movieService instead of direct fetch
             const movieData = await movieService.getMovieById(showData.movieId);
             if (movieData) {
               setMovieTitle(movieData.title);
             }
           } catch (err) {
             console.error("Error fetching movie details:", err);
-            // Continue even if movie details can't be fetched
             setMovieTitle(showData.movieTitle || 'Movie');
           }
         }
@@ -67,7 +77,7 @@ const SeatBooking = () => {
           const colors = {};
           if (screenData.layout && screenData.layout.sections) {
             screenData.layout.sections.forEach(section => {
-              colors[section.categoryName] = section.color || '#cbd5e1';
+              colors[section.categoryName] = section.color || '#64748b';
             });
             setCategoryColors(colors);
           }
@@ -161,24 +171,25 @@ const SeatBooking = () => {
   };
 
   // Calculate total amount for selected seats
-  const calculateTotalAmount = () => {
-    if (!show || !show.pricing) return;
-    
-    let total = 0;
-    selectedSeats.forEach(seatId => {
-      // Find seat in the screen layout
-      const foundSeat = findSeatById(seatId);
-      if (foundSeat && foundSeat.category) {
-        // Get price from show pricing
-        const pricing = show.pricing[foundSeat.category];
-        if (pricing && pricing.finalPrice) {
-          total += pricing.finalPrice;
-        }
+// Calculate total amount for selected seats
+const calculateTotalAmount = () => {
+  if (!show || !show.pricing) return;
+
+  let total = 0;
+  selectedSeats.forEach(seatId => {
+    const foundSeat = findSeatById(seatId);
+    if (foundSeat && foundSeat.category) {
+      const pricing = show.pricing[foundSeat.category];
+      if (pricing && pricing.finalPrice) {
+        // Use the pre-calculated finalPrice
+        total += pricing.finalPrice;
       }
-    });
-    
-    setTotalAmount(total);
-  };
+    }
+  });
+
+  setTotalAmount(total);
+};
+  
 
   // Find seat information by ID
   const findSeatById = (seatId) => {
@@ -187,7 +198,6 @@ const SeatBooking = () => {
     // Iterate through sections and seats to find the matching seat
     for (const section of screen.layout.sections) {
       if (section.seats) {
-        // Match based on the seatNumber (like "A1")
         const foundSeat = section.seats.find(seat => seat.seatNumber === seatId);
         if (foundSeat) {
           return {
@@ -264,24 +274,63 @@ const SeatBooking = () => {
   };
 
   // Handler for proceeding to payment
-  const handleProceedToPayment = async () => {
-    if (selectedSeats.length === 0) {
-      toast.warning("Please select at least one seat");
+// Inside handleProceedToPayment function, update to include userId and other required fields from Booking.java
+
+const handleProceedToPayment = async () => {
+  if (selectedSeats.length === 0) {
+    toast.warning("Please select at least one seat");
+    return;
+  }
+  
+  try {
+    // Get user ID from localStorage or auth context
+    const userId = localStorage.getItem('userId'); // Or use your auth context
+    
+    if (!userId) {
+      toast.error("You must be logged in to book tickets");
+      navigate('/login', { state: { from: `/shows/${showId}` } });
       return;
     }
     
-    try {
-      // First, confirm the reservation
-      const response = await bookingService.confirmReservation(showId, selectedSeats, bookingId);
-      
-      // Navigate to payment page with booking ID
-      navigate(`/customer/payment/${response.id}`);
-    } catch (err) {
-      console.error("Error confirming reservation:", err);
-      toast.error("Failed to process reservation. Please try again.");
-      await refreshSeatStatus();
-    }
-  };
+    // Prepare booking data including all required fields from Booking.java
+    const bookingData = {
+      showId,
+      userId,
+      seats: selectedSeats.map(seatId => {
+        const seatInfo = findSeatById(seatId);
+        return {
+          seatId,
+          row: seatInfo.row,
+          column: seatInfo.column,
+          category: seatInfo.category,
+          basePrice: show.pricing[seatInfo.category]?.basePrice || 0,
+          finalPrice: show.pricing[seatInfo.category]?.finalPrice || 0
+        };
+      }),
+      totalSeats: selectedSeats.length,
+      subtotalAmount: totalAmount,
+      // Include any additional fields that your backend requires
+      movieId: show.movieId,
+      movieTitle: movieTitle,
+      theaterId: theater.id,
+      theaterName: theater.name,
+      screenNumber: screen.screenNumber,
+      showTime: show.showTime,
+      experience: show.experience,
+      language: show.language
+    };
+    
+    // First, confirm the reservation
+    const response = await bookingService.confirmReservation(showId, selectedSeats, bookingId, bookingData,userId );
+    
+    // Navigate to payment page with booking ID
+    navigate(`/customer/payment/${response.id}`);
+  } catch (err) {
+    console.error("Error confirming reservation:", err);
+    toast.error("Failed to process reservation. Please try again.");
+    await refreshSeatStatus();
+  }
+};
 
   // Format the timer
   const formatTime = (seconds) => {
@@ -296,6 +345,19 @@ const SeatBooking = () => {
     if (reservedSeats.includes(seatId)) return 'reserved';
     if (selectedSeats.includes(seatId)) return 'selected';
     return 'available';
+  };
+
+  // Format movie showtime
+  const formatShowtime = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   // Render the seating layout
@@ -349,7 +411,7 @@ const SeatBooking = () => {
               seatMatrix[seat.row - 1][seat.column - 1] = {
                 ...seat,
                 category: section.categoryName,
-                seatColor: section.color || '#cbd5e1',
+                seatColor: section.color || '#64748b',
                 basePrice: section.basePrice
               };
             }
@@ -383,21 +445,37 @@ const SeatBooking = () => {
                 const statusClass = getSeatStatusClass(seatId);
                 const categoryClass = seat.category.toLowerCase().replace(/\s+/g, '-');
                 
+                const seatType = seat.type?.toLowerCase() || 'regular';
+                
                 return (
                   <button
                     key={`seat-${seatId}`}
-                    className={`seat ${statusClass} ${categoryClass}`}
+                    className={`seat ${statusClass} ${categoryClass} ${seatType}`}
                     onClick={() => handleSeatClick(seatId)}
                     disabled={statusClass === 'booked' || statusClass === 'reserved'}
                     aria-label={`Seat ${seatId}`}
-                    title={`${seatId} - ${seat.category} - ₹${show.pricing[seat.category]?.finalPrice || seat.basePrice}`}
-                    style={
-                      statusClass === 'selected' 
-                        ? { backgroundColor: seat.seatColor, borderColor: seat.seatColor, color: '#ffffff' } 
-                        : { borderColor: seat.seatColor }
-                    }
+                    title={`${seatId} - ${seat.category} - ${seat.type} - ₹${show.pricing[seat.category]?.finalPrice || seat.basePrice}`}
+                    style={{
+                      borderColor: seat.seatColor,
+                      ...(statusClass === 'selected' && { backgroundColor: seat.seatColor })
+                    }}
                   >
-                    {seatId.substring(1)} {/* Just show the number part, not the row letter */}
+                    {seatId.substring(1)}
+                    {seatType === 'recliner' && (
+                      <span className="seat-type-indicator">
+                        <Armchair size={10} />
+                      </span>
+                    )}
+                    {seatType === 'companion' && (
+                      <span className="seat-type-indicator">
+                        <Users2 size={10} />
+                      </span>
+                    )}
+                    {seatType === 'vip' && (
+                      <span className="seat-type-indicator">
+                        <Crown size={10} />
+                      </span>
+                    )}
                   </button>
                 );
               }
@@ -413,11 +491,11 @@ const SeatBooking = () => {
   // Show loading state
   if (loading) {
     return (
-      <div className="container my-5 text-center">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
+      <div className="container-fluid seat-booking-container">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Loading seat layout...</p>
         </div>
-        <p className="mt-3">Loading seat layout...</p>
       </div>
     );
   }
@@ -425,11 +503,12 @@ const SeatBooking = () => {
   // Show error state
   if (error) {
     return (
-      <div className="container my-5 text-center">
-        <div className="alert alert-danger">
-          <Info size={24} className="mb-2" />
+      <div className="container-fluid seat-booking-container">
+        <div className="error-container">
+          <AlertTriangle size={32} />
+          <h4>Error</h4>
           <p>{error}</p>
-          <button className="btn btn-outline-danger mt-3" onClick={() => window.location.reload()}>
+          <button className="btn btn-outline-danger" onClick={() => window.location.reload()}>
             Try Again
           </button>
         </div>
@@ -439,136 +518,145 @@ const SeatBooking = () => {
 
   // Return the seat booking UI
   return (
-    <div className="seat-booking-container container py-4">
-      <div className="row">
-        <div className="col-12">
-          <button 
-            className="btn btn-outline-secondary mb-3"
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft size={16} />
-            <span className="ms-1">Back</span>
-          </button>
-          <h2 className="text-center mb-1">{movieTitle || 'Movie Title'}</h2>
-          <h5 className="text-center text-muted mb-2">
-            {theater?.name || 'Theater'} | Screen {screen?.screenNumber || ''} | {show && new Date(show.showTime).toLocaleString()}
-          </h5>
-          <div className="text-center mb-4">
-            <span className="badge bg-secondary me-2">{show?.language}</span>
-            <span className="badge bg-info">{show?.experience}</span>
+    <div className="container-fluid seat-booking-container">
+      <div className="booking-header">
+        <button 
+          className="back-button text-white"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft size={18} />
+          <span>Back</span>
+        </button>
+
+        <div className="movie-info">
+          <h1>{movieTitle || 'Movie Title'}</h1>
+          <div className="theater-info">
+            <span>{theater?.name}</span>
+            <span className="separator">•</span>
+            <span>Screen {screen?.screenNumber}</span>
+            <span className="separator">•</span>
+            <span>{show && formatShowtime(show.showTime)}</span>
+          </div>
+          <div className="movie-tags">
+            <span className="tag">{show?.language}</span>
+            <span className="tag">{show?.experience}</span>
           </div>
         </div>
       </div>
       
       {timerActive && (
-        <div className="row mb-4">
-          <div className="col-12">
-            <div className="timer-banner">
-              <Clock size={18} />
-              <span>Booking will expire in: </span>
-              <strong>{formatTime(timer)}</strong>
-            </div>
-          </div>
+        <div className="timer-banner">
+          <Clock size={16} />
+          <span>Seat selection expires in </span>
+          <strong>{formatTime(timer)}</strong>
         </div>
       )}
       
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="screen-container">
-            <div className="screen">
-              <Monitor size={18} />
-              <span>SCREEN</span>
-            </div>
-          </div>
+      <div className="screen-area">
+        <div className="screen">
+          <Monitor size={16} />
+          <span>SCREEN</span>
         </div>
       </div>
       
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="seat-legend">
-            <div className="legend-item">
-              <div className="seat-example available"></div>
-              <span>Available</span>
-            </div>
-            <div className="legend-item">
-              <div className="seat-example selected" style={{ backgroundColor: '#3b82f6', borderColor: '#1d4ed8' }}></div>
-              <span>Selected</span>
-            </div>
-            <div className="legend-item">
-              <div className="seat-example booked"></div>
-              <span>Booked</span>
-            </div>
-            <div className="legend-item">
-              <div className="seat-example reserved"></div>
-              <span>Reserved</span>
-            </div>
-            
-            {/* Render category legends */}
-            {seatCategories.map(category => (
-              <div key={`legend-${category}`} className="legend-item">
-                <div 
-                  className="seat-example category"
-                  style={{ borderColor: categoryColors[category] || '#cbd5e1' }}
-                ></div>
-                <span>{category} (₹{show?.pricing[category]?.finalPrice})</span>
-              </div>
-            ))}
+      <div className="seat-legend">
+        {seatCategories.map(category => (
+          <div key={`legend-${category}`} className="legend-item">
+            <div 
+              className="seat-legend-box"
+              style={{ borderColor: categoryColors[category] || '#64748b' }}
+            ></div>
+            <span>{category} - ₹{show?.pricing[category]?.finalPrice}</span>
           </div>
+        ))}
+        
+        <div className="legend-divider"></div>
+        
+        <div className="legend-item">
+          <div className="seat-legend-box available"></div>
+          <span>Available</span>
+        </div>
+        <div className="legend-item">
+          <div className="seat-legend-box selected"></div>
+          <span>Selected</span>
+        </div>
+        <div className="legend-item">
+          <div className="seat-legend-box booked"></div>
+          <span>Sold</span>
+        </div>
+        <div className="legend-item">
+          <div className="seat-legend-box reserved"></div>
+          <span>Reserved</span>
+        </div>
+        
+        <div className="legend-divider"></div>
+        
+        <div className="legend-item">
+          <Armchair size={14} color="#94a3b8" />
+          <span>Recliner</span>
+        </div>
+        <div className="legend-item">
+          <Users2 size={14} color="#94a3b8" />
+          <span>Companion</span>
+        </div>
+        <div className="legend-item">
+          <Crown size={14} color="#94a3b8" />
+          <span>VIP</span>
         </div>
       </div>
       
-      <div className="row mb-4">
-        <div className="col-12 seating-container">
-          {renderSeatingLayout()}
-        </div>
+      <div className="seating-container">
+        {renderSeatingLayout()}
       </div>
       
-      <div className="row">
-        <div className="col-12 col-md-6 offset-md-3">
-          <div className="booking-summary">
-            <h3>Booking Summary</h3>
-            
-            <div className="summary-item">
-              <span className="label">Selected Seats:</span>
-              <span className="value">
-                {selectedSeats.length > 0 
-                  ? selectedSeats.join(', ')
-                  : 'None'}
-              </span>
+      <div className="booking-summary-container">
+        <div className="booking-summary">
+          <h2>
+            <Ticket size={18} />
+            <span>Booking Summary</span>
+          </h2>
+          
+          <div className="summary-item">
+            <div className="summary-label">Selected Seats</div>
+            <div className="summary-value">
+              {selectedSeats.length > 0 ? selectedSeats.join(', ') : 'None'}
             </div>
-            
-            <div className="summary-item">
-              <span className="label">Number of Tickets:</span>
-              <span className="value">
-                <Users size={16} className="me-1" />
-                {selectedSeats.length}
-              </span>
-            </div>
-            
-            <div className="summary-item">
-              <span className="label">Seat Categories:</span>
-              <span className="value">
-                {selectedSeats.map(seatId => {
-                  const seat = findSeatById(seatId);
-                  return seat ? seat.category : '';
-                }).filter(Boolean).join(', ') || 'None'}
-              </span>
-            </div>
-            
-            <div className="summary-item total">
-              <span className="label">Total Amount:</span>
-              <span className="value">₹{totalAmount.toFixed(2)}</span>
-            </div>
-            
-            <button 
-              className="btn-proceed mt-3" 
-              onClick={handleProceedToPayment}
-              disabled={selectedSeats.length === 0}
-            >
-              <CreditCard size={18} />
-              Proceed to Payment
-            </button>
           </div>
+          
+          <div className="summary-item">
+            <div className="summary-label">
+              <Users size={16} />
+              <span>Number of Tickets</span>
+            </div>
+            <div className="summary-value">{selectedSeats.length}</div>
+          </div>
+          
+          <div className="summary-item">
+            <div className="summary-label">
+              <Tag size={16} />
+              <span>Seat Categories</span>
+            </div>
+            <div className="summary-value">
+              {selectedSeats.map(seatId => {
+                const seat = findSeatById(seatId);
+                return seat ? seat.category : '';
+              }).filter(Boolean).join(', ') || 'None'}
+            </div>
+          </div>
+          
+          <div className="summary-total">
+            <div className="total-label">Total Amount</div>
+            <div className="total-value">₹{totalAmount.toFixed(2)}</div>
+          </div>
+          
+          <button 
+            className="payment-button" 
+            onClick={handleProceedToPayment}
+            disabled={selectedSeats.length === 0}
+          >
+            <CreditCard size={18} />
+            <span>Proceed to Payment</span>
+          </button>
         </div>
       </div>
     </div>

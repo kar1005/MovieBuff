@@ -1,109 +1,246 @@
 /* src/components/customer/booking/seat-booking/SeatBooking.css */
 
 .seat-booking-container {
+  position: relative;
+  overflow-x: hidden;
+  background-color: #0f172a;
+  color: #e2e8f0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  padding: 0;
+  min-height: calc(100vh - 65px);
 }
 
-/* Timer banner */
+/* Loading and Error States */
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 65px);
+  padding: 2rem;
+  text-align: center;
+  gap: 1rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(148, 163, 184, 0.3);
+  border-radius: 50%;
+  border-top-color: #3b82f6;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-container {
+  color: #f87171;
+}
+
+.error-container button {
+  margin-top: 1rem;
+  padding: 0.5rem 1.5rem;
+  background-color: transparent;
+  border: 1px solid #f87171;
+  color: #f87171;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.error-container button:hover {
+  background-color: rgba(248, 113, 113, 0.1);
+}
+
+/* Header Section */
+.booking-header {
+  padding: 1.5rem;
+  position: relative;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: 1px solid #475569;
+  color: #e2e8f0;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 1.5rem;
+}
+
+.back-button:hover {
+  background-color: #1e293b;
+  border-color: #64748b;
+}
+
+.movie-info {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.movie-info h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #f8fafc;
+}
+
+.theater-info {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.separator {
+  color: #475569;
+}
+
+.movie-tags {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.tag {
+  background-color: #1e293b;
+  color: #94a3b8;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Timer Banner */
 .timer-banner {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  background-color: #fef2f2;
-  color: #b91c1c;
+  gap: 0.5rem;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #f87171;
   padding: 0.75rem 1rem;
+  margin: 0 1.5rem 1.5rem;
   border-radius: 8px;
   font-size: 0.875rem;
 }
 
+.timer-banner strong {
+  font-weight: 600;
+}
+
 /* Screen */
-.screen-container {
+.screen-area {
+  width: 100%;
+  background-color: #0f172a; /* Same as page background */
+  border-top: 1px solid #1e293b;
+  border-bottom: 1px solid #1e293b;
+  padding: 1rem 0;
+  margin: 0 0 1.5rem 0;
   display: flex;
   justify-content: center;
-  margin-bottom: 2rem;
 }
 
 .screen {
-  width: 80%;
+  width: 100%;
   max-width: 600px;
   height: 40px;
-  background-color: #94a3b8;
-  border-radius: 5px;
+  background-color: #e2e8f0;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 0.875rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   gap: 0.5rem;
-  text-transform: uppercase;
+  color: #334155;
+  font-size: 0.75rem;
+  font-weight: 500;
   letter-spacing: 1px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-/* Seat legend */
+/* Seat Legend */
 .seat-legend {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  gap: 1rem;
+  margin: 0 1.5rem 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #1e293b;
 }
 
 .legend-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
 }
 
-.seat-example {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  border: 2px solid #e2e8f0;
+.seat-legend-box {
+  width: 16px;
+  height: 16px;
+  border: 1px solid;
+  border-radius: 3px;
 }
 
-.seat-example.available {
-  background-color: #f8fafc;
+.seat-legend-box.available {
+  border-color: #64748b;
+  background-color: transparent;
 }
 
-.seat-example.selected {
+.seat-legend-box.selected {
   background-color: #3b82f6;
-  border-color: #1d4ed8;
+  border-color: #3b82f6;
 }
 
-.seat-example.booked {
-  background-color: #cbd5e1;
-  border-color: #94a3b8;
+.seat-legend-box.booked {
+  background-color: #334155;
+  border-color: #334155;
 }
 
-.seat-example.reserved {
-  background-color: #fef2f2;
+.seat-legend-box.reserved {
+  background-color: rgba(239, 68, 68, 0.2);
   border-color: #ef4444;
 }
 
-.seat-example.category {
-  background-color: #f8fafc;
+.legend-divider {
+  width: 1px;
+  height: 16px;
+  background-color: #1e293b;
+  margin: 0 0.5rem;
 }
 
-/* Seating layout */
+/* Seating Container & Layout */
 .seating-container {
   display: flex;
   justify-content: center;
-  margin-bottom: 2rem;
+  padding: 0 1.5rem 2rem;
   overflow-x: auto;
-  padding: 1rem 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 .seating-layout {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 6px;
 }
 
 .seat-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 6px;
 }
 
 .row-label {
@@ -113,43 +250,46 @@
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  color: #475569;
+  font-size: 0.75rem;
+  color: #94a3b8;
 }
 
 .seat {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 4px;
-  border: 2px solid #e2e8f0;
-  background-color: #f8fafc;
+  border: 1px solid;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 500;
+  background-color: transparent;
+  color: #94a3b8;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
 }
 
 .seat:hover:not(:disabled) {
   transform: scale(1.05);
+  color: #f8fafc;
 }
 
 .seat.selected {
-  background-color: #3b82f6;
-  border-color: #1d4ed8;
-  color: white;
+  color: #f8fafc;
 }
 
 .seat.booked {
-  background-color: #cbd5e1;
-  border-color: #94a3b8;
+  background-color: #334155;
+  border-color: #334155;
+  color: #64748b;
   cursor: not-allowed;
 }
 
 .seat.reserved {
-  background-color: #fef2f2;
+  background-color: rgba(239, 68, 68, 0.1);
   border-color: #ef4444;
+  color: #ef4444;
   cursor: not-allowed;
 }
 
@@ -159,83 +299,139 @@
 
 .seat-aisle {
   width: 10px;
-  height: 30px;
 }
 
 .seat-gap {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
 }
 
-/* Booking summary */
+/* Booking Summary */
+.booking-summary-container {
+  padding: 0 1.5rem 2rem;
+}
+
 .booking-summary {
-  background-color: white;
+  background-color: #1e293b;
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  max-width: 480px;
+  margin: 0 auto;
 }
 
-.booking-summary h3 {
+.booking-summary h2 {
   font-size: 1.25rem;
   font-weight: 600;
-  margin-bottom: 1.25rem;
-  color: #0f172a;
+  margin-bottom: 1.5rem;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .summary-item {
   display: flex;
   justify-content: space-between;
   margin-bottom: 1rem;
+  align-items: flex-start;
 }
 
-.summary-item .label {
-  color: #64748b;
-}
-
-.summary-item .value {
-  font-weight: 500;
-  color: #0f172a;
+.summary-label {
+  color: #94a3b8;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-size: 0.875rem;
 }
 
-.summary-item.total {
-  border-top: 1px solid #e2e8f0;
-  margin-top: 0.5rem;
-  padding-top: 1rem;
-  font-weight: 600;
-  font-size: 1.125rem;
-}
-
-.btn-proceed {
-  width: 100%;
-  background-color: #0f766e;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 12px 20px;
-  font-size: 1rem;
+.summary-value {
+  color: #e2e8f0;
   font-weight: 500;
-  cursor: pointer;
+  text-align: right;
+  font-size: 0.875rem;
+  word-break: break-word;
+  max-width: 50%;
+}
+
+.summary-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #334155;
+}
+
+.total-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.total-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.payment-button {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
+  margin-top: 1.5rem;
+  background-color: #0f766e;
+  color: #f8fafc;
+  border: none;
+  padding: 0.875rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
   transition: background-color 0.2s;
 }
 
-.btn-proceed:hover {
+.payment-button:hover:not(:disabled) {
   background-color: #0e6b63;
 }
 
-.btn-proceed:disabled {
-  background-color: #94a3b8;
+.payment-button:disabled {
+  background-color: #334155;
+  color: #64748b;
   cursor: not-allowed;
+}
+
+/* Seat types */
+.seat-type-indicator {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  font-size: 8px;
+  color: inherit;
+  opacity: 0.8;
+}
+
+.seat.recliner,
+.seat.vip {
+  position: relative;
+}
+
+.seat.companion {
+  position: relative;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+  .movie-info h1 {
+    font-size: 1.5rem;
+  }
+  
+  .booking-header {
+    padding: 1rem;
+  }
+  
   .seat {
     width: 24px;
     height: 24px;
@@ -248,15 +444,51 @@
   
   .seat-gap {
     width: 24px;
+    height: 24px;
   }
   
+  .row-label {
+    width: 20px;
+    height: 24px;
+    font-size: 0.7rem;
+  }
+  
+  .booking-summary {
+    padding: 1.25rem;
+  }
+  
+  .booking-summary h2 {
+    font-size: 1.125rem;
+  }
+  
+  .summary-label, .summary-value {
+    font-size: 0.8125rem;
+  }
+}
+
+/* For smaller screens */
+@media (max-width: 480px) {
   .seat-legend {
-    gap: 1rem;
-    font-size: 0.75rem;
+    gap: 0.75rem;
   }
   
-  .seat-example {
-    width: 16px;
-    height: 16px;
+  .legend-item {
+    font-size: 0.6875rem;
+  } 
+  
+  .seat-legend-box {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .seat {
+    width: 22px;
+    height: 22px;
+    font-size: 0.6rem;
+  }
+  
+  .seat-gap {
+    width: 22px;
+    height: 22px;
   }
 }

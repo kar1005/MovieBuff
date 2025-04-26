@@ -283,18 +283,20 @@ const bookingService = {
   },
   
   // Confirm seat reservation - transition from reserved to booked
-  confirmReservation: async (showId, seatIds, bookingId) => {
-    try {
-      const response = await axiosInstance.post(`${BASE_URL}/confirm-reservation`, {
-        showId,
-        seatIds,
-        bookingId
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || `Failed to confirm reservation for booking ${bookingId}`;
-    }
-  },
+confirmReservation: async (showId, seatIds, bookingId, bookingData,userId ) => {
+  try {
+    const response = await axiosInstance.post(`${BASE_URL}/confirm-reservation`, {
+      showId,
+      seatIds,
+      bookingId,
+      userId,
+      ...bookingData // Include all the booking data
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || `Failed to confirm reservation for booking ${bookingId}`;
+  }
+},
   
   // Finalize booking after payment
   finalizeBooking: async (bookingId, paymentDetails) => {

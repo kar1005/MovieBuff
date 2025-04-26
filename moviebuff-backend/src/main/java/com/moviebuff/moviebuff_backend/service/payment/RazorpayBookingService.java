@@ -3,7 +3,9 @@ package com.moviebuff.moviebuff_backend.service.payment;
 import com.moviebuff.moviebuff_backend.exception.BadRequestException;
 import com.moviebuff.moviebuff_backend.exception.ResourceNotFoundException;
 import com.moviebuff.moviebuff_backend.model.booking.Booking;
+import com.moviebuff.moviebuff_backend.model.booking.Booking.BookingSeat;
 import com.moviebuff.moviebuff_backend.repository.interfaces.bookings.IBookingRepository;
+import com.moviebuff.moviebuff_backend.service.show.IShowService;
 import com.razorpay.Order;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
@@ -20,8 +22,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +34,7 @@ public class RazorpayBookingService implements IPaymentService {
 
     private final IBookingRepository bookingRepository;
     private final Random random = new Random();
-
+    private final IShowService showService;
     @Value("${razorpay.key.id}")
     private String razorpayKeyId;
 
@@ -169,6 +173,15 @@ public class RazorpayBookingService implements IPaymentService {
 
             // Update booking status to CONFIRMED
             booking.setStatus(Booking.BookingStatus.CONFIRMED);
+            List<String> seatIds = booking.getSeats().stream()
+    .map(BookingSeat::getSeatId)
+    .collect(Collectors.toList());
+
+// Call the service to update seat status
+showService.updateSeatAvailability(booking.getShowId(), seatIds, false);
+
+
+
 
             // Update payment details
             if (booking.getPaymentDetails() == null) {

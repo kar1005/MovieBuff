@@ -307,7 +307,12 @@ public List<ShowResponse> getShowsByTheater(String theaterId, boolean includePas
         if (show.getSeatStatus() != null) {
             for (Show.SeatStatus seat : show.getSeatStatus()) {
                 if (seatIds.contains(seat.getSeatId())) {
-                    seat.setStatus(available ? Show.SeatAvailability.AVAILABLE : Show.SeatAvailability.UNAVAILABLE);
+                    // Set to BOOKED instead of UNAVAILABLE when booking is confirmed
+                    if (!available) {
+                        seat.setStatus(Show.SeatAvailability.BOOKED);
+                    } else {
+                        seat.setStatus(Show.SeatAvailability.AVAILABLE);
+                    }
                     seat.setLastUpdated(LocalDateTime.now());
                 }
             }

@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { CheckCircle, Download, Share2, Ticket, Calendar, Clock, MapPin, AlertCircle } from 'lucide-react';
+import { 
+  CheckCircle, 
+  Download, 
+  Share2, 
+  Ticket, 
+  Calendar, 
+  Clock, 
+  MapPin, 
+  AlertCircle, 
+  CreditCard
+} from 'lucide-react';
 import bookingService from '../../../../../services/bookingService';
 import './BookingConfirmation.css';
 
@@ -44,7 +54,9 @@ const BookingConfirmation = () => {
       }
     };
     
-    fetchBookingDetails();
+    if (bookingId) {
+      fetchBookingDetails();
+    }
   }, [bookingId]);
   
   // Handle email notification
@@ -71,7 +83,7 @@ const BookingConfirmation = () => {
   
   // Format date
   const formatDate = (dateString) => {
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-US', options);
   };
   
@@ -84,11 +96,11 @@ const BookingConfirmation = () => {
   // Show loading state
   if (loading) {
     return (
-      <div className="container my-5 text-center">
+      <div className="container my-3 text-center">
         <div className="spinner-border text-success" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
-        <p className="mt-3">Loading booking confirmation...</p>
+        <p className="mt-2">Loading booking confirmation...</p>
       </div>
     );
   }
@@ -96,11 +108,11 @@ const BookingConfirmation = () => {
   // Show error state
   if (error) {
     return (
-      <div className="container my-5 text-center">
+      <div className="container my-3 text-center">
         <div className="alert alert-danger">
-          <AlertCircle size={24} />
+          <AlertCircle size={20} />
           <p>{error}</p>
-          <button className="btn btn-outline-danger" onClick={() => window.location.reload()}>
+          <button className="btn btn-outline-danger btn-sm" onClick={() => window.location.reload()}>
             Try Again
           </button>
         </div>
@@ -111,11 +123,11 @@ const BookingConfirmation = () => {
   // If booking not found
   if (!booking) {
     return (
-      <div className="container my-5 text-center">
+      <div className="container my-3 text-center">
         <div className="alert alert-warning">
-          <AlertCircle size={24} />
+          <AlertCircle size={20} />
           <p>Booking not found. Please check your booking details.</p>
-          <button className="btn btn-primary" onClick={() => navigate('/')}>
+          <button className="btn btn-primary btn-sm" onClick={() => navigate('/')}>
             Back to Home
           </button>
         </div>
@@ -124,128 +136,130 @@ const BookingConfirmation = () => {
   }
 
   return (
-    <div className="booking-confirmation-container container py-4">
-      <div className="success-header text-center mb-4">
-        <CheckCircle size={48} className="success-icon" />
-        <h2>Booking Confirmed!</h2>
-        <p className="confirmation-text">
-          Your tickets for <strong>{booking.movieTitle}</strong> have been confirmed. 
-          Booking ID: <span className="booking-id">{booking.bookingNumber}</span>
-        </p>
-      </div>
-      
-      <div className="row">
-        <div className="col-md-7 mb-4">
-          <div className="confirmation-card">
-            <div className="ticket-header">
-              <Ticket size={20} />
-              <h3>Ticket Details</h3>
-            </div>
-            
-            <div className="movie-details">
-              <h4>{booking.movieTitle}</h4>
-              <div className="experience-badge">{booking.experience} | {booking.language}</div>
-            </div>
-            
-            <div className="details-grid">
-              <div className="detail-item">
-                <Calendar size={16} />
-                <div>
-                  <p className="detail-label">Date</p>
-                  <p className="detail-value">{formatDate(booking.showTime)}</p>
-                </div>
+    <div className="booking-confirmation-wrapper">
+      <div className="booking-confirmation-container container py-2">
+        <div className="success-header text-center mb-2">
+          <CheckCircle size={32} className="success-icon" />
+          <h2>Booking Confirmed!</h2>
+          <p className="confirmation-text">
+            Your tickets for <strong>{booking.movieTitle}</strong> have been confirmed.
+            Booking ID: <span className="booking-id">{booking.bookingNumber}</span>
+          </p>
+        </div>
+        
+        <div className="row">
+          <div className="col-md-7 mb-2">
+            <div className="confirmation-card">
+              <div className="ticket-header">
+                <Ticket size={16} />
+                <h3>Ticket Details</h3>
               </div>
               
-              <div className="detail-item">
-                <Clock size={16} />
-                <div>
-                  <p className="detail-label">Show Time</p>
-                  <p className="detail-value">{formatTime(booking.showTime)}</p>
-                </div>
+              <div className="movie-details">
+                <h4>{booking.movieTitle}</h4>
+                <div className="experience-badge">{booking.experience} | {booking.language}</div>
               </div>
               
-              <div className="detail-item">
-                <MapPin size={16} />
-                <div>
-                  <p className="detail-label">Theater</p>
-                  <p className="detail-value">{booking.theaterName}</p>
-                  <p className="detail-subvalue">Screen {booking.screenNumber}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="seat-details">
-              <h5>Seat Information</h5>
-              <div className="seats-grid">
-                {booking.seats.map(seat => (
-                  <div key={seat.seatId} className="seat-item">
-                    <div className="seat-number">{seat.seatId}</div>
-                    <div className="seat-category">{seat.category}</div>
+              <div className="details-grid">
+                <div className="detail-item">
+                  <Calendar size={14} />
+                  <div>
+                    <p className="detail-label">Date</p>
+                    <p className="detail-value">{formatDate(booking.showTime)}</p>
                   </div>
-                ))}
+                </div>
+                
+                <div className="detail-item">
+                  <Clock size={14} />
+                  <div>
+                    <p className="detail-label">Show Time</p>
+                    <p className="detail-value">{formatTime(booking.showTime)}</p>
+                  </div>
+                </div>
+                
+                <div className="detail-item">
+                  <MapPin size={14} />
+                  <div>
+                    <p className="detail-label">Theater</p>
+                    <p className="detail-value">{booking.theaterName}</p>
+                    <p className="detail-subvalue">Screen {booking.screenNumber}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="seat-details">
+                <h5>Seat Information</h5>
+                <div className="seats-grid">
+                  {booking.seats && booking.seats.map(seat => (
+                    <div key={seat.seatId} className="seat-item">
+                      <div className="seat-number">{seat.seatId}</div>
+                      <div className="seat-category">{seat.category}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="payment-details">
+                <h5>Payment Information</h5>
+                <div className="detail-row">
+                  <span>Payment Method:</span>
+                  <span>{booking.paymentDetails?.method || 'Credit Card'}</span>
+                </div>
+                <div className="detail-row">
+                  <span>Amount Paid:</span>
+                  <span>₹{booking.totalAmount?.toFixed(2) || '0.00'}</span>
+                </div>
+                <div className="detail-row">
+                  <span>Transaction ID:</span>
+                  <span>{booking.paymentDetails?.transactionId || 'N/A'}</span>
+                </div>
               </div>
             </div>
+          </div>
+          
+          <div className="col-md-5">
+            <div className="qr-card">
+              <h3>Scan at the theater</h3>
+              <div className="qr-container">
+                {qrCode ? (
+                  <img src={qrCode} alt="Ticket QR Code" className="qr-code" />
+                ) : (
+                  <div className="qr-placeholder">QR Code Loading...</div>
+                )}
+              </div>
+              <p className="qr-info">
+                Show this QR code at the theater entrance for verification
+              </p>
+              
+              {/* <div className="action-buttons">
+                <button className="btn-action" onClick={handleSendEmail}>
+                  <Download size={14} />
+                  Email Ticket
+                </button>
+                <button className="btn-action" onClick={handleSendSMS}>
+                  <Share2 size={14} />
+                  SMS Ticket
+                </button>
+              </div> */}
+            </div>
             
-            <div className="payment-details">
-              <h5>Payment Information</h5>
-              <div className="detail-row">
-                <span>Payment Method:</span>
-                <span>{booking.paymentDetails?.method || 'Credit Card'}</span>
-              </div>
-              <div className="detail-row">
-                <span>Amount Paid:</span>
-                <span>₹{booking.totalAmount.toFixed(2)}</span>
-              </div>
-              <div className="detail-row">
-                <span>Transaction ID:</span>
-                <span>{booking.paymentDetails?.transactionId || 'N/A'}</span>
-              </div>
+            <div className="info-card mt-2">
+              <h5>Important Information</h5>
+              <ul>
+                <li>Please arrive at least 15 minutes before showtime</li>
+                <li>Outside food and beverages are not allowed</li>
+                <li>Booking is non-transferable and non-refundable</li>
+                <li>In case of any issues, please contact theater management</li>
+              </ul>
             </div>
           </div>
         </div>
         
-        <div className="col-md-5">
-          <div className="qr-card">
-            <h3>Scan at the theater</h3>
-            <div className="qr-container">
-              {qrCode ? (
-                <img src={qrCode} alt="Ticket QR Code" className="qr-code" />
-              ) : (
-                <div className="qr-placeholder">QR Code Loading...</div>
-              )}
-            </div>
-            <p className="qr-info">
-              Show this QR code at the theater entrance for verification
-            </p>
-            
-            <div className="action-buttons">
-              <button className="btn-action" onClick={handleSendEmail}>
-                <Download size={16} />
-                Email Ticket
-              </button>
-              <button className="btn-action" onClick={handleSendSMS}>
-                <Share2 size={16} />
-                SMS Ticket
-              </button>
-            </div>
-          </div>
-          
-          <div className="info-card mt-4">
-            <h5>Important Information</h5>
-            <ul>
-              <li>Please arrive at least 15 minutes before showtime</li>
-              <li>Outside food and beverages are not allowed</li>
-              <li>Booking is non-transferable and non-refundable</li>
-              <li>In case of any issues, please contact theater management</li>
-            </ul>
-          </div>
+        <div className="text-center my-2">
+          <button className="btn btn-primary" onClick={() => navigate('/movies')}>
+            Book Another Movie
+          </button>
         </div>
-      </div>
-      
-      <div className="text-center my-4">
-        <button className="btn btn-outline-primary" onClick={() => navigate('/')}>
-          Book Another Movie
-        </button>
       </div>
     </div>
   );

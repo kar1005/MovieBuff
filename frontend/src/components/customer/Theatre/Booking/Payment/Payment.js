@@ -1,17 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { CreditCard, CheckCircle, Clock, AlertCircle, ArrowLeft, Users, Film, Popcorn } from 'lucide-react';
+import { 
+  CreditCard, 
+  CheckCircle, 
+  Clock, 
+  AlertCircle, 
+  ArrowLeft, 
+  Users, 
+  Monitor, 
+  Popcorn,
+  Ticket,
+  CreditCard as CardIcon,
+  Smartphone,
+  Building,
+  FileText,
+  Lock,
+  DollarSign,
+  Plus,
+  Percent,
+  Tag
+} from 'lucide-react';
 import bookingService from '../../../../../services/bookingService';
 import paymentService from '../../../../../services/paymentService';
 import movieService from '../../../../../services/movieService';
+import showService from '../../../../../services/showService';
 import './Payment.css';
 
 const Payment = () => {
   const { bookingId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const [booking, setBooking] = useState(null);
+  const [show, setShow] = useState(null);
   const [movieDetails, setMovieDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,6 +42,13 @@ const Payment = () => {
   const [paymentStatus, setPaymentStatus] = useState({
     status: null, // 'success', 'error', 'processing'
     message: ''
+  });
+  const [priceBreakdown, setPriceBreakdown] = useState({
+    subtotal: 0,
+    additionalCharges: {},
+    totalAdditionalAmount: 0,
+    discount: 0,
+    total: 0
   });
   
   // Fetch booking details and load Razorpay
@@ -30,10 +59,23 @@ const Payment = () => {
         const response = await bookingService.getBookingById(bookingId);
         setBooking(response);
         
+        // Fetch show details to get pricing structure
+        if (response.showId) {
+          try {
+            const showData = await showService.getShow(response.showId);
+            setShow(showData);
+            
+            // Calculate price breakdown once we have both booking and show data
+            calculatePriceBreakdown(response, showData);
+          } catch (err) {
+            console.error("Error fetching show details:", err);
+            // Continue even if show details can't be fetched
+          }
+        }
+        
         // Optionally fetch movie details if needed
         try {
           if (response.movieId) {
-            // Use the movieService instead of direct fetch
             const movieData = await movieService.getMovieById(response.movieId);
             setMovieDetails(movieData);
           }
@@ -84,27 +126,64 @@ const Payment = () => {
       clearTimeout(timer);
     };
   }, [bookingId]);
-  
-  // Calculate fees and total amount
-  const calculateFees = () => {
-    if (!booking) return { subtotal: 0, convenienceFee: 0, discount: 0, total: 0 };
+
+  // Calculate price breakdown based on booking and show data
+  const calculatePriceBreakdown = (bookingData, showData) => {
+    if (!bookingData || !bookingData.seats || bookingData.seats.length === 0 || !showData || !showData.pricing) {
+      return;
+    }
     
-    // Get base amount from booking
-    const subtotal = booking.subtotalAmount || 0;
+    let subtotal = 0;
+    const additionalCharges = {};
+    let totalAdditionalAmount = 0;
     
-    // Calculate fees - use the actual ones from booking if available
-    const convenienceFee = booking.additionalCharges || (subtotal * 0.025); // 2.5% convenience fee
-    const discount = booking.appliedCoupon?.discount || 0; // Use discount if there's a coupon
+    // Process each seat
+    bookingData.seats.forEach(seat => {
+      // Add base price to subtotal
+      subtotal += seat.basePrice || 0;
+      
+      // Process additional charges for this seat
+      const pricing = showData.pricing[seat.category];
+      if (pricing && pricing.additionalCharges) {
+        pricing.additionalCharges.forEach(charge => {
+          let chargeAmount = 0;
+          
+          if (charge.isPercentage) {
+            // Calculate percentage of base price
+            chargeAmount = (seat.basePrice || 0) * (charge.amount / 100);
+          } else {
+            // Fixed charge
+            chargeAmount = charge.amount;
+          }
+          
+          // Add to appropriate charge type in our breakdown
+          if (!additionalCharges[charge.type]) {
+            additionalCharges[charge.type] = {
+              amount: 0,
+              isPercentage: charge.isPercentage,
+              originalAmount: charge.amount
+            };
+          }
+          additionalCharges[charge.type].amount += chargeAmount;
+          totalAdditionalAmount += chargeAmount;
+        });
+      }
+    });
     
-    // Get total from booking or calculate
-    const total = booking.totalAmount || (subtotal + convenienceFee - discount);
+    // Get discount from booking if there's a coupon
+    const discount = bookingData.appliedCoupon?.discount || 0;
     
-    return {
+    // Calculate total
+    const total = subtotal + totalAdditionalAmount - discount;
+    
+    // Update state with calculated breakdown
+    setPriceBreakdown({
       subtotal,
-      convenienceFee,
+      additionalCharges,
+      totalAdditionalAmount,
       discount,
       total
-    };
+    });
   };
   
   // Handle payment initialization
@@ -121,24 +200,12 @@ const Payment = () => {
         message: 'Processing your payment request...'
       });
       
-      // Calculate total amount
-      const { total } = calculateFees();
-      
-      // Log debugging information
-      console.log('Payment details:', {
-        bookingId,
-        amount: total,
-        currency: 'INR'
-      });
-      
       // Initialize payment with backend
       const paymentResponse = await paymentService.initiateBookingPayment(
         bookingId, 
-        total,
+        priceBreakdown.total,
         'INR'
       );
-      
-      console.log('Payment response:', paymentResponse);
       
       if (!paymentResponse || !paymentResponse.orderId) {
         throw new Error('Failed to create payment order. Please try again.');
@@ -147,7 +214,7 @@ const Payment = () => {
       // Configure Razorpay options
       const options = {
         key: process.env.REACT_APP_RAZORPAY_KEY_ID || paymentResponse.key || 'rzp_test_key',
-        amount: Math.round(total * 100), // Convert to paise/cents
+        amount: Math.round(priceBreakdown.total * 100), // Convert to paise/cents
         currency: 'INR',
         name: 'MovieBuff',
         description: `Tickets for ${booking.movieTitle}`,
@@ -238,7 +305,7 @@ const Payment = () => {
       
       // Redirect to confirmation page
       setTimeout(() => {
-        navigate(`/booking-confirmed/${bookingId}`);
+        navigate(`/customer/booking-confirmed/${bookingId}`);
       }, 2000);
       
     } catch (err) {
@@ -273,8 +340,7 @@ const Payment = () => {
     return date.toLocaleDateString('en-IN', { 
       weekday: 'short',
       day: 'numeric', 
-      month: 'short', 
-      year: 'numeric'
+      month: 'short'
     });
   };
   
@@ -299,15 +365,15 @@ const Payment = () => {
     switch (paymentStatus.status) {
       case 'success':
         className = "alert alert-success";
-        icon = <CheckCircle size={18} className="me-2" />;
+        icon = <CheckCircle size={18} />;
         break;
       case 'error':
         className = "alert alert-danger";
-        icon = <AlertCircle size={18} className="me-2" />;
+        icon = <AlertCircle size={18} />;
         break;
       case 'processing':
         className = "alert alert-info";
-        icon = <div className="spinner-border spinner-border-sm me-2" role="status">
+        icon = <div className="spinner-border spinner-border-sm" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>;
         break;
@@ -318,7 +384,7 @@ const Payment = () => {
     
     return (
       <div className={className} role="alert">
-        <div className="d-flex align-items-center">
+        <div className="d-flex align-items-center gap-2">
           {icon}
           <div>{paymentStatus.message}</div>
         </div>
@@ -329,11 +395,11 @@ const Payment = () => {
   // Show loading state
   if (loading) {
     return (
-      <div className="container my-5 text-center">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
+      <div className="payment-container">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Loading payment details...</p>
         </div>
-        <p className="mt-3">Loading payment details...</p>
       </div>
     );
   }
@@ -341,11 +407,12 @@ const Payment = () => {
   // Show error state
   if (error) {
     return (
-      <div className="container my-5 text-center">
-        <div className="alert alert-danger">
-          <AlertCircle size={24} className="mb-3" />
-          <p className="mb-3">{error}</p>
-          <button className="btn btn-outline-danger" onClick={() => window.location.reload()}>
+      <div className="payment-container">
+        <div className="error-container">
+          <AlertCircle size={32} />
+          <h4>Error</h4>
+          <p>{error}</p>
+          <button className="btn-back" onClick={() => window.location.reload()}>
             Try Again
           </button>
         </div>
@@ -356,11 +423,12 @@ const Payment = () => {
   // If booking not found
   if (!booking) {
     return (
-      <div className="container my-5 text-center">
-        <div className="alert alert-warning">
-          <AlertCircle size={24} className="mb-3" />
-          <p className="mb-3">Booking not found or has expired. Please try booking again.</p>
-          <button className="btn btn-primary" onClick={() => navigate('/')}>
+      <div className="payment-container">
+        <div className="error-container">
+          <AlertCircle size={32} />
+          <h4>Booking Not Found</h4>
+          <p>Booking not found or has expired. Please try booking again.</p>
+          <button className="btn-back" onClick={() => navigate('/')}>
             Back to Home
           </button>
         </div>
@@ -368,152 +436,195 @@ const Payment = () => {
     );
   }
   
-  // Calculate fees
-  const { subtotal, convenienceFee, discount, total } = calculateFees();
-  
   return (
-    <div className="payment-container container py-4">
+    <div className="payment-container">
       {renderPaymentStatusAlert()}
       
-      <div className="row mb-4">
-        <div className="col-12">
-          <h2 className="text-center mb-1">Complete Your Payment</h2>
-          <p className="text-center text-muted">
-            You have 10 minutes to complete this transaction
-          </p>
-        </div>
+      <div className="payment-header">
+        <h2>Complete Your Payment</h2>
+        <p>
+          <Clock size={16} />
+          <span>You have 10 minutes to complete this transaction</span>
+        </p>
       </div>
       
-      <div className="row">
-        <div className="col-md-7 mb-4">
-          <div className="booking-details-card">
-            <h3>Booking Details</h3>
-            
-            <div className="movie-details">
-              <h4>{booking.movieTitle}</h4>
-              <div className="d-flex align-items-center mb-2">
-                <span className="badge bg-info me-2">{booking.experience}</span>
-                <span className="badge bg-secondary">{booking.language}</span>
+      <div className="container">
+        <div className="row">
+          <div className="col-md-7 mb-4">
+            <div className="booking-details-card">
+              <h3>
+                <Ticket size={18} />
+                <span>Booking Details</span>
+              </h3>
+              
+              <div className="movie-details">
+                <h4>{booking.movieTitle}</h4>
+                <div className="badges">
+                  <span className="badge bg-info">{booking.experience}</span>
+                  <span className="badge bg-secondary">{booking.language}</span>
+                </div>
+                <div className="theater-info">
+                  <Monitor size={16} />
+                  <span>{booking.theaterName} • Screen {booking.screenNumber}</span>
+                </div>
+                <div className="show-time">
+                  <Clock size={16} />
+                  <span>{formatDate(booking.showTime)} • {formatTime(booking.showTime)}</span>
+                </div>
               </div>
-              <p className="text-muted mb-1">
-                <Film size={16} className="me-1" />
-                {booking.theaterName} • Screen {booking.screenNumber}
-              </p>
-              <p className="show-time">
-                <Clock size={16} />
-                <span>{formatDate(booking.showTime)} • {formatTime(booking.showTime)}</span>
-              </p>
+              
+              <div className="ticket-details">
+                <div className="detail-row">
+                  <span>Selected Seats</span>
+                  <span className="value">
+                    {booking.seats && booking.seats.map ? 
+                      booking.seats.map(seat => seat.seatId).join(', ') : 
+                      'N/A'}
+                  </span>
+                </div>
+                
+                <div className="detail-row">
+                  <span>Number of Tickets</span>
+                  <span className="value">
+                    <Users size={14} />
+                    <span>{booking.seats && booking.seats.length || 0}</span>
+                  </span>
+                </div>
+                
+                <div className="detail-row">
+                  <span>Seat Categories</span>
+                  <span className="value">
+                    {booking.seats && booking.seats.map ? 
+                      [...new Set(booking.seats.map(seat => seat.category))].join(', ') : 
+                      'N/A'}
+                  </span>
+                </div>
+                
+                <div className="detail-row">
+                  <span>Booking Number</span>
+                  <span className="value">{booking.bookingNumber || 'N/A'}</span>
+                </div>
+                
+                <div className="detail-row">
+                  <span>Amenities</span>
+                  <span className="value">
+                    <Popcorn size={14} />
+                    <span>Food & Beverages Available</span>
+                  </span>
+                </div>
+              </div>
             </div>
             
-            <div className="ticket-details">
-              <div className="detail-row">
-                <span>Selected Seats:</span>
-                <span className="value">
-                  {booking.seats && booking.seats.map ? 
-                    booking.seats.map(seat => seat.seatId).join(', ') : 
-                    'N/A'}
-                </span>
-              </div>
-              
-              <div className="detail-row">
-                <span>Number of Tickets:</span>
-                <span className="value">
-                  <Users size={14} className="me-1" />
-                  {booking.seats && booking.seats.length || 0}
-                </span>
-              </div>
-              
-              <div className="detail-row">
-                <span>Seat Categories:</span>
-                <span className="value">
-                  {booking.seats && booking.seats.map ? 
-                    [...new Set(booking.seats.map(seat => seat.category))].join(', ') : 
-                    'N/A'}
-                </span>
-              </div>
-              
-              <div className="detail-row">
-                <span>Booking Number:</span>
-                <span className="value">{booking.bookingNumber || 'N/A'}</span>
-              </div>
-              
-              <div className="detail-row">
-                <span>Amenities:</span>
-                <span className="value">
-                  <Popcorn size={14} className="me-1" />
-                  Food & Beverages Available
-                </span>
-              </div>
-            </div>
+            <button className="btn-back mt-3" onClick={handleBackToSeats}>
+              <ArrowLeft size={16} />
+              <span>Back to Seat Selection</span>
+            </button>
           </div>
           
-          <button className="btn-back mt-3" onClick={handleBackToSeats}>
-            <ArrowLeft size={16} />
-            Back to Seat Selection
-          </button>
-        </div>
-        
-        <div className="col-md-5">
-          <div className="payment-summary-card">
-            <h3>Payment Summary</h3>
-            
-            <div className="amount-row">
-              <span>Base Price ({booking.seats && booking.seats.length || 0} tickets)</span>
-              <span>{formatCurrency(subtotal)}</span>
-            </div>
-            
-            <div className="amount-row">
-              <span>Convenience Fee</span>
-              <span>{formatCurrency(convenienceFee)}</span>
-            </div>
-            
-            {discount > 0 && (
+          <div className="col-md-5">
+            <div className="payment-summary-card">
+              <h3>
+                <DollarSign size={18} />
+                <span>Payment Summary</span>
+              </h3>
+              
               <div className="amount-row">
-                <span>Discount</span>
-                <span>- {formatCurrency(discount)}</span>
+                <span>Base Price ({booking.seats && booking.seats.length || 0} tickets)</span>
+                <span>{formatCurrency(priceBreakdown.subtotal)}</span>
               </div>
-            )}
-            
-            <div className="amount-row total">
-              <span>Total Amount</span>
-              <span>{formatCurrency(total)}</span>
-            </div>
-            
-            <button 
-              className="btn-payment"
-              onClick={handlePayment}
-              disabled={processingPayment || !razorpayLoaded}
-            >
-              {processingPayment ? (
-                <>
-                  <div className="spinner-border spinner-border-sm" role="status">
-                    <span className="visually-hidden">Processing...</span>
+              
+              {/* Additional Charges */}
+              {Object.entries(priceBreakdown.additionalCharges).length > 0 && (
+                <div className="additional-charges-section">
+                  <div className="additional-charges-header">
+                    <Tag size={14} />
+                    <span>Additional Charges</span>
                   </div>
-                  <span>Processing...</span>
-                </>
-              ) : (
-                <>
-                  <CreditCard size={18} />
-                  <span>Pay {formatCurrency(total)}</span>
-                </>
+                  
+                  {Object.entries(priceBreakdown.additionalCharges).map(([type, charge], index) => (
+                    <div key={`charge-${index}`} className="additional-charge-row">
+                      <div className="charge-label">
+                        {charge.isPercentage ? (
+                          <Percent size={12} />
+                        ) : (
+                          <Plus size={12} />
+                        )}
+                        <span>{type}</span>
+                        {charge.isPercentage && (
+                          <span className="percentage-badge">{charge.originalAmount}%</span>
+                        )}
+                      </div>
+                      <span>{formatCurrency(charge.amount)}</span>
+                    </div>
+                  ))}
+                  
+                  <div className="additional-charge-row subtotal">
+                    <span>Total Additional Charges</span>
+                    <span>{formatCurrency(priceBreakdown.totalAdditionalAmount)}</span>
+                  </div>
+                </div>
               )}
-            </button>
-            
-            <div className="payment-methods">
-              <p>Supported Payment Methods:</p>
-              <div className="method-icons">
-                <span className="method-icon credit-card">Credit Card</span>
-                <span className="method-icon debit-card">Debit Card</span>
-                <span className="method-icon netbanking">Net Banking</span>
-                <span className="method-icon upi">UPI</span>
+              
+              {priceBreakdown.discount > 0 && (
+                <div className="amount-row discount">
+                  <span>Discount</span>
+                  <span>- {formatCurrency(priceBreakdown.discount)}</span>
+                </div>
+              )}
+              
+              <div className="amount-row total">
+                <span>Total Amount</span>
+                <span>{formatCurrency(priceBreakdown.total)}</span>
               </div>
-            </div>
-            
-            <div className="security-note">
-              <p>
-                <CheckCircle size={16} />
-                <span>Your transaction is secure and encrypted</span>
-              </p>
+              
+              <button 
+                className="btn-payment"
+                onClick={handlePayment}
+                disabled={processingPayment || !razorpayLoaded}
+              >
+                {processingPayment ? (
+                  <>
+                    <div className="spinner-border spinner-border-sm" role="status">
+                      <span className="visually-hidden">Processing...</span>
+                    </div>
+                    <span>Processing...</span>
+                  </>
+                ) : (
+                  <>
+                    <CreditCard size={18} />
+                    <span>Pay {formatCurrency(priceBreakdown.total)}</span>
+                  </>
+                )}
+              </button>
+              
+              <div className="payment-methods">
+                <p>Supported Payment Methods:</p>
+                <div className="method-icons">
+                  <span className="method-icon">
+                    <CardIcon size={12} className="me-1" />
+                    <span>Credit Card</span>
+                  </span>
+                  <span className="method-icon">
+                    <CardIcon size={12} className="me-1" />
+                    <span>Debit Card</span>
+                  </span>
+                  <span className="method-icon">
+                    <Building size={12} className="me-1" />
+                    <span>Net Banking</span>
+                  </span>
+                  <span className="method-icon">
+                    <Smartphone size={12} className="me-1" />
+                    <span>UPI</span>
+                  </span>
+                </div>
+              </div>
+              
+              <div className="security-note">
+                <p>
+                  <Lock size={14} />
+                  <span>Your transaction is secure and encrypted</span>
+                </p>
+              </div>
             </div>
           </div>
         </div>

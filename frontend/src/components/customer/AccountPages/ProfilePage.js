@@ -552,7 +552,7 @@ const CustomerProfilePage = () => {
                                 </p>
                               </div>
                               
-                              <div className="booking-actions">
+                              {/* <div className="booking-actions">
                                 <Button variant="outline-primary" size="sm">
                                   View Details
                                 </Button>
@@ -561,7 +561,7 @@ const CustomerProfilePage = () => {
                                     Download Ticket
                                   </Button>
                                 )}
-                              </div>
+                              </div> */}
                             </div>
                           </ListGroup.Item>
                         ))}
