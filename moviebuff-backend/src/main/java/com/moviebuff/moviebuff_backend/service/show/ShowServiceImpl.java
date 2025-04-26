@@ -230,9 +230,10 @@ public List<ShowResponse> getShowsByTheater(String theaterId, boolean includePas
                 .map(Theater::getId)
                 .collect(Collectors.toList());
         
-        LocalDate ldate = LocalDate.now();
-        // Create date range for filtering
-        LocalDateTime startOfDay = date.equals(ldate)?LocalDateTime.now():date.atStartOfDay();
+        // LocalDate ldate = LocalDate.now();
+        // // Create date range for filtering
+        // LocalDateTime startOfDay = date.equals(ldate)?LocalDateTime.now():date.atStartOfDay();
+        LocalDateTime startOfDay = date.atStartOfDay();
         LocalDateTime endOfDay = date.plusDays(1).atStartOfDay().minusSeconds(1);
         
         System.out.println("Finding shows for movie " + movieId + " in city " + city + " on date " + date);
