@@ -1,3 +1,4 @@
+// Replace your date-related code with this implementation
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -13,8 +14,6 @@ export default function TheatreListOnMovies() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [movieDetails, setMovieDetails] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [modalOpen, setModalOpen] = useState(false);
   const [availableDates, setAvailableDates] = useState([]);
   
   // Get the id parameter from the URL
@@ -22,15 +21,36 @@ export default function TheatreListOnMovies() {
   const userCity = useSelector(selectUserCity);
   const navigate = useNavigate();
   
+  // IMPORTANT: Force the date to Indian time zone
+  const getCurrentIndianDate = () => {
+    // Force Indian time (UTC+5:30) regardless of browser timezone
+    const now = new Date();
+    
+    // Calculate IST time from UTC
+    // 1. Convert current time to UTC milliseconds
+    const utcMillis = now.getTime();
+    
+    // 2. Calculate IST offset: UTC+5:30 = 5.5 hours = 5.5 * 60 * 60 * 1000 milliseconds
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    
+    // 3. Calculate current time in IST
+    const istTime = new Date(utcMillis + istOffset - (now.getTimezoneOffset() * 60 * 1000));
+    
+    // 4. Get just the date part in YYYY-MM-DD format
+    return istTime.toISOString().split('T')[0];
+  };
+  
+  // Initialize selected date to current Indian date
+  const [selectedDate, setSelectedDate] = useState(getCurrentIndianDate());
+  
   // Function to fetch theaters and shows for the specific movie
   const fetchTheatersAndShowsForMovie = async () => {
     try {
       setLoading(true);
       
-      
       // Fetch movie details
-        const movieData = await movieService.getMovieById(id);
-        setMovieDetails(movieData);
+      const movieData = await movieService.getMovieById(id);
+      setMovieDetails(movieData);
       
       const showsData = await showService.getShowsByMovieAndCity(id, userCity, selectedDate);
       
@@ -42,8 +62,8 @@ export default function TheatreListOnMovies() {
       for (const show of showsData) {
         if (!theaterMap.has(show.theaterId)) {
           // Fetch theater details
-            const theaterData = await theaterService.getTheaterById(show.theaterId);
-            theaterMap.set(show.theaterId, theaterData);
+          const theaterData = await theaterService.getTheaterById(show.theaterId);
+          theaterMap.set(show.theaterId, theaterData);
         }
         
         // Group shows by theater ID
@@ -67,74 +87,80 @@ export default function TheatreListOnMovies() {
     }
   };
   
+  // Generate dates for the next 7 days in Indian time
   useEffect(() => {
-    if (userCity && id) {
+    const generateIndianDates = () => {
+      const dates = [];
+      
+      // Get today's date in IST
+      const istNow = new Date();
+      const utcMillis = istNow.getTime();
+      const istOffset = 5.5 * 60 * 60 * 1000;
+      const todayIST = new Date(utcMillis + istOffset - (istNow.getTimezoneOffset() * 60 * 1000));
+      
+      // Generate 7 days from today in IST
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(todayIST);
+        date.setDate(todayIST.getDate() + i);
+        
+        // Format as YYYY-MM-DD
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        dates.push(`${year}-${month}-${day}`);
+      }
+      
+      setAvailableDates(dates);
+    };
+    
+    generateIndianDates();
+  }, []);
+  
+  // Fetch theaters whenever selectedDate, userCity or id changes
+  useEffect(() => {
+    if (userCity && id && selectedDate) {
       fetchTheatersAndShowsForMovie();
     } else {
       setError('Please select a location to view theaters');
       setLoading(false);
     }
-  }, [userCity, id]);
+  }, [userCity, id, selectedDate]);
 
   const handleShowClick = (showId) => {
     navigate(`/customer/booking/${showId}`);
   };
 
-
-  // Format date for display
+  // Format date for display in Indian format
   const formatDate = (dateString) => {
-    const options = { weekday: 'short', day: 'numeric', month: 'short' };
-    return new Date(dateString).toLocaleDateString('en-US', options);
+    if (!dateString) return '';
+    
+    const dateParts = dateString.split('-');
+    const year = parseInt(dateParts[0]);
+    const month = parseInt(dateParts[1]) - 1; // JavaScript months are 0-indexed
+    const day = parseInt(dateParts[2]);
+    
+    const date = new Date(year, month, day);
+    
+    const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    const weekday = weekdays[date.getDay()];
+    const dayNum = date.getDate();
+    const monthName = months[date.getMonth()];
+    
+    return `${weekday}, ${dayNum} ${monthName}`;
   };
 
-  // Generate dates for the next 7 days
-  useEffect(() => {
-    const dates = [];
-    const today = new Date();
-    
-    for (let i = 0; i < 7; i++) {
-      const date = new Date();
-      date.setDate(today.getDate() + i);
-      dates.push(date.toISOString().split('T')[0]);
-    }
-    
-    setAvailableDates(dates);
-  }, []);
-
-  useEffect(() => {
-    const fetchTheatres = async () => {
-      try {
-        
-        setLoading(true);
-        const data = await showService.getShowsByMovieAndCity(id, userCity, selectedDate);
-        setTheaters(data);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching theatres:", error);
-        setLoading(false);
-      }
-    };
-
-    fetchTheatres();
-  }, [selectedDate]);
-
-  const toggleModal = () => {
-    setModalOpen(!modalOpen);
+  // Format show time
+  const formatShowTime = (dateTimeString) => {
+    if (!dateTimeString) return '';
+    const date = new Date(dateTimeString);
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   };
   
-  const renderAmenities = (amenities) => {
-    if (!amenities || amenities.length === 0) return null;
-    
-    return (
-      <div className="movie-theater-amenities">
-        {amenities.map((amenity, index) => (
-          <span key={index} className="movie-amenity-badge">
-            {amenity}
-          </span>
-        ))}
-      </div>
-    );
-  };
+  // Rest of your component code remains the same
+  
+  // ... getTicketStatusClass, getTicketStatus functions
   
   const getTicketStatusClass = (status) => {
     switch(status) {
@@ -153,7 +179,6 @@ export default function TheatreListOnMovies() {
   
   const getTicketStatus = (show) => {
     // This is a placeholder function - in a real app, you'd calculate this based on seat availability
-    // For now, we'll simulate various statuses
     const availableSeats = show.availableSeats || 0;
     const totalSeats = show.totalSeats || 100;
     const percentage = (availableSeats / totalSeats) * 100;
@@ -164,14 +189,8 @@ export default function TheatreListOnMovies() {
     return 'AVAILABLE';
   };
 
-  const formatShowTime = (dateTimeString) => {
-    if (!dateTimeString) return '';
-    const date = new Date(dateTimeString);
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-  };
+  // ... render section with loading, error, and content rendering
   
-  
-
   if (loading) {
     return (
       <div className="movie-theater-list-container">
@@ -200,17 +219,6 @@ export default function TheatreListOnMovies() {
     );
   }
 
-  // if (theaters.length === 0) {
-  //   return (
-  //     <div className="movie-theater-list-container">
-  //       <div className="movie-no-theaters">
-  //         <h3>No theaters showing {movieDetails?.title || 'this movie'} in {userCity}</h3>
-  //         <p>There are no theaters currently showing this movie in your selected location.</p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
-
   return (
     <div className="movie-theater-list-container">
       <div className="movie-theater-list-header">
@@ -234,6 +242,7 @@ export default function TheatreListOnMovies() {
           ))}
         </div>
       </div>
+      
       <div className="movie-legend">
         <div className="legend-item">
           <span className="legend-indicator available"></span>
@@ -298,7 +307,15 @@ export default function TheatreListOnMovies() {
                 </div>
               </div>
               
-              {renderAmenities(theater.amenities)}
+              {theater.amenities && theater.amenities.length > 0 && (
+                <div className="movie-theater-amenities">
+                  {theater.amenities.map((amenity, index) => (
+                    <span key={index} className="movie-amenity-badge">
+                      {amenity}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
             
             <div className="movie-show-times-section">
@@ -325,7 +342,6 @@ export default function TheatreListOnMovies() {
                 <p className="no-shows-message">No shows available for this date</p>
               )}
             </div>
-            
           </div>
         ))}
       </div>
