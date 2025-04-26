@@ -120,12 +120,12 @@ const showService = {
   },
 
   // Get shows by movie and city
-  getShowsByMovieAndCity: async (movieId, city) => {
+  getShowsByMovieAndCity: async (movieId, city, date) => {
     try {
-      const response = await axiosInstance.get(`${BASE_URL}/movie/${movieId}/city/${city}`);
+      const response = await axiosInstance.get(`${BASE_URL}/movie/${movieId}/city/${city}/date/${date}`);
       return response.data;
     } catch (error) {
-      throw error.response?.data || `Failed to fetch shows for movie ${movieId} in city ${city}`;
+      throw error.response?.data || `Failed to fetch shows for movie ${movieId} in city ${city} on date ${date}`;
     }
   },
 

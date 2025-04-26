@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import { selectUserCity } from '../../../../redux/slices/locationSlice';
+import showService from '../../../../services/showService';
+import theaterService from '../../../../services/theaterService';
+import movieService from '../../../../services/movieService';
 import './TheatreListOnMovies.css';
 
 export default function TheatreListOnMovies() {
@@ -11,6 +14,8 @@ export default function TheatreListOnMovies() {
   const [error, setError] = useState(null);
   const [movieDetails, setMovieDetails] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [availableDates, setAvailableDates] = useState([]);
   
   // Get the id parameter from the URL
   const { id } = useParams();
@@ -22,27 +27,12 @@ export default function TheatreListOnMovies() {
     try {
       setLoading(true);
       
-      // For movie-specific theaters, use the shows controller endpoint for movie and city
-      const apiUrl = `http://localhost:8080/api/shows/movie/${id}/city/${userCity}`;
       
       // Fetch movie details
-      try {
-        const movieResponse = await fetch(`http://localhost:8080/api/movies/${id}`);
-        if (movieResponse.ok) {
-          const movieData = await movieResponse.json();
-          setMovieDetails(movieData);
-        }
-      } catch (movieErr) {
-        console.error('Error fetching movie details:', movieErr);
-      }
+        const movieData = await movieService.getMovieById(id);
+        setMovieDetails(movieData);
       
-      const response = await fetch(apiUrl);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch theaters and shows');
-      }
-      
-      const showsData = await response.json();
+      const showsData = await showService.getShowsByMovieAndCity(id, userCity, selectedDate);
       
       // The response will be a list of shows, so we need to extract unique theaters
       const theaterMap = new Map();
@@ -52,15 +42,8 @@ export default function TheatreListOnMovies() {
       for (const show of showsData) {
         if (!theaterMap.has(show.theaterId)) {
           // Fetch theater details
-          try {
-            const theaterResponse = await fetch(`http://localhost:8080/api/theaters/${show.theaterId}`);
-            if (theaterResponse.ok) {
-              const theaterData = await theaterResponse.json();
-              theaterMap.set(show.theaterId, theaterData);
-            }
-          } catch (err) {
-            console.error(`Error fetching theater ${show.theaterId}:`, err);
-          }
+            const theaterData = await theaterService.getTheaterById(show.theaterId);
+            theaterMap.set(show.theaterId, theaterData);
         }
         
         // Group shows by theater ID
@@ -95,6 +78,48 @@ export default function TheatreListOnMovies() {
 
   const handleShowClick = (showId) => {
     navigate(`/customer/booking/${showId}`);
+  };
+
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    const options = { weekday: 'short', day: 'numeric', month: 'short' };
+    return new Date(dateString).toLocaleDateString('en-US', options);
+  };
+
+  // Generate dates for the next 7 days
+  useEffect(() => {
+    const dates = [];
+    const today = new Date();
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date();
+      date.setDate(today.getDate() + i);
+      dates.push(date.toISOString().split('T')[0]);
+    }
+    
+    setAvailableDates(dates);
+  }, []);
+
+  useEffect(() => {
+    const fetchTheatres = async () => {
+      try {
+        
+        setLoading(true);
+        const data = await showService.getShowsByMovieAndCity(id, userCity, selectedDate);
+        setTheaters(data);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching theatres:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchTheatres();
+  }, [selectedDate]);
+
+  const toggleModal = () => {
+    setModalOpen(!modalOpen);
   };
   
   const renderAmenities = (amenities) => {
@@ -175,55 +200,40 @@ export default function TheatreListOnMovies() {
     );
   }
 
-  if (theaters.length === 0) {
-    return (
-      <div className="movie-theater-list-container">
-        <div className="movie-no-theaters">
-          <h3>No theaters showing {movieDetails?.title || 'this movie'} in {userCity}</h3>
-          <p>There are no theaters currently showing this movie in your selected location.</p>
-          <div className="movie-no-theaters-actions">
-            <button 
-              className="movie-change-location-btn" 
-              onClick={() => navigate('/customer/select-location')}
-            >
-              Change Location
-            </button>
-            <button 
-              className="movie-view-all-theaters-btn" 
-              onClick={() => navigate('/customer/theatres')}
-            >
-              View All Theaters
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // if (theaters.length === 0) {
+  //   return (
+  //     <div className="movie-theater-list-container">
+  //       <div className="movie-no-theaters">
+  //         <h3>No theaters showing {movieDetails?.title || 'this movie'} in {userCity}</h3>
+  //         <p>There are no theaters currently showing this movie in your selected location.</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="movie-theater-list-container">
       <div className="movie-theater-list-header">
         <h2>
           Theaters showing 
-          <span className="movie-title"> {movieDetails?.title || 'this movie'} </span> 
+          <span className="filter-movie-title"> {movieDetails?.title || 'this movie'} </span> 
           in <span className="movie-city-name">{userCity}</span>
         </h2>
-        <div className="movie-header-actions">
-          <button 
-            className="movie-change-location-btn" 
-            onClick={() => navigate('/customer/select-location')}
-          >
-            Change Location
-          </button>
-          <button 
-            className="movie-view-all-theaters-btn" 
-            onClick={() => navigate('/customer/theatres')}
-          >
-            View All Theaters
-          </button>
-        </div>
       </div>
       
+      <div className="date-picker-container">
+        <div className="date-picker-scroll">
+          {availableDates.map((date) => (
+            <div 
+              key={date} 
+              className={`date-option ${selectedDate === date ? 'date-selected' : ''}`}
+              onClick={() => setSelectedDate(date)}
+            >
+              {formatDate(date)}
+            </div>
+          ))}
+        </div>
+      </div>
       <div className="movie-legend">
         <div className="legend-item">
           <span className="legend-indicator available"></span>

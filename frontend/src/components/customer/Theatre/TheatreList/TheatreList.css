@@ -5,7 +5,7 @@
   font-family: 'Roboto', sans-serif;
 }
 
-.theater-list-header {
+.all-theater-list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -14,10 +14,10 @@
   border-bottom: 1px solid #e1e1e1;
 }
 
-.theater-list-header h2 {
+.all-theater-list-header h2 {
   font-size: 24px;
   font-weight: 600;
-  color: #333;
+  color: white;
   margin: 0;
 }
 

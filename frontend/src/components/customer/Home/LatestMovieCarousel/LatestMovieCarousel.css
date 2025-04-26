@@ -1,7 +1,7 @@
 /* MovieCarousel.css */
 
 /* Base styling for the entire page */
-.movie-carousel-page {
+.latest-movie-carousel-page {
     background-color: #0f172a;
     color: #e2e8f0;
     min-height: 100vh;
@@ -99,14 +99,14 @@
   }
   
   /* Movie grid layout */
-  .movie-grid {
+  .latest-movie-grid {
     display: flex;
     gap: 1rem;
     overflow-x: hidden;
   }
   
   /* Movie card styles - Fixed uniform height */
-  .movie-card {
+  .latest-movie-card {
     flex-shrink: 0;
     border-radius: 0.5rem;
     overflow: hidden;
@@ -117,20 +117,20 @@
     width: calc((100% - 2rem) / 3); /* Adjust based on items to show */
   }
   
-  .movie-card:hover {
+  .latest-movie-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
     border-color: #eab308;
   }
   
-  .movie-poster-container {
+  .latest-movie-poster-container {
     position: relative;
     height: 400px;
     overflow: hidden;
     background-color: #111827;
   }
   
-  .movie-poster {
+  .latest-movie-poster {
     width: auto !important; /* Override any other width settings */
     height: 100% !important; /* Make it take full height */
     max-width: 100% !important; /* Constrain width */
@@ -140,11 +140,11 @@
     transition: transform 0.3s ease;
   }
   
-  .movie-card:hover .movie-poster {
+  .latest-movie-card:hover .latest-movie-poster {
     transform: scale(1.05);
   }
   
-  .movie-rating-badge {
+  .latest-movie-rating-badge {
     position: absolute;
     top: 10px;
     right: 10px;
@@ -159,14 +159,14 @@
     gap: 0.25rem;
   }
   
-  .movie-info {
+  .latest-movie-info {
     padding: 0.75rem;
     height: 160px; /* Fixed height for info section */
     display: flex;
     flex-direction: column;
   }
   
-  .movie-title {
+  .latest-movie-title {
     font-size: 1rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
@@ -178,7 +178,7 @@
     height: 40px; /* Fixed height for title */
   }
   
-  .movie-meta {
+  .latest-movie-meta {
     display: flex;
     align-items: center;
     font-size: 0.75rem;
@@ -187,17 +187,17 @@
     height: 20px; /* Fixed height for meta info */
   }
   
-  .movie-meta-item {
+  .latest-movie-meta-item {
     display: flex;
     align-items: center;
     gap: 0.25rem;
   }
   
-  .movie-meta-separator {
+  .latest-movie-meta-separator {
     margin: 0 0.5rem;
   }
   
-  .movie-genres {
+  .latest-movie-genres {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
@@ -207,7 +207,7 @@
     overflow: hidden;
   }
   
-  .movie-genre-tag {
+  .latest-movie-genre-tag {
     font-size: 0.675rem;
     background-color: #334155;
     color: #cbd5e1;
@@ -270,7 +270,7 @@
   
   /* Responsive styles */
   @media (max-width: 640px) {
-    .movie-card {
+    .latest-movie-card {
       width: 100%;
     }
     
@@ -281,13 +281,13 @@
   }
   
   @media (min-width: 641px) and (max-width: 1023px) {
-    .movie-card {
+    .latest-movie-card {
       width: calc(50% - 0.5rem);
     }
   }
   
   @media (min-width: 1024px) {
-    .movie-card {
+    .latest-movie-card {
       width: calc(33.333% - 0.667rem);
     }
     

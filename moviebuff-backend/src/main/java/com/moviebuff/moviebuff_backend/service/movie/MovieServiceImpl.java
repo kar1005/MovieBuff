@@ -66,6 +66,16 @@ public class MovieServiceImpl implements IMovieService {
         return mongoTemplate.find(query, Movie.class);
     }
 
+     @Override
+    public List<Movie> getUpcomingMovies(int limit) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("status").is(Movie.MovieStatus.UPCOMING));
+        query.with(Sort.by("releaseDate"));
+        query.limit(limit);
+        
+        return mongoTemplate.find(query, Movie.class);
+    }
+
     @Override
     @Cacheable(value = "movies", key = "#id")
     public MovieResponse getMovieById(String id) {
@@ -136,15 +146,6 @@ public class MovieServiceImpl implements IMovieService {
     @Cacheable(value = "trending-movies")
     public List<MovieResponse> getTrendingMovies(int limit) {
         return movieRepository.findTrendingMovies()
-                .stream()
-                .limit(limit)
-                .map(movieMapper::toMovieResponse)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<MovieResponse> getUpcomingMovies(int limit) {
-        return movieRepository.findUpcomingMovies(LocalDate.now(), Movie.MovieStatus.UPCOMING)
                 .stream()
                 .limit(limit)
                 .map(movieMapper::toMovieResponse)
