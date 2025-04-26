@@ -194,11 +194,19 @@ public class BookingsController {
     // Confirm seat reservation - transition from reserved to booked
     @PostMapping("/confirm-reservation")
     public ResponseEntity<Booking> confirmReservation(@RequestBody Map<String, Object> reservationData) {
+        System.out.println("----------------------------------------------------------------------------------------");
+        System.out.println("reservationData : "+reservationData);
+        System.out.println("----------------------------------------------------------------------------------------");
+    
         String showId = (String) reservationData.get("showId");
         String bookingId = (String) reservationData.get("bookingId");
+        String userId = (String) reservationData.get("userId"); // Extract userId from the request
+        
         @SuppressWarnings("unchecked")
         List<String> seatIds = (List<String>) reservationData.get("seatIds");
-        Booking booking = bookingService.confirmReservation(showId, seatIds, bookingId);
+        
+        // Pass userId to the service method
+        Booking booking = bookingService.confirmReservation(showId, seatIds, bookingId, userId);
         return ResponseEntity.ok(booking);
     }
     

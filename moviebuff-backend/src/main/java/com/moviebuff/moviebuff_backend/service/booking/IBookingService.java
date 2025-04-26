@@ -50,7 +50,7 @@ public interface IBookingService {
     Map<String, Object> getReservationByToken(String token);
 
     Booking createTemporaryBooking(String showId);
-    Booking confirmReservation(String showId, List<String> seatIds, String bookingId);
+    Booking confirmReservation(String showId, List<String> seatIds, String bookingId, String userId);
     Booking finalizeBooking(String bookingId, Map<String, Object> paymentDetails);
     void expireAllReservations();
     

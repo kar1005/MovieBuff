@@ -1159,7 +1159,7 @@ public class BookingServiceImpl implements IBookingService {
     }
 
     @Override
-    public Booking confirmReservation(String showId, List<String> seatIds, String bookingId) {
+    public Booking confirmReservation(String showId, List<String> seatIds, String bookingId, String userId) {
         // Get the booking
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + bookingId));
@@ -1168,7 +1168,10 @@ public class BookingServiceImpl implements IBookingService {
         if (booking.getStatus() != Booking.BookingStatus.INITIATED) {
             throw new BadRequestException("Booking is not in INITIATED status");
         }
-        
+    
+        // Set the userId in the booking
+        booking.setUserId(userId);
+    
         // Validate show
         Show show = showRepository.findById(showId)
                 .orElseThrow(() -> new ResourceNotFoundException("Show not found with id: " + showId));
@@ -1237,7 +1240,6 @@ public class BookingServiceImpl implements IBookingService {
         
         return bookingRepository.save(booking);
     }
-
 
 
 
