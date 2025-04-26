@@ -109,6 +109,10 @@ public ResponseEntity<List<ShowResponse>> getShowsByMovieAndCity(
         @PathVariable String movieId,
         @PathVariable String city,
         @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+            System.out.println("------------------------------------------------------------------------------------------------------------");
+            System.out.println("RESP : "+ showService.getShowsByMovieAndCity(movieId, city, date));
+            System.out.println("------------------------------------------------------------------------------------------------------------");
+            
     return ResponseEntity.ok(showService.getShowsByMovieAndCity(movieId, city, date));
 }
 

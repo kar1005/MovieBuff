@@ -224,32 +224,55 @@ public List<ShowResponse> getShowsByTheater(String theaterId, boolean includePas
 
     @Override
     public List<ShowResponse> getShowsByMovieAndCity(String movieId, String city, LocalDate date) {
+        log.info("Finding shows for movie {} in city {} on date {}", movieId, city, date);
+        
         // Get theaters in the city
         List<Theater> theaters = theaterRepository.findByLocationCity(city);
+        
+        if (theaters.isEmpty()) {
+            log.info("No theaters found in city: {}", city);
+            return new ArrayList<>(); // Using ArrayList instead of Collections.emptyList()
+        }
+        
         List<String> theaterIds = theaters.stream()
                 .map(Theater::getId)
                 .collect(Collectors.toList());
         
-        // LocalDate ldate = LocalDate.now();
-        // // Create date range for filtering
-        // LocalDateTime startOfDay = date.equals(ldate)?LocalDateTime.now():date.atStartOfDay();
-        LocalDateTime startOfDay = date.atStartOfDay();
+        // Handle current date vs future date timing
+        LocalDateTime startOfDay;
+        if (date.equals(LocalDate.now())) {
+            // For current date, start from current time
+            startOfDay = LocalDateTime.now();
+        } else {
+            // For future dates, start from beginning of day
+            startOfDay = date.atStartOfDay();
+        }
+        
         LocalDateTime endOfDay = date.plusDays(1).atStartOfDay().minusSeconds(1);
         
-        System.out.println("Finding shows for movie " + movieId + " in city " + city + " on date " + date);
-        
-        // Get shows for the movie from these theaters within the specified date
-        List<Show> shows = showRepository.findByMovieIdAndTheaterIdInAndShowTimeBetween(
-                movieId, theaterIds, startOfDay, endOfDay);
-        
-        System.out.println("Found " + shows.size() + " shows");
-        shows.forEach(show -> log.info("Show: id={}, time={}", show.getId(), show.getShowTime()));
-        
-        return shows.stream()
-                .map(responseMapper::mapToResponse)
-                .collect(Collectors.toList());
+        try {
+            // Get shows for the movie from these theaters within the specified date
+            List<Show> shows = showRepository.findByMovieIdAndTheaterIdInAndShowTimeBetween(
+                    movieId, theaterIds, startOfDay, endOfDay);
+            
+            // Filter to only include shows with OPEN status
+            shows = shows.stream()
+                    .filter(show -> Show.ShowStatus.OPEN.equals(show.getStatus()))
+                    .collect(Collectors.toList());
+            
+            log.info("Found {} OPEN shows for movie {} in city {} on date {}", 
+                    shows.size(), movieId, city, date);
+            
+            return shows.stream()
+                    .map(responseMapper::mapToResponse)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Error finding shows for movie {} in city {} on date {}: {}", 
+                    movieId, city, date, e.getMessage());
+            // Instead of throwing ServiceException, throwing RuntimeException
+            throw new RuntimeException("Failed to retrieve shows: " + e.getMessage(), e);
+        }
     }
-
     @Override
     public List<ShowResponse> getTrendingShows(String city, int limit) {
         List<Show> shows;

@@ -12,7 +12,10 @@ import {
   Ticket, 
   Armchair,
   Users2,
-  Crown
+  Crown,
+  Plus,
+  Percent,
+  DollarSign
 } from 'lucide-react';
 import showService from '../../../../../services/showService';
 import bookingService from '../../../../../services/bookingService';
@@ -37,9 +40,13 @@ const SeatBooking = () => {
   const [timerActive, setTimerActive] = useState(false);
   const [bookingId, setBookingId] = useState(null);
   const [totalAmount, setTotalAmount] = useState(0);
+  const [subtotalAmount, setSubtotalAmount] = useState(0);
+  const [additionalCharges, setAdditionalCharges] = useState(0);
   const [seatCategories, setSeatCategories] = useState([]);
   const [categoryColors, setCategoryColors] = useState({});
   const [movieTitle, setMovieTitle] = useState('');
+  const [selectedSeatsDetails, setSelectedSeatsDetails] = useState([]);
+  const [additionalChargesBreakdown, setAdditionalChargesBreakdown] = useState({});
 
   // Fetch initial data
   useEffect(() => {
@@ -138,7 +145,7 @@ const SeatBooking = () => {
   // Calculate total amount when selected seats change
   useEffect(() => {
     if (show && selectedSeats.length > 0) {
-      calculateTotalAmount();
+      calculatePricing();
       
       // Start timer if not already active
       if (!timerActive) {
@@ -146,6 +153,10 @@ const SeatBooking = () => {
       }
     } else if (selectedSeats.length === 0) {
       setTotalAmount(0);
+      setSubtotalAmount(0);
+      setAdditionalCharges(0);
+      setAdditionalChargesBreakdown({});
+      setSelectedSeatsDetails([]);
       setTimerActive(false);
       setTimer(300); // Reset timer
     }
@@ -170,26 +181,73 @@ const SeatBooking = () => {
     }
   };
 
-  // Calculate total amount for selected seats
-// Calculate total amount for selected seats
-const calculateTotalAmount = () => {
-  if (!show || !show.pricing) return;
+  // Calculate pricing details for selected seats
+  const calculatePricing = () => {
+    if (!show || !show.pricing) return;
 
-  let total = 0;
-  selectedSeats.forEach(seatId => {
-    const foundSeat = findSeatById(seatId);
-    if (foundSeat && foundSeat.category) {
-      const pricing = show.pricing[foundSeat.category];
-      if (pricing && pricing.finalPrice) {
-        // Use the pre-calculated finalPrice
-        total += pricing.finalPrice;
+    let subtotal = 0;
+    let additionalTotal = 0;
+    const chargesBreakdown = {};
+    const seatsDetails = [];
+
+    selectedSeats.forEach(seatId => {
+      const foundSeat = findSeatById(seatId);
+      if (foundSeat && foundSeat.category) {
+        const pricing = show.pricing[foundSeat.category];
+        
+        if (pricing) {
+          const basePrice = pricing.basePrice || 0;
+          subtotal += basePrice;
+          
+          // Create seat detail record
+          const seatDetail = {
+            seatId,
+            row: foundSeat.row,
+            column: foundSeat.column,
+            category: foundSeat.category,
+            basePrice: basePrice,
+            finalPrice: pricing.finalPrice || basePrice
+          };
+          
+          seatsDetails.push(seatDetail);
+          
+          // Calculate additional charges
+          if (pricing.additionalCharges) {
+            pricing.additionalCharges.forEach(charge => {
+              let chargeAmount = 0;
+              
+              if (charge.isPercentage) {
+                // Calculate percentage of base price
+                chargeAmount = basePrice * (charge.amount / 100);
+              } else {
+                // Fixed charge
+                chargeAmount = charge.amount;
+              }
+              
+              additionalTotal += chargeAmount;
+              
+              // Add to breakdown
+              if (!chargesBreakdown[charge.type]) {
+                chargesBreakdown[charge.type] = {
+                  amount: 0,
+                  isPercentage: charge.isPercentage,
+                  originalAmount: charge.amount
+                };
+              }
+              chargesBreakdown[charge.type].amount += chargeAmount;
+            });
+          }
+        }
       }
-    }
-  });
+    });
 
-  setTotalAmount(total);
-};
-  
+    // Update state with calculated values
+    setSubtotalAmount(subtotal);
+    setAdditionalCharges(additionalTotal);
+    setTotalAmount(subtotal + additionalTotal);
+    setAdditionalChargesBreakdown(chargesBreakdown);
+    setSelectedSeatsDetails(seatsDetails);
+  };
 
   // Find seat information by ID
   const findSeatById = (seatId) => {
@@ -274,63 +332,58 @@ const calculateTotalAmount = () => {
   };
 
   // Handler for proceeding to payment
-// Inside handleProceedToPayment function, update to include userId and other required fields from Booking.java
-
-const handleProceedToPayment = async () => {
-  if (selectedSeats.length === 0) {
-    toast.warning("Please select at least one seat");
-    return;
-  }
-  
-  try {
-    // Get user ID from localStorage or auth context
-    const userId = localStorage.getItem('userId'); // Or use your auth context
-    
-    if (!userId) {
-      toast.error("You must be logged in to book tickets");
-      navigate('/login', { state: { from: `/shows/${showId}` } });
+  const handleProceedToPayment = async () => {
+    if (selectedSeats.length === 0) {
+      toast.warning("Please select at least one seat");
       return;
     }
     
-    // Prepare booking data including all required fields from Booking.java
-    const bookingData = {
-      showId,
-      userId,
-      seats: selectedSeats.map(seatId => {
-        const seatInfo = findSeatById(seatId);
-        return {
-          seatId,
-          row: seatInfo.row,
-          column: seatInfo.column,
-          category: seatInfo.category,
-          basePrice: show.pricing[seatInfo.category]?.basePrice || 0,
-          finalPrice: show.pricing[seatInfo.category]?.finalPrice || 0
-        };
-      }),
-      totalSeats: selectedSeats.length,
-      subtotalAmount: totalAmount,
-      // Include any additional fields that your backend requires
-      movieId: show.movieId,
-      movieTitle: movieTitle,
-      theaterId: theater.id,
-      theaterName: theater.name,
-      screenNumber: screen.screenNumber,
-      showTime: show.showTime,
-      experience: show.experience,
-      language: show.language
-    };
-    
-    // First, confirm the reservation
-    const response = await bookingService.confirmReservation(showId, selectedSeats, bookingId, bookingData,userId );
-    
-    // Navigate to payment page with booking ID
-    navigate(`/customer/payment/${response.id}`);
-  } catch (err) {
-    console.error("Error confirming reservation:", err);
-    toast.error("Failed to process reservation. Please try again.");
-    await refreshSeatStatus();
-  }
-};
+    try {
+      // Get user ID from localStorage or auth context
+      const userId = localStorage.getItem('userId'); // Or use your auth context
+      
+      if (!userId) {
+        toast.error("You must be logged in to book tickets");
+        navigate('/auth/login', { state: { from: `/shows/${showId}` } });
+        return;
+      }
+      
+      // Prepare booking data including all required fields from Booking.java
+      const bookingData = {
+        showId,
+        userId,
+        seats: selectedSeatsDetails,
+        totalSeats: selectedSeats.length,
+        subtotalAmount: subtotalAmount,
+        additionalCharges: additionalCharges,
+        totalAmount: totalAmount,
+        // Include any additional fields that your backend requires
+        movieId: show.movieId,
+        movieTitle: movieTitle,
+        theaterId: theater.id,
+        theaterName: theater.name,
+        screenNumber: screen.screenNumber,
+        showTime: show.showTime,
+        experience: show.experience,
+        language: show.language
+      };
+      
+      // First, confirm the reservation
+      const response = await bookingService.confirmReservation(showId, selectedSeats, bookingId);
+      
+      // Navigate to payment page with booking ID
+      navigate(`/customer/payment/${response.id}`, { 
+        state: { 
+          bookingDetails: bookingData,
+          additionalChargesBreakdown
+        } 
+      });
+    } catch (err) {
+      console.error("Error confirming reservation:", err);
+      toast.error("Failed to process reservation. Please try again.");
+      await refreshSeatStatus();
+    }
+  };
 
   // Format the timer
   const formatTime = (seconds) => {
@@ -454,7 +507,7 @@ const handleProceedToPayment = async () => {
                     onClick={() => handleSeatClick(seatId)}
                     disabled={statusClass === 'booked' || statusClass === 'reserved'}
                     aria-label={`Seat ${seatId}`}
-                    title={`${seatId} - ${seat.category} - ${seat.type} - ₹${show.pricing[seat.category]?.finalPrice || seat.basePrice}`}
+                    title={`${seatId} - ${seat.category} - ${seat.type || 'Regular'} - ₹${show.pricing[seat.category]?.finalPrice || seat.basePrice}`}
                     style={{
                       borderColor: seat.seatColor,
                       ...(statusClass === 'selected' && { backgroundColor: seat.seatColor })
@@ -637,12 +690,50 @@ const handleProceedToPayment = async () => {
               <span>Seat Categories</span>
             </div>
             <div className="summary-value">
-              {selectedSeats.map(seatId => {
-                const seat = findSeatById(seatId);
-                return seat ? seat.category : '';
-              }).filter(Boolean).join(', ') || 'None'}
+              {selectedSeatsDetails.map(seat => seat.category)
+                .filter((value, index, self) => self.indexOf(value) === index)
+                .join(', ') || 'None'}
             </div>
           </div>
+          
+          <div className="summary-item">
+            <div className="summary-label">
+              <DollarSign size={16} />
+              <span>Subtotal</span>
+            </div>
+            <div className="summary-value">₹{subtotalAmount.toFixed(2)}</div>
+          </div>
+          
+          {Object.entries(additionalChargesBreakdown).length > 0 && (
+            <div className="additional-charges">
+              <div className="summary-label">
+                <Plus size={16} />
+                <span>Additional Charges</span>
+              </div>
+              
+              {Object.entries(additionalChargesBreakdown).map(([type, charge], index) => (
+                <div key={`charge-${index}`} className="charge-item">
+                  <div className="charge-label">
+                    {charge.isPercentage ? (
+                      <Percent size={14} />
+                    ) : (
+                      <Plus size={14} />
+                    )}
+                    <span>{type}</span>
+                    {charge.isPercentage && (
+                      <span className="percentage-badge">{charge.originalAmount}%</span>
+                    )}
+                  </div>
+                  <div className="charge-amount">₹{charge.amount.toFixed(2)}</div>
+                </div>
+              ))}
+              
+              <div className="charge-item total-charges">
+                <div className="charge-label">Total Additional Charges</div>
+                <div className="charge-amount">₹{additionalCharges.toFixed(2)}</div>
+              </div>
+            </div>
+          )}
           
           <div className="summary-total">
             <div className="total-label">Total Amount</div>
