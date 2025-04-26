@@ -1,0 +1,301 @@
+/* MovieCarousel.css */
+
+/* Base styling for the entire page */
+.upcoming-movie-carousel-page {
+    background-color: #0f172a;
+    color: #e2e8f0;
+    min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  }
+  
+  /* Container styles */
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  
+  /* Page header styles */
+  .page-header {
+    padding: 1.5rem 0;
+    border-bottom: 1px solid #1e293b;
+  }
+  
+  .page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #f8fafc;
+  }
+  
+  /* Section styling */
+  .carousel-section {
+    padding: 2rem 0;
+  }
+  
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .section-header h2{
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff; /* Changed to white */
+    text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.2); /* Added subtle text shadow for better visibility */
+  }
+  
+  .view-all-link {
+    font-size: 0.875rem;
+    color: #eab308;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s ease;
+  }
+  
+  .view-all-link:hover {
+    color: #facc15;
+    text-decoration: underline;
+  }
+  
+  /* Carousel container */
+  .carousel-container {
+    position: relative;
+    margin: 0 -0.5rem;
+    padding: 0 0.5rem;
+  }
+  
+  /* Navigation buttons */
+  .carousel-nav-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    background-color: rgba(0, 0, 0, 0.6);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    transition: background-color 0.2s ease;
+  }
+  
+  .carousel-nav-button:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+  
+  .carousel-prev-button {
+    left: 8px;
+  }
+  
+  .carousel-next-button {
+    right: 8px;
+  }
+  
+  /* Movie grid layout */
+  .upcoming-movie-grid {
+    display: flex;
+    gap: 1rem;
+    overflow-x: hidden;
+  }
+  
+  /* Movie card styles - Fixed uniform height */
+  .upcoming-movie-card {
+    flex-shrink: 0;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    transition: all 0.3s ease;
+    height: 580px; /* Fixed height for uniform cards */
+    width: calc((100% - 2rem) / 3); /* Adjust based on items to show */
+  }
+  
+  .upcoming-movie-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    border-color: #eab308;
+  }
+  
+  .upcoming-movie-poster-container {
+    position: relative;
+    height: 400px;
+    overflow: hidden;
+    background-color: #111827;
+  }
+  
+  .upcoming-movie-poster {
+    width: auto !important; /* Override any other width settings */
+    height: 100% !important; /* Make it take full height */
+    max-width: 100% !important; /* Constrain width */
+    object-fit: contain !important; /* Ensure entire image is visible */
+    margin: 0 auto; /* Center the image */
+    display: block;
+    transition: transform 0.3s ease;
+  }
+  
+  .upcoming-movie-card:hover .upcoming-movie-poster {
+    transform: scale(1.05);
+  }
+  
+  .upcoming-movie-rating-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: #eab308;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  
+  .upcoming-movie-info {
+    padding: 0.75rem;
+    height: 160px; /* Fixed height for info section */
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .upcoming-movie-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #f8fafc;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    height: 40px; /* Fixed height for title */
+  }
+  
+  .upcoming-movie-meta {
+    display: flex;
+    align-items: center;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-bottom: 0.5rem;
+    height: 20px; /* Fixed height for meta info */
+  }
+  
+  .upcoming-movie-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  
+  .upcoming-movie-meta-separator {
+    margin: 0 0.5rem;
+  }
+  
+  .upcoming-movie-genres {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0.5rem;
+    height: 24px; /* Fixed height for genres */
+    overflow: hidden;
+  }
+  
+  .upcoming-movie-genre-tag {
+    font-size: 0.675rem;
+    background-color: #334155;
+    color: #cbd5e1;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+  }
+  
+  /* Book Now Button */
+  .book-now-button {
+    margin-top: auto; /* Push button to bottom of card */
+    background-color: #eab308;
+    color: #0f172a;
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .book-now-button:hover {
+    background-color: #facc15;
+  }
+  
+  /* Loading state */
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem 0;
+    height: 200px;
+  }
+  
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(234, 179, 8, 0.3);
+    border-radius: 50%;
+    border-top-color: #eab308;
+    animation: spin 1s ease-in-out infinite;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  /* Error state */
+  .error-container {
+    text-align: center;
+    padding: 3rem 0;
+    color: #ef4444;
+  }
+  
+  /* Responsive styles */
+  @media (max-width: 640px) {
+    .upcoming-movie-card {
+      width: 100%;
+    }
+    
+    .carousel-nav-button {
+      width: 36px;
+      height: 36px;
+    }
+  }
+  
+  @media (min-width: 641px) and (max-width: 1023px) {
+    .upcoming-movie-card {
+      width: calc(50% - 0.5rem);
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .upcoming-movie-card {
+      width: calc(33.333% - 0.667rem);
+    }
+    
+    .page-title {
+      font-size: 1.875rem;
+    }
+    
+    .section-title {
+      font-size: 1.5rem;
+    }
+  }

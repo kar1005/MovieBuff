@@ -63,9 +63,9 @@ const Header = () => {
   // Function to handle search suggestion click
   const handleSuggestionClick = (type, id, name) => {
     if (type === 'movie') {
-      navigate(`/movie/${id}`);
+      navigate(`/customer/movie-detail/${id}`);
     } else if (type === 'actor') {
-      navigate(`/actor/${id}`);
+      navigate(`/customer/actor/${id}`);
     }
     setSearchQuery(name);
     setShowSearchSuggestions(false);
@@ -181,9 +181,7 @@ const Header = () => {
               
               <Navbar.Collapse id="navbar-nav">
                 <Nav className="me-auto">
-                  <Nav.Link as={Link} to="/customer/movies">Movies</Nav.Link>
                   <Nav.Link as={Link} to="/customer/theaters">Theaters</Nav.Link>
-                  <Nav.Link as={Link} to="/customer/upcoming">Upcoming</Nav.Link>
                 </Nav>
               </Navbar.Collapse>
             </div>

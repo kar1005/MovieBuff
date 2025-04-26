@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Star, Clock, Ticket } from 'lucide-react';
-import './LatestMovieCarousel.css'; 
+import './UpcomingMoviesCarousel.css'; 
 
-function LatestMoviesCarousel() {
+function UpcomingMoviesCarousel() {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -37,7 +37,7 @@ function LatestMoviesCarousel() {
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/movies/latest-released?limit=5');
+        const response = await fetch('http://localhost:8080/api/movies/upcoming-movies?limit=5');
         if (!response.ok) {
           throw new Error('Failed to fetch movies');
         }
@@ -130,11 +130,11 @@ function LatestMoviesCarousel() {
   }
   
   return (
-    <div className="movie-carousel-page">
+    <div className="upcoming-movie-carousel-page">
       <div className="carousel-section">
         <div className="container">
           <div className="section-header">
-            <h2 className="section-title">Latest Releases</h2>
+            <h2 className="section-title">Upcoming Movies</h2>
             <a href="/movies" className="view-all-link">
               View All <ChevronRight className="h-4 w-4" />
             </a>
@@ -151,40 +151,40 @@ function LatestMoviesCarousel() {
               </button>
             )}
             
-            <div className="movie-grid">
+            <div className="upcoming-movie-grid">
               {visibleMovies.map((movie) => (
-                <div key={movie.id} className="movie-card">
-                  <div className="movie-poster-container">
+                <div key={movie.id} className="upcoming-movie-card">
+                  <div className="upcoming-movie-poster-container">
                     <img 
                       src={movie.posterUrl || '/api/placeholder/300/450'} 
                       alt={movie.title}
                       onClick={() => handleCardClick(movie.id)}
-                      className="movie-poster"
+                      className="upcoming-movie-poster"
                     />
                     {movie.rating?.average && (
-                      <div className="movie-rating-badge">
+                      <div className="upcoming-movie-rating-badge">
                         <Star className="h-3 w-3" />
                         <span>{movie.rating.average.toFixed(1)}</span>
                       </div>
                     )}
                   </div>
-                  <div className="movie-info">
-                    <h3 className="movie-title">{movie.title}</h3>
-                    <div className="movie-meta">
-                      <div className="movie-meta-item">
+                  <div className="upcoming-movie-info">
+                    <h3 className="upcoming-movie-title">{movie.title}</h3>
+                    <div className="upcoming-movie-meta">
+                      <div className="upcoming-movie-meta-item">
                         <Clock className="h-3 w-3" />
                         <span>{movie.duration ? formatDuration(movie.duration) : 'N/A'}</span>
                       </div>
                       {movie.releaseDate && (
                         <>
-                          <span className="movie-meta-separator">•</span>
+                          <span className="upcoming-movie-meta-separator">•</span>
                           <span>{new Date(movie.releaseDate).getFullYear()}</span>
                         </>
                       )}
                     </div>
-                    <div className="movie-genres">
+                    <div className="upcoming-movie-genres">
                       {movie.genres?.slice(0, 2).map((genre, idx) => (
-                        <span key={idx} className="movie-genre-tag">
+                        <span key={idx} className="upcoming-movie-genre-tag">
                           {genre}
                         </span>
                       ))}
@@ -217,4 +217,4 @@ function LatestMoviesCarousel() {
   );
 };
 
-export default LatestMoviesCarousel;
+export default UpcomingMoviesCarousel;

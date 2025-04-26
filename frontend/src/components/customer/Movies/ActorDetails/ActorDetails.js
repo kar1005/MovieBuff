@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import actorService from './../../../../services/actorService';
 import './ActorDetails.css';
+import { Share2 } from 'lucide-react';
 
 const ActorDetails = () => {
   const { id } = useParams();
@@ -11,6 +12,7 @@ const ActorDetails = () => {
   const [relatedActors, setRelatedActors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchActorData = async () => {
@@ -66,6 +68,23 @@ const ActorDetails = () => {
     return age;
   };
 
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: actor.title,
+        text: `Check out ${actor.name} profile!`,
+        url: window.location.href,
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert('Link copied to clipboard!');
+    }
+  };
+
+  const handleMovieClick = (movieId) => () => {
+    navigate(`/customer/movie-detail/${movieId}`);
+  }
+
   // Get career span
   const getCareerSpan = () => {
     if (!actor.careerStartDate) return 'N/A';
@@ -88,7 +107,7 @@ const ActorDetails = () => {
           <h1>{actor.name}</h1>
           {actor.gender && (
             <p className="actor-occupation">
-              {actor.gender === 'MALE' ? 'Actor' : 'Actress'}
+              {actor.gender === 'Male' ? 'Actor' : 'Actress'}
               {actor.filmography?.length > 0 && ` • ${actor.filmography.length} Films`}
             </p>
           )}
@@ -97,11 +116,6 @@ const ActorDetails = () => {
             <div className="metadata-row">
               <span className="metadata-label">Born:</span>
               <span className="metadata-value">{formatDate(actor.dateOfBirth)} ({calculateAge(actor.dateOfBirth)} years)</span>
-            </div>
-            
-            <div className="metadata-row">
-              <span className="metadata-label">Birthplace:</span>
-              <span className="metadata-value">{statistics.birthplace || 'N/A'}</span>
             </div>
             
             <div className="metadata-row">
@@ -115,9 +129,10 @@ const ActorDetails = () => {
             </div>
           </div>
           
-          <div className="share-button">
-            <button>Share</button>
-          </div>
+          <button className="share-button" onClick={handleShare}>
+              <Share2 size={16} />
+              Share
+          </button>
         </div>
       </div>
       
@@ -147,7 +162,7 @@ const ActorDetails = () => {
               filmography
                 .sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate))
                 .map((movie) => (
-                  <div key={movie.movieId} className="movie-item">
+                  <div key={movie.movieId} className="movie-item" onClick={handleMovieClick(movie.movieId)}>
                     <div className="movie-year">
                       {movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : 'N/A'}
                     </div>
@@ -177,7 +192,7 @@ const ActorDetails = () => {
           <h2>Peers & More</h2>
           <div className="related-actors">
             {relatedActors.slice(0, 5).map((actor) => (
-              <Link to={`/actors/${actor.id}`} key={actor.id} className="related-actor">
+              <Link to={`/customer/actor/${actor.id}`} key={actor.id} className="related-actor">
                 <div className="related-actor-image">
                   <img src={actor.imageUrl || '/default-actor.png'} alt={actor.name} />
                 </div>

@@ -1,6 +1,7 @@
 import React from 'react'
 import HomePageSlider from './HomePageSlider';
-import LatestMoviesCarousel from './LatestMoviesCarousel'
+import LatestMoviesCarousel from './LatestMovieCarousel/LatestMoviesCarousel'
+import UpcomingMoviesCarousel from './UpcomingMoviesCarousel/UpcomingMoviesCarousel';
 
 function Home() {
   return (
@@ -8,6 +9,7 @@ function Home() {
       <HomePageSlider />
       <div className="py-8">
         <LatestMoviesCarousel />
+        <UpcomingMoviesCarousel/>
       </div>
     </>
   )

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Calendar, MapPin, ChevronDown, ChevronRight, ArrowLeft } from 'lucide-react';
 import './TheatreDetails.css';
+import movieService from '../../../../services/movieService';
+import theaterService from '../../../../services/theaterService';
+import showService from '../../../../services/showService';
 
 const TheatreDetails = () => {
   // Get theatre ID from URL parameters
@@ -29,34 +32,26 @@ const TheatreDetails = () => {
       try {
         setLoading(true);
         
-        // Replace with your actual API endpoints
-        const theatreResponse = await fetch(`http://localhost:8080/api/theaters/${theatreId}`);
-        if (!theatreResponse.ok) {
-          throw new Error(`Failed to fetch theatre: ${theatreResponse.status}`);
-        }
-        const theatreData = await theatreResponse.json();
+        // Fetch theatre data
+        const theatreData = await theaterService.getTheaterById(theatreId);
         
-        const showsResponse = await fetch(`http://localhost:8080/api/shows/theater/${theatreId}`);
-        if (!showsResponse.ok) {
-          throw new Error(`Failed to fetch shows: ${showsResponse.status}`);
-        }
-        const showsData = await showsResponse.json();
+        // Fetch shows for this theatre
+        const showsData = await showService.getShowsByTheater(theatreId);
         
-        // Fetch movie details for each unique movieId in shows
+        // Get unique movie IDs from the shows
         const movieIds = [...new Set(showsData.map(show => show.movieId))];
-        const movieDetailsPromises = movieIds.map(movieId => 
-          fetch(`http://localhost:8080/api/movies/${movieId}`)
-            .then(res => res.json())
-            .catch(err => ({ id: movieId, title: "Unknown Movie" }))
-        );
         
-        const movieDetails = await Promise.all(movieDetailsPromises);
+        // Fetch all movie details in parallel
+        const moviePromises = movieIds.map(id => movieService.getMovieById(id));
+        const moviesData = await Promise.all(moviePromises);
+        
+        // Create a map of movie IDs to movie objects
         const movieMap = {};
-        movieDetails.forEach(movie => {
+        moviesData.forEach(movie => {
           movieMap[movie.id] = movie;
         });
         
-        // Attach movie details to shows - Fixed to use 'title' instead of 'name'
+        // Enhance shows with movie details
         const enhancedShows = showsData.map(show => ({
           ...show,
           movieTitle: movieMap[show.movieId]?.title || "Unknown Movie"
@@ -67,7 +62,7 @@ const TheatreDetails = () => {
         setLoading(false);
       } catch (err) {
         console.error("Error fetching data:", err);
-        setError(err.message);
+        setError(err.message || "Failed to load theatre data");
         setLoading(false);
       }
     };
@@ -116,7 +111,7 @@ const TheatreDetails = () => {
       if (!groupedShows[show.movieId]) {
         groupedShows[show.movieId] = {
           movieId: show.movieId,
-          movieTitle: show.movieTitle || "Unknown Movie", // Changed from movieName to movieTitle
+          movieTitle: show.movieTitle || "Unknown Movie",
           language: show.language,
           screenNumber: show.screenNumber,
           showTimes: []
@@ -339,7 +334,7 @@ const TheatreDetails = () => {
         </div>
       </div>
       
-      {/* Shows listing - Updated layout to show buttons beside movie name */}
+      {/* Shows listing */}
       <div className="shows-container">
         {groupedShows.length > 0 ? (
           groupedShows.map((movie, index) => (

@@ -223,21 +223,25 @@ public List<ShowResponse> getShowsByTheater(String theaterId, boolean includePas
     }
 
     @Override
-    public List<ShowResponse> getShowsByMovieAndCity(String movieId, String city) {
+    public List<ShowResponse> getShowsByMovieAndCity(String movieId, String city, LocalDate date) {
         // Get theaters in the city
         List<Theater> theaters = theaterRepository.findByLocationCity(city);
         List<String> theaterIds = theaters.stream()
                 .map(Theater::getId)
                 .collect(Collectors.toList());
         
-        LocalDateTime now = LocalDateTime.now();
-        System.out.println("Finding shows for movie "+movieId+"in city "+city+" after "+now);
+        LocalDate ldate = LocalDate.now();
+        // Create date range for filtering
+        LocalDateTime startOfDay = date.equals(ldate)?LocalDateTime.now():date.atStartOfDay();
+        LocalDateTime endOfDay = date.plusDays(1).atStartOfDay().minusSeconds(1);
         
-        // Get shows for the movie from these theaters
-        List<Show> shows = showRepository.findByMovieIdAndTheaterIdInAndShowTimeAfter(
-                movieId, theaterIds, now);
+        System.out.println("Finding shows for movie " + movieId + " in city " + city + " on date " + date);
         
-        System.out.println("Found "+shows.size()+" shows");
+        // Get shows for the movie from these theaters within the specified date
+        List<Show> shows = showRepository.findByMovieIdAndTheaterIdInAndShowTimeBetween(
+                movieId, theaterIds, startOfDay, endOfDay);
+        
+        System.out.println("Found " + shows.size() + " shows");
         shows.forEach(show -> log.info("Show: id={}, time={}", show.getId(), show.getShowTime()));
         
         return shows.stream()

@@ -20,7 +20,7 @@ public interface IMovieService {
     MovieResponse updateMovie(String id, MovieRequest request);
     void deleteMovie(String id);
     List<MovieResponse> getTrendingMovies(int limit);
-    List<MovieResponse> getUpcomingMovies(int limit);
+    List<Movie> getUpcomingMovies(int limit);
     List<MovieResponse> searchMovies(String query, Integer limit);
     MovieResponse updateMovieCast(String id, List<Movie.ActorReference> cast);
     MovieResponse updateMovieStatistics(String id, Movie.MovieStatistics statistics);

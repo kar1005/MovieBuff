@@ -230,32 +230,6 @@ const MovieDetails = () => {
             ))}
           </div>
         </section>
-
-        {statistics && (
-          <section className="stats-section">
-            <h2>Movie Statistics</h2>
-            <div className="stats-grid">
-              <div className="stat-item">
-                <h4>Total Bookings</h4>
-                <p>{statistics.totalBookings?.toLocaleString() || 'N/A'}</p>
-              </div>
-              <div className="stat-item">
-                <h4>Revenue</h4>
-                <p>${statistics.revenue?.toLocaleString() || 'N/A'}</p>
-              </div>
-              <div className="stat-item">
-                <h4>Popularity Score</h4>
-                <p>{statistics.popularityScore?.toFixed(1) || 'N/A'}</p>
-              </div>
-              {statistics.otherMetrics && Object.entries(statistics.otherMetrics).map(([key, value]) => (
-                <div key={key} className="stat-item">
-                  <h4>{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</h4>
-                  <p>{typeof value === 'number' ? value.toLocaleString() : value}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
         
         {movie.cast && movie.cast.length > 0 && (
           <section className="filmography-preview">

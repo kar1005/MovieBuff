@@ -23,7 +23,7 @@ public interface IShowService {
    List<ShowResponse> getShowsByMovie(String movieId);
    List<ShowResponse> getShowsByTheaterAndScreen(String theaterId, int screenNumber, LocalDateTime startTime, LocalDateTime endTime);
    List<ShowResponse> getShowsByDate(String date, String city);
-   List<ShowResponse> getShowsByMovieAndCity(String movieId, String city);
+   List<ShowResponse> getShowsByMovieAndCity(String movieId, String city, LocalDate date);
    List<ShowResponse> getTrendingShows(String city, int limit);
 
    void refreshShowStatus(String showId);

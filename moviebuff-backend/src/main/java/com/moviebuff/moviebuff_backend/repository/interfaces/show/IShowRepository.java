@@ -75,4 +75,6 @@ List<Show> findByTheaterIdAndShowTimeBetween(String theaterId, LocalDateTime sta
         // Find shows with seats that have been blocked for longer than the timeout period
         @Query("{'seatStatus.status': 'BLOCKED', 'seatStatus.lastUpdated': {$lt: ?0}}")
         List<Show> findShowsWithExpiredBlockedSeats(LocalDateTime expiryTime);
+
+        List<Show> findByMovieIdAndTheaterIdInAndShowTimeBetween(String movieId, List<String> theaterIds, LocalDateTime start, LocalDateTime end);
 }

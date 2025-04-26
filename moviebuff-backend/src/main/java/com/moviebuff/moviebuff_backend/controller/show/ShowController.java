@@ -104,11 +104,12 @@ public ResponseEntity<List<ShowResponse>> getShowsByDate(
     return ResponseEntity.ok(showService.getShowsByDate(date, city));
 }
 
-@GetMapping("/movie/{movieId}/city/{city}")
+@GetMapping("/movie/{movieId}/city/{city}/date/{date}")
 public ResponseEntity<List<ShowResponse>> getShowsByMovieAndCity(
         @PathVariable String movieId,
-        @PathVariable String city) {
-    return ResponseEntity.ok(showService.getShowsByMovieAndCity(movieId, city));
+        @PathVariable String city,
+        @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+    return ResponseEntity.ok(showService.getShowsByMovieAndCity(movieId, city, date));
 }
 
 @GetMapping("/{showId}/seat-availability")

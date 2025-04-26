@@ -75,6 +75,18 @@ public class MovieController {
         }
     }
 
+     @GetMapping("/upcoming-movies")
+    public ResponseEntity<?> getUpcomingMovies(@RequestParam(defaultValue = "5") int limit) {
+        try {
+            List<Movie> movies = movieService.getUpcomingMovies(limit);
+            return ResponseEntity.ok(movies);
+        } catch (Exception e) {
+            System.out.println("Error fetching latest movies"+ e);
+            logger.error("Error fetching latest released movies", e);
+            throw e;
+        }
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<MovieResponse> getMovieById(@PathVariable String id) {
         try {
@@ -125,17 +137,6 @@ public class MovieController {
             return ResponseEntity.ok(movieService.getTrendingMovies(limit));
         } catch (Exception e) {
             logger.error("Error fetching trending movies", e);
-            throw e;
-        }
-    }
-
-    @GetMapping("/upcoming")
-    public ResponseEntity<List<MovieResponse>> getUpcomingMovies(
-            @RequestParam(defaultValue = "10") int limit) {
-        try {
-            return ResponseEntity.ok(movieService.getUpcomingMovies(limit));
-        } catch (Exception e) {
-            logger.error("Error fetching upcoming movies", e);
             throw e;
         }
     }

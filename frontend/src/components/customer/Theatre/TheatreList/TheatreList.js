@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { selectUserCity, selectUserCoordinates } from '../../../../redux/slices/locationSlice';
 import './TheatreList.css';
+import theaterService from '../../../../services/theaterService';
 
 export default function TheatreList() {
   const [theaters, setTheaters] = useState([]);
@@ -18,27 +19,7 @@ export default function TheatreList() {
     try {
       setLoading(true);
       
-      // For all theaters in a city, use the theater controller endpoint
-      let apiUrl = 'http://localhost:8080/api/theaters';
-      
-      // Add query parameters
-      if (userCity) {
-        apiUrl += `?city=${userCity}`;
-      }
-      
-      // Add coordinates if available
-      if (userCoordinates && userCoordinates.length === 2) {
-        const hasCity = apiUrl.includes('?');
-        apiUrl += `${hasCity ? '&' : '?'}latitude=${userCoordinates[0]}&longitude=${userCoordinates[1]}&radius=30`;
-      }
-      
-      const response = await fetch(apiUrl);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch theaters');
-      }
-      
-      const data = await response.json();
+      const data = await theaterService.getTheatersByCity(userCity);
       setTheaters(data);
       setLoading(false);
     } catch (err) {
@@ -92,12 +73,6 @@ export default function TheatreList() {
         <div className="theater-error">
           <h3>Oops!</h3>
           <p>{error}</p>
-          <button 
-            className="change-location-btn" 
-            onClick={() => navigate('/customer/select-location')}
-          >
-            Change Location
-          </button>
         </div>
       </div>
     );
@@ -109,14 +84,6 @@ export default function TheatreList() {
         <div className="no-theaters">
           <h3>No theaters found in {userCity}</h3>
           <p>We couldn't find any theaters in your selected location.</p>
-          <div className="no-theaters-actions">
-            <button 
-              className="change-location-btn" 
-              onClick={() => navigate('/customer/select-location')}
-            >
-              Change Location
-            </button>
-          </div>
         </div>
       </div>
     );
@@ -124,19 +91,11 @@ export default function TheatreList() {
 
   return (
     <div className="theater-list-container">
-      <div className="theater-list-header">
+      <div className="all-theater-list-header">
         <h2>
           All theaters in
           <span className="city-name"> {userCity}</span>
         </h2>
-        <div className="header-actions">
-          <button 
-            className="change-location-btn" 
-            onClick={() => navigate('/customer/select-location')}
-          >
-            Change Location
-          </button>
-        </div>
       </div>
       
       <div className="theaters-list">
