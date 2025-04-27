@@ -582,7 +582,7 @@ const SeatBooking = () => {
           <span>Back</span>
         </button>
 
-        <div className="movie-info">
+        <div className="movie-info-head">
           <h1>{movieTitle || 'Movie Title'}</h1>
           <div className="theater-info">
             <span>{theater?.name}</span>

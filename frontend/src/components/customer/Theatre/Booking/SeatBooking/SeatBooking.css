@@ -81,12 +81,12 @@
   border-color: #64748b;
 }
 
-.movie-info {
+.movie-info-head {
   text-align: center;
   margin-bottom: 1.5rem;
 }
 
-.movie-info h1 {
+.movie-info-head h1 {
   font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
@@ -425,7 +425,7 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .movie-info h1 {
+  .movie-info-head h1 {
     font-size: 1.5rem;
   }
   
