@@ -16,11 +16,16 @@ import AddActor from './Actors/AddActor.js';
 import AddTheatreManager from './TheatreManager/AddTheatreManager.js';
 import SliderManagement from './Slider/SliderManagement.js';
 import Statistics from './Analytics/Statistics.js';
+import {useSelector } from 'react-redux';
 
 const AdminApp = () => {
+  const role = useSelector((state) => state.auth.role);
   return (
     <AdminLayout>
       <Routes>
+        if(role !== "ADMIN"){
+          <Route path="*" element={<Navigate to="/customer" replace />} />
+        }
         <Route path="/" element={<Navigate to="dashboard" replace />} />
         <Route path="/dashboard" element={<AdminDashboard />} />
 

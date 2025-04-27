@@ -36,7 +36,11 @@ function App() {
           <Route path="/logout" element={<Logout />} />
 
           {/* Admin Routes */}
-          <Route path="/admin/*" element={<AdminApp />} />
+          if(role === "ADMIN") {
+            <Route path="/admin/*" element={<AdminApp />} />
+          }else{
+            <Route path="/customer/*" element={<CustomerApp />} />
+          }
           
           {/* Theater Manager Routes */}
           <Route path="/manager/*" element={<ManagerApp />} />
