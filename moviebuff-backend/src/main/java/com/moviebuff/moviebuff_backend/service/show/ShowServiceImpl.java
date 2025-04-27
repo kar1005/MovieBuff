@@ -238,19 +238,6 @@ public List<ShowResponse> getShowsByTheater(String theaterId, boolean includePas
                 .map(Theater::getId)
                 .collect(Collectors.toList());
         
-<<<<<<< HEAD
-        LocalDate ldate = LocalDate.now();
-        System.out.println("ldate: "+ldate);
-        System.out.println("date: "+date);
-        LocalDateTime startOfDay ;
-        // Create date range for filtering
-        if(date.equals(ldate)){
-            startOfDay = LocalDateTime.now();
-        }else{
-            startOfDay = date.atStartOfDay();
-        }
-        // LocalDateTime startOfDay = date.atStartOfDay();
-=======
         // Handle current date vs future date timing
         LocalDateTime startOfDay;
         if (date.equals(LocalDate.now())) {
@@ -261,7 +248,6 @@ public List<ShowResponse> getShowsByTheater(String theaterId, boolean includePas
             startOfDay = date.atStartOfDay();
         }
         
->>>>>>> fdd1b8cd9254de1e91c8d714ed4976b6ecd0a31b
         LocalDateTime endOfDay = date.plusDays(1).atStartOfDay().minusSeconds(1);
         
         try {
