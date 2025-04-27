@@ -457,6 +457,9 @@ public Map<String, Object> getAnalytics(String theaterId, String startDate, Stri
 
 @Override
 public TheaterResponse.TheaterStats getTheaterStats(String theaterId) {
+    System.out.println("-----------------------------------------");
+    System.out.println("IM called");
+    System.out.println("-----------------------------------------");
     Theater theater = getTheaterEntity(theaterId);
     
     // Calculate basic stats
@@ -530,7 +533,9 @@ public TheaterResponse.TheaterStats getTheaterStats(String theaterId) {
         stats.setMonthlyBookings(0L);
         stats.setOccupancyRate(0.0);
     }
-    
+    System.out.println("-----------------------------------------");
+    System.out.println("IM called :"+stats);
+    System.out.println("-----------------------------------------");
     return stats;
 }
 

@@ -131,7 +131,7 @@ const MovieDetails = () => {
               {movie.rating && (
                 <div className="rating">
                   <Star fill="#FFC107" stroke="#FFC107" size={20} />
-                  <span>{movie.rating.average}/10</span>
+                  <span>{movie.rating.average}/5</span>
                   <span className="vote-count">({movie.rating.count} votes)</span>
                 </div>
               )}

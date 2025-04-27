@@ -488,7 +488,7 @@ function AdminDashboard() {
         </Col>
 
         {/* Booking Status */}
-        <Col lg={4}>
+        {/* <Col lg={4}>
           <Card className="h-100 dashboard-card">
             <Card.Header className="d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Booking Status</h5>
@@ -554,7 +554,7 @@ function AdminDashboard() {
               </div>
             </Card.Body>
           </Card>
-        </Col>
+        </Col> */}
       </Row>
 
       {/* Analytics Section */}
