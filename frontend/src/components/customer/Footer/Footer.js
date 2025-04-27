@@ -30,20 +30,20 @@ const Footer = () => {
                                     Your one-stop destination for booking movie tickets online. 
                                     Enjoy the latest blockbusters with premium comfort.
                                 </p>
-                                <div className="social-links">
-                                    <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-                                        <Instagram size={20} />
-                                    </a>
-                                    <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
-                                        <Twitter size={20} />
-                                    </a>
-                                    <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-                                        <Facebook size={20} />
-                                    </a>
-                                    <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
-                                        <Youtube size={20} />
-                                    </a>
-                                </div>
+                                    {/* <div className="social-links">
+                                        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                                            <Instagram size={20} />
+                                        </a>
+                                        <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
+                                            <Twitter size={20} />
+                                        </a>
+                                        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                                            <Facebook size={20} />
+                                        </a>
+                                        <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                                            <Youtube size={20} />
+                                        </a>
+                                    </div> */}
                             </div>
                         </Col>
                         
@@ -53,19 +53,19 @@ const Footer = () => {
                                 <li><Link to="/customer/movies">Movies</Link></li>
                                 <li><Link to="/customer/theaters">Theaters</Link></li>
                                 <li><Link to="/customer/upcoming">Upcoming</Link></li>
-                                <li><Link to="/customer/offers">Offers</Link></li>
-                                <li><Link to="/customer/gift-cards">Gift Cards</Link></li>
+                                {/* <li><Link to="/customer/offers">Offers</Link></li>
+                                <li><Link to="/customer/gift-cards">Gift Cards</Link></li> */}
                             </ul>
                         </Col>
                         
                         <Col lg={2} md={6} className="mb-4 mb-md-0">
                             <h5 className="footer-heading">Information</h5>
                             <ul className="footer-links">
-                                <li><Link to="/customer/about">About Us</Link></li>
+                                {/* <li><Link to="/customer/about">About Us</Link></li> */}
                                 <li><Link to="/customer/faq">FAQs</Link></li>
-                                <li><Link to="/customer/terms">Terms of Use</Link></li>
+                                {/* <li><Link to="/customer/terms">Terms of Use</Link></li>
                                 <li><Link to="/customer/privacy">Privacy Policy</Link></li>
-                                <li><Link to="/customer/careers">Careers</Link></li>
+                                <li><Link to="/customer/careers">Careers</Link></li> */}
                             </ul>
                         </Col>
                         
@@ -74,19 +74,19 @@ const Footer = () => {
                             <ul className="footer-contact">
                                 <li>
                                     <MapPin size={18} />
-                                    <span>123 Movie St., Cinema City, 45678</span>
+                                    <span>DDU college Road, Nadiad, 387001</span>
                                 </li>
                                 <li>
                                     <Phone size={18} />
-                                    <span>+1 (555) 123-4567</span>
+                                    <span>+91 9898985452</span>
                                 </li>
                                 <li>
                                     <Mail size={18} />
-                                    <span>support@moviebuff.com</span>
+                                    <span>bookwithmoviebuff@gmail.com</span>
                                 </li>
                             </ul>
                             
-                            <div className="newsletter mt-4">
+                            {/* <div className="newsletter mt-4">
                                 <h6>Subscribe to Our Newsletter</h6>
                                 <form className="newsletter-form">
                                     <input 
@@ -96,7 +96,7 @@ const Footer = () => {
                                     />
                                     <button type="submit">Subscribe</button>
                                 </form>
-                            </div>
+                            </div> */}
                         </Col>
                     </Row>
                 </Container>

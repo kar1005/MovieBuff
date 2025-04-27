@@ -245,18 +245,18 @@
   padding: 15px;
 }
 
-.movie-shows {
+.tdetails-movie-shows {
   margin-bottom: 30px;
   border-bottom: 1px solid #eee;
   padding-bottom: 20px;
 }
 
-.movie-shows:last-child {
+.tdetails-movie-shows:last-child {
   border-bottom: none;
 }
 
 /* New styling for the side-by-side layout */
-.movie-show-row {
+.tdetails-movie-show-row {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -265,18 +265,18 @@
   gap: 20px;
 }
 
-.movie-info {
+.tdetails-movie-info {
   flex: 0 0 200px;
 }
 
-.movie-info h2 {
+.tdetails-movie-info h2 {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 5px;
-  color: #333;
+  color: black;
 }
 
-.movie-meta {
+.tdetails-movie-meta {
   display: flex;
   font-size: 13px;
   color: #666;
@@ -400,12 +400,12 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .movie-show-row {
+  .tdetails-movie-show-row {
     flex-direction: column;
     align-items: flex-start;
   }
   
-  .movie-info {
+  .tdetails-movie-info {
     margin-bottom: 15px;
     flex: 1 0 100%;
   }

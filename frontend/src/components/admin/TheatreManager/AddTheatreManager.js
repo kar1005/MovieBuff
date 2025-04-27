@@ -86,7 +86,7 @@ const AddTheatreManager = () => {
       }
 
       const data = await result.json();
-      navigate('/login');
+      navigate('/admin/theater-managers');
       toast.success('Google registration successful! Please log in.');
     } catch (err) {
       console.error('Google auth error:', err);
@@ -184,14 +184,14 @@ const AddTheatreManager = () => {
       try {
         await dispatch(createTheater(theaterRequest)).unwrap();
         toast.success('Registration successful! Please check your email for credentials.');
-        navigate('/login');
+        navigate('/admin/theater-managers');
       } catch (theaterError) {
         // If theater creation fails, we should log this and notify the admin
         console.error('Theater creation failed:', theaterError);
         
         // Still allow the user to proceed since their account was created
         toast.warning('Account created successfully, but theater setup needs attention. Our team will contact you shortly.');
-        navigate('/login');
+        navigate('/admin/theater-managers');
       }
   
     } catch (error) {

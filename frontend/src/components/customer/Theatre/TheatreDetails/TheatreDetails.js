@@ -338,11 +338,11 @@ const TheatreDetails = () => {
       <div className="shows-container">
         {groupedShows.length > 0 ? (
           groupedShows.map((movie, index) => (
-            <div key={index} className="movie-shows">
-              <div className="movie-show-row">
-                <div className="movie-info">
+            <div key={index} className="tdetails-movie-shows">
+              <div className="tdetails-movie-show-row">
+                <div className="tdetails-movie-info">
                   <h2>{movie.movieTitle}</h2>
-                  <div className="movie-meta">
+                  <div className="tdetails-movie-meta">
                     <span className="language">{movie.language}</span>
                   </div>
                 </div>
