@@ -81,12 +81,13 @@
   border-color: #64748b;
 }
 
-.movie-info-head {
+.book-movie-info-head {
   text-align: center;
   margin-bottom: 1.5rem;
+  width: 100%;
 }
 
-.movie-info-head h1 {
+.book-movie-info-head h1 {
   font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
@@ -108,7 +109,7 @@
   color: #475569;
 }
 
-.movie-tags {
+.book-movie-tags {
   display: flex;
   justify-content: center;
   gap: 0.5rem;
@@ -425,7 +426,7 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .movie-info-head h1 {
+  .book-movie-info-head h1 {
     font-size: 1.5rem;
   }
   

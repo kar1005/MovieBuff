@@ -574,29 +574,29 @@ const SeatBooking = () => {
   return (
     <div className="container-fluid seat-booking-container">
       <div className="booking-header">
-        <button 
-          className="back-button text-white"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft size={18} />
-          <span>Back</span>
-        </button>
+  <button 
+    className="back-button"
+    onClick={() => navigate(-1)}
+  >
+    <ArrowLeft size={18} />
+    <span>Back</span>
+  </button>
 
-        <div className="movie-info-head">
-          <h1>{movieTitle || 'Movie Title'}</h1>
-          <div className="theater-info">
-            <span>{theater?.name}</span>
-            <span className="separator">•</span>
-            <span>Screen {screen?.screenNumber}</span>
-            <span className="separator">•</span>
-            <span>{show && formatShowtime(show.showTime)}</span>
-          </div>
-          <div className="movie-tags">
-            <span className="tag">{show?.language}</span>
-            <span className="tag">{show?.experience}</span>
-          </div>
-        </div>
-      </div>
+  <div className="book-movie-info-head">
+    <h1>{movieTitle || 'Movie Title'}</h1>
+    <div className="theater-info">
+      <span>{theater?.name}</span>
+      <span className="separator">•</span>
+      <span>Screen {screen?.screenNumber}</span>
+      <span className="separator">•</span>
+      <span>{show && formatShowtime(show.showTime)}</span>
+    </div>
+    <div className="book-movie-tags">
+      <span className="tag">{show?.language}</span>
+      <span className="tag">{show?.experience}</span>
+    </div>
+  </div>
+</div>
       
       {timerActive && (
         <div className="timer-banner">

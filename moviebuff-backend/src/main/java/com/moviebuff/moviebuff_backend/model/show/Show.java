@@ -182,7 +182,6 @@ public class Show {
     
     // Calculate popularity score based on various metrics
     public void calculatePopularityScore() {
-        // Simple example algorithm - can be made more sophisticated
         this.popularityScore = (this.viewCount * 0.3) + 
                                (this.bookingAttempts * 0.3) + 
                                ((double)this.bookedSeats / this.totalSeats * 0.4) * 100;
