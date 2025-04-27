@@ -255,6 +255,8 @@
 }
 
 .seat {
+  background-color: transparent !important; /* Force transparent background */
+  color: #94a3b8;
   width: 28px;
   height: 28px;
   border-radius: 4px;
@@ -264,8 +266,6 @@
   justify-content: center;
   font-size: 0.7rem;
   font-weight: 500;
-  background-color: transparent;
-  color: #94a3b8;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -276,18 +276,19 @@
 }
 
 .seat.selected {
+  background-color: var(--seat-category-color, #3b82f6) !important;
   color: #f8fafc;
 }
 
 .seat.booked {
-  background-color: #334155;
+  background-color: #334155 !important;
   border-color: #334155;
   color: #64748b;
   cursor: not-allowed;
 }
 
 .seat.reserved {
-  background-color: rgba(239, 68, 68, 0.1);
+  background-color: rgba(239, 68, 68, 0.1) !important;
   border-color: #ef4444;
   color: #ef4444;
   cursor: not-allowed;

@@ -502,17 +502,18 @@ const SeatBooking = () => {
                 
                 return (
                   <button
-                    key={`seat-${seatId}`}
-                    className={`seat ${statusClass} ${categoryClass} ${seatType}`}
-                    onClick={() => handleSeatClick(seatId)}
-                    disabled={statusClass === 'booked' || statusClass === 'reserved'}
-                    aria-label={`Seat ${seatId}`}
-                    title={`${seatId} - ${seat.category} - ${seat.type || 'Regular'} - ₹${show.pricing[seat.category]?.finalPrice || seat.basePrice}`}
-                    style={{
-                      borderColor: seat.seatColor,
-                      ...(statusClass === 'selected' && { backgroundColor: seat.seatColor })
-                    }}
-                  >
+  key={`seat-${seatId}`}
+  className={`seat ${statusClass} ${categoryClass} ${seatType}`}
+  onClick={() => handleSeatClick(seatId)}
+  disabled={statusClass === 'booked' || statusClass === 'reserved'}
+  aria-label={`Seat ${seatId}`}
+  title={`${seatId} - ${seat.category} - ${seat.type || 'Regular'} - ₹${show.pricing[seat.category]?.finalPrice || seat.basePrice}`}
+  style={{
+    borderColor: seat.seatColor,
+    '--seat-category-color': seat.seatColor,
+    // Remove any direct background-color setting here
+  }}
+>
                     {seatId.substring(1)}
                     {seatType === 'recliner' && (
                       <span className="seat-type-indicator">

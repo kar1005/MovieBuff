@@ -1,5 +1,5 @@
 /* MovieDetails.css */
-.movie-details-container {
+.smovie-details-container {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
@@ -23,7 +23,7 @@
 }
 
 /* Hero Section */
-.movie-hero {
+.smovie-hero {
   width: 100%;
   height: 500px;
   background-size: cover;
@@ -32,7 +32,7 @@
   color: #fff;
 }
 
-.movie-hero-content {
+.smovie-hero-content {
   display: flex;
   max-width: 1200px;
   margin: 0 auto;
@@ -41,11 +41,11 @@
   gap: 40px;
 }
 
-.movie-poster-container {
+.smovie-poster-container {
   flex-shrink: 0;
 }
 
-.movie-poster {
+.smovie-poster {
   width: 240px;
   height: 360px;
   object-fit: cover;
@@ -53,17 +53,17 @@
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
 }
 
-.movie-info {
+.smovie-info {
   flex-grow: 1;
 }
 
-.movie-title {
+.smovie-title {
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 16px;
 }
 
-.movie-meta {
+.smovie-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
@@ -91,7 +91,7 @@
   gap: 6px;
 }
 
-.movie-attributes {
+.smovie-attributes {
   margin-bottom: 30px;
 }
 
@@ -138,7 +138,7 @@
 }
 
 .book-button:hover {
-  background-color: #d81b60;
+  background-color: #ffc107;
 }
 
 .trailer-button, .share-button {
@@ -148,7 +148,7 @@
   background-color: rgba(255, 255, 255, 0.1);
   color: white;
   border: none;
-  padding: 12px 16px;
+  padding: 20px 16px;
   border-radius: 6px;
   font-weight: 500;
   font-size: 0.9rem;
@@ -161,15 +161,15 @@
 }
 
 /* Content Sections */
-.movie-content {
+.smovie-content {
   padding: 40px 20px;
 }
 
-.movie-content section {
+.smovie-content section {
   margin-bottom: 48px;
 }
 
-.movie-content h2 {
+.smovie-content h2 {
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 20px;
@@ -178,7 +178,7 @@
   padding-bottom: 8px;
 }
 
-.movie-content h2::after {
+.smovie-content h2::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -725,24 +725,24 @@ textarea:focus {
 
 /* Responsive styles */
 @media (max-width: 768px) {
-  .movie-hero-content {
+  .smovie-hero-content {
     flex-direction: column;
     align-items: center;
     padding-top: 40px;
   }
   
-  .movie-poster {
+  .smovie-poster {
     width: 200px;
     height: 300px;
     margin-bottom: 20px;
   }
   
-  .movie-title {
+  .smovie-title {
     font-size: 2rem;
     text-align: center;
   }
   
-  .movie-meta {
+  .smovie-meta {
     justify-content: center;
   }
   
@@ -786,16 +786,16 @@ textarea:focus {
 }
 
 @media (max-width: 480px) {
-  .movie-hero {
+  .smovie-hero {
     height: auto;
   }
   
-  .movie-poster {
+  .smovie-poster {
     width: 160px;
     height: 240px;
   }
   
-  .movie-title {
+  .smovie-title {
     font-size: 1.8rem;
   }
   

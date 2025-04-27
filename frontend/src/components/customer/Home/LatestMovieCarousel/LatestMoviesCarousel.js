@@ -135,6 +135,9 @@ function LatestMoviesCarousel() {
         <div className="container">
           <div className="section-header">
             <h2 className="section-title">Latest Releases</h2>
+            {/* <a href="/movies" className="view-all-link">
+              View All <ChevronRight className="h-4 w-4" />
+            </a> */}
           </div>
           
           <div className="carousel-container">

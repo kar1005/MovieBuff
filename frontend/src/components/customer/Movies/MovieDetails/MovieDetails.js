@@ -118,16 +118,16 @@ const MovieDetails = () => {
   }
 
   return (
-    <div className="movie-details-container">
-      <div className="movie-hero" style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.9)), url(${movie.posterUrl})` }}>
-        <div className="movie-hero-content">
-          <div className="movie-poster-container">
-            <img src={movie.posterUrl} alt={movie.title} className="movie-poster" />
+    <div className="smovie-details-container">
+      <div className="smovie-hero" style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.9)), url(${movie.posterUrl})` }}>
+        <div className="smovie-hero-content">
+          <div className="smovie-poster-container">
+            <img src={movie.posterUrl} alt={movie.title} className="smovie-poster" />
           </div>
-          <div className="movie-info">
-            <h1 className="movie-title">{movie.title}</h1>
+          <div className="smovie-info">
+            <h1 className="smovie-title">{movie.title}</h1>
             
-            <div className="movie-meta">
+            <div className="smovie-meta">
               {movie.rating && (
                 <div className="rating">
                   <Star fill="#FFC107" stroke="#FFC107" size={20} />
@@ -152,7 +152,7 @@ const MovieDetails = () => {
               </div>
             </div>
             
-            <div className="movie-attributes">
+            <div className="smovie-attributes">
               <div className="attribute-section">
                 <h3>Genres</h3>
                 <div className="tags">
@@ -196,7 +196,7 @@ const MovieDetails = () => {
         </div>
       </div>
 
-      <div className="movie-content">
+      <div className="smovie-content">
         <section className="about-section">
           <h2>About the movie</h2>
           <p>{movie.description}</p>

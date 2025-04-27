@@ -349,7 +349,7 @@ function ActorHome() {
                                                     {actor.imageUrl ? (
                                                         <div style={styles.actorImageContainer} className="me-3">
                                                             <img 
-                                                                src={actor.imageUrl}
+                                                                src={actor.imageUrl || ''}
                                                                 alt={`${actor.name}`}
                                                                 style={styles.actorImage}
                                                                 className="shadow-sm"
