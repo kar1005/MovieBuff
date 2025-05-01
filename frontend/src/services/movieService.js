@@ -72,7 +72,7 @@ const movieService = {
     // Special Movie Lists
     getTrendingMovies: async (limit = 10) => {
         try {
-            const response = await axiosInstance.get(`${BASE_URL}/trending?limit=${limit}`);
+            const response = await axiosInstance.get(`${BASE_URL}/latest-released`);
             return response.data;
         } catch (error) {
             throw error.response?.data || 'Failed to fetch trending movies';
@@ -81,7 +81,7 @@ const movieService = {
 
     getUpcomingMovies: async (limit = 10) => {
         try {
-            const response = await axiosInstance.get(`${BASE_URL}/upcoming?limit=${limit}`);
+            const response = await axiosInstance.get(`${BASE_URL}/upcoming`);
             return response.data;
         } catch (error) {
             throw error.response?.data || 'Failed to fetch upcoming movies';

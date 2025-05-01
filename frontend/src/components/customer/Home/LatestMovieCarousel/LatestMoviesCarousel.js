@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Star, Clock, Ticket } from 'lucide-react';
 import './LatestMovieCarousel.css'; 
+import movieService from '../../../../services/movieService';
 
 function LatestMoviesCarousel() {
   const [movies, setMovies] = useState([]);
@@ -37,11 +38,7 @@ function LatestMoviesCarousel() {
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/movies/latest-released?limit=5');
-        if (!response.ok) {
-          throw new Error('Failed to fetch movies');
-        }
-        let data = await response.json();
+        let data = await movieService.getTrendingMovies();
         
         // Remove duplicate movies by ID
         const uniqueMovies = [];

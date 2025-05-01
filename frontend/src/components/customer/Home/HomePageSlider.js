@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import './HomePageSlider.css';
+import sliderService from '../../../services/sliderService';
 
 const HomePageSlider = () => {
     const [currentSlide, setCurrentSlide] = useState(0);
     const [sliderImages, setSliderImages] = useState([]);
     const [isHovering, setIsHovering] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-
-    axios.defaults.baseURL = 'http://localhost:8080';
 
     useEffect(() => {
         fetchSliderImages();
@@ -33,8 +32,8 @@ const HomePageSlider = () => {
     const fetchSliderImages = async () => {
         setIsLoading(true);
         try {
-            const response = await axios.get('/api/slider');
-            setSliderImages(response.data);
+            const data = await sliderService.getAllSlider();
+            setSliderImages(data);
         } catch (error) {
             console.error('Failed to fetch slider images', error);
         } finally {
