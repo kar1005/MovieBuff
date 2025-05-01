@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginStart, loginSuccess, loginFailure } from '../../../redux/slices/authSlice';
 import { toast } from 'react-toastify';
-import { login } from './../../../services/authServices';
+import { login, googleAuth } from '../../../services/authServices';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
 import './Login.css';
@@ -84,26 +84,11 @@ const Login = () => {
     try {
       setLoading(true);
       setError(null);
+      dispatch(loginStart());
       
       console.log("Sending Google token to server...");
-      const res = await fetch('http://localhost:8080/api/auth/google', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({ idToken: response.credential })
-      });
-  
-      console.log("Server response status:", res.status);
-      
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error("Server error response:", errorText);
-        throw new Error(errorText || `Failed with status: ${res.status}`);
-      }
-  
-      const data = await res.json();
+      // Use the googleAuth method from authService instead of direct fetch
+      const data = await googleAuth(response.credential);
       console.log("Server response data:", data);
       
       // Handle different response structures
@@ -114,10 +99,6 @@ const Login = () => {
       if (!userId) {
         throw new Error("User ID not found in response");
       }
-  
-      localStorage.setItem('token', data.token);      
-      localStorage.setItem('userId', userId);
-      localStorage.setItem('userEmail', userEmail);
       
       dispatch(loginSuccess({
         email: userEmail,
@@ -128,6 +109,12 @@ const Login = () => {
       
       console.log("Login successful for role:", userRole);
       toast.success('Login successful!');
+      
+      if(userRole === 'THEATER_MANAGER'){
+        console.log("Fetching theaters for manager ID:", userId);
+        dispatch(fetchManagerTheaters(userId));
+      }
+      
       navigateByRole(userRole);
       
     } catch (error) {
@@ -150,10 +137,6 @@ const Login = () => {
       
       const data = await login(credentials);
       console.log("Login response:", data);
-      
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('userId', data.id);
-      localStorage.setItem('userEmail', data.email);
       
       dispatch(loginSuccess({
         email: data.email, 

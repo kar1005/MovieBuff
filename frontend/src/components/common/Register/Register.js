@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { register } from '../../../services/authServices';
+import { register, googleAuth } from '../../../services/authServices';
 import { Card, Container, Row, Col, Form, Button, Alert } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import './Register.css';
@@ -8,6 +8,7 @@ import { GOOGLE_CLIENT_ID } from '../../../config/googleAuth';
 
 const Register = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -78,28 +79,12 @@ const Register = () => {
 
   const handleGoogleSuccess = async (response) => {
     try {
+      setLoading(true);
+      setError(null);
       console.log("Google auth response received:", response);
       
-      const result = await fetch('http://localhost:8080/api/auth/google', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',  // Include credentials for CORS
-        body: JSON.stringify({
-          idToken: response.credential
-        })
-      });
-  
-      console.log("API response status:", result.status);
-      
-      if (!result.ok) {
-        const errorText = await result.text();
-        console.error("API error response:", errorText);
-        throw new Error(errorText || `Error: ${result.status}`);
-      }
-  
-      const data = await result.json();
+      // Use the googleAuth method from authService
+      const data = await googleAuth(response.credential);
       console.log("Success response:", data);
       
       navigate('/login');
@@ -107,6 +92,8 @@ const Register = () => {
     } catch (err) {
       console.error('Google auth error:', err);
       setError(err.message || 'Google registration failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -134,12 +121,17 @@ const Register = () => {
     }
 
     try {
+      setLoading(true);
+      setError(null);
       const registrationData = { ...formData };
       delete registrationData.confirmPassword;
       await register(registrationData);
+      toast.success('Registration successful! Please log in.');
       navigate('/login');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -287,8 +279,9 @@ const Register = () => {
                     variant="primary" 
                     type="submit" 
                     className="w-100 mt-4 register-button"
+                    disabled={loading}
                   >
-                    Create Account
+                    {loading ? 'Creating Account...' : 'Create Account'}
                   </Button>
                 </Form>
               </Card.Body>
