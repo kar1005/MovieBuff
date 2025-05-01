@@ -252,7 +252,10 @@ const MovieDetails = () => {
         )}
         
         {/* Include Movie Review Section component */}
-        <MovieReviewSection movieId={movieId} />
+        
+        {movie && movie.status === "RELEASED" && (
+  <MovieReviewSection movieId={movieId} />
+)}
       </div>
     </div>
   );

@@ -78,12 +78,12 @@ const HelpSupportPage = () => {
                   <div className="contact-icon">
                     <Mail size={28} />
                   </div>
-                  <Card.Title className="mt-3">Email Support</Card.Title>
+                  <Card.Title className="mt-3 text-dark">Email Support</Card.Title>
                   <Card.Text>
                     Get in touch with our customer support team
                   </Card.Text>
                   <a href="mailto:support@moviebuff.com" className="contact-link">
-                    support@moviebuff.com
+                    bookwithmoviebuff@gmail.com
                   </a>
                 </Card.Body>
               </Card>
@@ -95,7 +95,7 @@ const HelpSupportPage = () => {
                   <div className="contact-icon">
                     <Phone size={28} />
                   </div>
-                  <Card.Title className="mt-3">Phone Support</Card.Title>
+                  <Card.Title className="mt-3 text-dark">Phone Support</Card.Title>
                   <Card.Text>
                     Available Monday - Saturday, 9AM - 6PM
                   </Card.Text>
@@ -112,7 +112,7 @@ const HelpSupportPage = () => {
                   <div className="contact-icon">
                     <MessageSquare size={28} />
                   </div>
-                  <Card.Title className="mt-3">Live Chat</Card.Title>
+                  <Card.Title className="mt-3 text-dark">Live Chat</Card.Title>
                   <Card.Text>
                     Chat with our representatives in real-time
                   </Card.Text>
@@ -126,7 +126,7 @@ const HelpSupportPage = () => {
           
           <Row className="mt-5">
             <Col md={12}>
-              <h2 className="text-center mb-4 section-title">Frequently Asked Questions</h2>
+              <h2 className="text-center mb-4 section-title text-light">Frequently Asked Questions</h2>
             </Col>
             
             <Col md={12}>
@@ -346,7 +346,7 @@ const HelpSupportPage = () => {
                 </Card.Header>
                 <Card.Body>
                   <Card className="mb-4 additional-resource-card">
-                    <Card.Body>
+                    {/* <Card.Body>
                       <div className="d-flex align-items-start">
                         <div className="resource-icon me-3">
                           <HelpCircle size={24} />
@@ -359,16 +359,15 @@ const HelpSupportPage = () => {
                           <Button variant="link" className="p-0">Visit Knowledge Base</Button>
                         </div>
                       </div>
-                    </Card.Body>
+                    </Card.Body> */}
                   </Card>
                   
                   <h5 className="section-title">Reach Us</h5>
                   <div className="reach-us-info mb-4">
                     <p>
                       <strong>Corporate Office:</strong><br />
-                      MovieBuff Entertainment Pvt. Ltd.<br />
-                      123 Cinema Street, Media Park<br />
-                      Bangalore, Karnataka 560001<br />
+                      DDU college road, <br />
+                      Nadiad, Gujarat, 387001<br />
                       India
                     </p>
                     <p>
@@ -379,7 +378,7 @@ const HelpSupportPage = () => {
                     </p>
                   </div>
                   
-                  <h5 className="section-title">Connect with Us</h5>
+                  {/* <h5 className="section-title">Connect with Us</h5>
                   <div className="social-links">
                     <a href="https://twitter.com/moviebuff" className="social-link" title="Twitter">
                       <Twitter size={20} />
@@ -390,7 +389,7 @@ const HelpSupportPage = () => {
                     <a href="https://instagram.com/moviebuff" className="social-link" title="Instagram">
                       <Instagram size={20} />
                     </a>
-                  </div>
+                  </div> */}
                 </Card.Body>
               </Card>
             </Col>
