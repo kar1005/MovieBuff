@@ -81,7 +81,7 @@ const movieService = {
 
     getUpcomingMovies: async (limit = 10) => {
         try {
-            const response = await axiosInstance.get(`${BASE_URL}/upcoming`);
+            const response = await axiosInstance.get(`${BASE_URL}/upcoming-movies`);
             return response.data;
         } catch (error) {
             throw error.response?.data || 'Failed to fetch upcoming movies';

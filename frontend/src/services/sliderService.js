@@ -7,7 +7,7 @@ const sliderService = {
     getAllSlider: async () => {
         try {
             
-            const response = await axiosInstance.get(`${BASE_URL}/`);
+            const response = await axiosInstance.get(`${BASE_URL}`);
             return response.data;
         } catch (error) {
             throw error.response?.data || 'Failed to fetch slider';
