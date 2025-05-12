@@ -1,11 +1,11 @@
 import axiosInstance from './axiosConfig';
 import { toast } from 'react-toastify';
 
-const API_URL = '/auth';
+const BASE_URL = '/auth';
 
 export const authService = {
   login: async (credentials) => {
-    const response = await axiosInstance.post(`${API_URL}/login`, credentials);
+    const response = await axiosInstance.post(`${BASE_URL}/login`, credentials);
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
     }
@@ -14,7 +14,7 @@ export const authService = {
 
   googleAuth: async (idToken) => {
     try {
-      const response = await fetch(`${API_URL}/google`, {
+      const response = await fetch(`${BASE_URL}/google`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -55,12 +55,12 @@ export const authService = {
   },
 
   register: async (userData) => {
-    return await axiosInstance.post(`${API_URL}/register`, userData);
+    return await axiosInstance.post(`${BASE_URL}/register`, userData);
   },
 
   registerTManager: async (userData) => {
     try {
-      const response = await axiosInstance.post(`${API_URL}/registertmanager`, userData);
+      const response = await axiosInstance.post(`${BASE_URL}/registertmanager`, userData);
       
       if (response.data) {
         console.log("Service Response", JSON.stringify(response.data));
@@ -76,7 +76,7 @@ export const authService = {
 
   logout: async () => {
     try {
-      const response = await axiosInstance.post(`${API_URL}/logout`);
+      const response = await axiosInstance.post(`${BASE_URL}/logout`);
       
       // Clear token even if the server response fails
       localStorage.removeItem('token');
@@ -95,7 +95,7 @@ export const authService = {
   },
 
   getCurrentUser: async () => {
-    return await axiosInstance.get(`${API_URL}/me`);
+    return await axiosInstance.get(`${BASE_URL}/me`);
   }
 };
 
