@@ -14,15 +14,11 @@ export const authService = {
 
   googleAuth: async (idToken) => {
     try {
-
-      const response = axiosInstance.post(`${BASE_URL}/google`,idToken );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || `Failed with status: ${response.status}`);
-      }
-
-      const data = await response.json();
+      // Add 'await' here - this was missing!
+      const response = await axiosInstance.post(`${BASE_URL}/google`, { idToken });
+      
+      // With axios, the data is already in response.data
+      const data = response.data;
       
       // Store user data in localStorage if token exists
       if (data.token) {
