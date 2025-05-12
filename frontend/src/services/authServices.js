@@ -14,7 +14,7 @@ export const authService = {
 
   googleAuth: async (idToken) => {
     try {
-      const response = await fetch('http://localhost:8080/api/auth/google', {
+      const response = await fetch(`${API_URL}/google`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
