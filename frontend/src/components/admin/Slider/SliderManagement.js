@@ -3,6 +3,7 @@ import axios from 'axios';
 import cloudinaryService from './../../../services/cloudinaryService';
 import { Card, Button, Form, Table } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import sliderService from '../../../services/sliderService';
 
 const SliderManagement = () => {
     const [sliderImages, setSliderImages] = useState([]);
@@ -13,12 +14,11 @@ const SliderManagement = () => {
     });
     const [uploadErrors, setUploadErrors] = useState([]);
     const fileInputRef = useRef(null);
-    axios.defaults.baseURL = 'http://localhost:8080';
   
     // Fetch slider images
     const fetchSliderImages = async () => {
       try {
-        const response = await axios.get('/api/slider');
+        const response = await sliderService.getAllSlider();
         setSliderImages(response.data);
       } catch (error) {
         console.error('Failed to fetch slider images', error);
@@ -76,7 +76,7 @@ const SliderManagement = () => {
         };
 
         // Save to backend
-        await axios.post('/api/slider', sliderData);
+        await sliderService.addSlider(sliderData);
 
         // Reset form and refresh images
         setNewImage({ title: '', file: null, description: '' });
@@ -123,7 +123,7 @@ const SliderManagement = () => {
         };
 
         // Save updated image to backend
-        await axios.put(`/api/slider/${imageId}`, updatedSliderData);
+        await sliderService.updateSlider(imageId, updatedSliderData);
 
         fetchSliderImages();
       } catch (error) {

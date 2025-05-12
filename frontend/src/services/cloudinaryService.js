@@ -1,8 +1,8 @@
 // src/services/cloudinaryService.js
 import axios from 'axios';
 
-// const CLOUDINARY_URL = process.env.REACT_APP_CLOUDINARY_URL;
-// const UPLOAD_PRESET = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
+const BASE_URL = '/cloudinary';
+
 
     const cloudinaryService = {
         // Upload image through backend proxy
@@ -15,7 +15,7 @@ import axios from 'axios';
                 }
     
                 const response = await axios.post(
-                    'http://localhost:8080/api/cloudinary/upload', 
+                    `${BASE_URL}/upload`, 
                     formData
                 );
     
@@ -29,7 +29,7 @@ import axios from 'axios';
         // Delete image using public ID through backend proxy
         deleteImage: async (publicId) => {
             try {
-                const response = await axios.post('http://localhost:8080/api/cloudinary/delete', { publicId });
+                const response = await axios.post(`${BASE_URL}/delete`, { publicId });
                 return response.data;
             } catch (error) {
                 console.error('Error deleting image:', error);

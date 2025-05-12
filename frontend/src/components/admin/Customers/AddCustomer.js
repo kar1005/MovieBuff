@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { register } from '../../../services/authServices';
+import { register,googleAuth } from '../../../services/authServices';
 import { Card } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import axios from 'axios';
@@ -65,16 +65,7 @@ const Register = () => {
 
   const handleGoogleSuccess = async (response) => {
     try {
-      const result = await fetch('http://localhost:8080/api/auth/google', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          idToken: response.credential
-        })
-      });
-
+      const result = await googleAuth(response.credential);
       if (!result.ok) {
         const errorData = await result.text();
         throw new Error(errorData);

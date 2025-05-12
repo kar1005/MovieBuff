@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { registerTManager } from '../../../services/authServices';
+import { googleAuth, registerTManager } from '../../../services/authServices';
 import { createTheater } from '../../../redux/slices/theaterSlice';
 import { useDispatch } from 'react-redux';
 
@@ -70,15 +70,7 @@ const AddTheatreManager = () => {
   const handleGoogleSuccess = async (response) => {
     try {
       setLoading(true);
-      const result = await fetch('http://localhost:8080/api/auth/google', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          idToken: response.credential
-        })
-      });
+      const result = await googleAuth(response.credential);
 
       if (!result.ok) {
         const errorData = await result.text();

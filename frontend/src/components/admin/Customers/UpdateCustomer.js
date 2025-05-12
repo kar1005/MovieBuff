@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import './UpdateCustomer.css';
+import { updateUser } from '../../../services/userService'; // Adjust the import path as necessary
 
 function UpdateCustomer({ customerId, handleClick }) {
     const [formData, setFormData] = useState({
@@ -28,9 +29,7 @@ function UpdateCustomer({ customerId, handleClick }) {
         const fetchCustomerData = async () => {
             try {
                 setLoading(true);
-                const response = await fetch(`http://localhost:8080/api/users/${customerId}`);
-                if (!response.ok) throw new Error('Failed to fetch customer data');
-                const data = await response.json();
+                const data = await updateUser(customerId,formData); // Fetch customer data using the provided ID
                 setFormData(data);
             } catch (error) {
                 console.error('Error fetching customer data:', error);
@@ -75,13 +74,7 @@ function UpdateCustomer({ customerId, handleClick }) {
             const updatedData = { ...formData };
             delete updatedData.confirmPassword;
             
-            const response = await fetch(`http://localhost:8080/api/users/${customerId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(updatedData),
-            });
+            const response = await updateUser(customerId, updatedData); // Update customer data using the provided ID
 
             if (!response.ok) {
                 throw new Error('Update failed');
