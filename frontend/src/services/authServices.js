@@ -14,14 +14,8 @@ export const authService = {
 
   googleAuth: async (idToken) => {
     try {
-      const response = await fetch(`${BASE_URL}/google`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({ idToken })
-      });
+
+      const response = axiosInstance.post(`${BASE_URL}/google`, { idToken });
 
       if (!response.ok) {
         const errorText = await response.text();
