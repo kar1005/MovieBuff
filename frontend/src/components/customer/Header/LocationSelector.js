@@ -288,9 +288,9 @@ function LocationSelector() {
   }, [storedCity]);
 
   // This effect will update the modal state in response to isLocationSet changes
-  useEffect(() => {
-    setShowModal(!isLocationSet);
-  }, [isLocationSet]);
+  // useEffect(() => {
+  //   setShowModal(!isLocationSet);
+  // }, [isLocationSet]);
 
   return (
     <>
