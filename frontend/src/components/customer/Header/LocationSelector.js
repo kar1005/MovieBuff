@@ -10,13 +10,14 @@ import {
 } from "../../../redux/slices/locationSlice";
 import "./LocationSelector.css";
 
-function LocationSelector() {
+// Add a disablePrompt prop that parent components can use
+function LocationSelector({ disablePrompt = false }) {
   const dispatch = useDispatch();
   const storedCity = useSelector(selectUserCity);
   const isLocationSet = useSelector(selectIsLocationSet);
 
-  // Initialize showModal based on whether location is set
-  const [showModal, setShowModal] = useState(!isLocationSet);
+  // Initialize modal state based on whether location is set AND disablePrompt
+  const [showModal, setShowModal] = useState(!isLocationSet && !disablePrompt);
   const [userCity, setUserCity] = useState(storedCity || "Select City");
   const [cityInput, setCityInput] = useState("");
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
@@ -280,7 +281,7 @@ function LocationSelector() {
       )
     : allCities;
 
-  // Only set user city from stored value, don't automatically open modal here
+  // Only set user city from stored value, don't automatically open modal
   useEffect(() => {
     if (storedCity) {
       setUserCity(storedCity);
@@ -288,9 +289,12 @@ function LocationSelector() {
   }, [storedCity]);
 
   // This effect will update the modal state in response to isLocationSet changes
-  // useEffect(() => {
-  //   setShowModal(!isLocationSet);
-  // }, [isLocationSet]);
+  // But only if not disabled by parent
+  useEffect(() => {
+    if (!disablePrompt) {
+      setShowModal(!isLocationSet);
+    }
+  }, [isLocationSet, disablePrompt]);
 
   return (
     <>
