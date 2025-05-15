@@ -252,10 +252,11 @@ function LocationSelector() {
   useEffect(() => {
     if (storedCity) {
       setUserCity(storedCity);
-    } else {
-      // If no stored city, open modal
-      setShowModal(true);
-    }
+    } 
+    // else {
+    //   // If no stored city, open modal
+    //   setShowModal(true);
+    // }
   }, [storedCity]);
   
   return (
