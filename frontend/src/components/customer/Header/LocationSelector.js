@@ -15,7 +15,8 @@ function LocationSelector() {
   const storedCity = useSelector(selectUserCity);
   const isLocationSet = useSelector(selectIsLocationSet);
 
-  const [showModal, setShowModal] = useState(false);
+  // Initialize showModal based on whether location is set
+  const [showModal, setShowModal] = useState(!isLocationSet);
   const [userCity, setUserCity] = useState(storedCity || "Select City");
   const [cityInput, setCityInput] = useState("");
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
@@ -279,16 +280,17 @@ function LocationSelector() {
       )
     : allCities;
 
-  // Check if there's already a stored city on component mount
+  // Only set user city from stored value, don't automatically open modal here
   useEffect(() => {
     if (storedCity) {
       setUserCity(storedCity);
     }
-    // else {
-    //   // If no stored city, open modal
-    //   setShowModal(true);
-    // }
   }, [storedCity]);
+
+  // This effect will update the modal state in response to isLocationSet changes
+  useEffect(() => {
+    setShowModal(!isLocationSet);
+  }, [isLocationSet]);
 
   return (
     <>
@@ -424,6 +426,7 @@ function LocationSelector() {
                       <small className="text-muted d-block mb-1">
                         Your detected location:
                       </small>
+
                       <a
                         href={locationData.googleLink}
                         target="_blank"
