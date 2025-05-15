@@ -248,7 +248,7 @@ function LocationSelector() {
     ? allCities.filter(city => city.toLowerCase().includes(cityInput.toLowerCase()))
     : allCities;
 
-  // Check if there's already a stored city on component mount
+  // Only set user city from stored value, don't automatically open modal here
   useEffect(() => {
     if (storedCity) {
       setUserCity(storedCity);
