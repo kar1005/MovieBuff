@@ -17,6 +17,7 @@ public class TheaterMapper {
 
         TheaterResponse response = new TheaterResponse();
         response.setId(theater.getId());
+        response.setManagerId(theater.getManagerId()); // ADD THIS LINE 
         response.setName(theater.getName());
         response.setAmenities(theater.getAmenities());
         response.setDescription(theater.getDescription());

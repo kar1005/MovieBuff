@@ -14,6 +14,7 @@ import lombok.AllArgsConstructor;
 @Data
 public class TheaterResponse {
     private String id;
+    private String managerId; // ADD THIS FIELD
     private String name;
     private List<String> amenities;
     private String description;
@@ -67,5 +68,13 @@ public class TheaterResponse {
         public void setMonthlyBookings(long monthlyBookings) {
             this.monthlyBookings = monthlyBookings;
         }    
+        
+        public String getManagerId() {
+        return managerId;
+        }
+        
+        public void setManagerId(String managerId) {
+            this.managerId = managerId;
+        }
 }
 }
