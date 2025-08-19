@@ -12,6 +12,8 @@ import lombok.AllArgsConstructor;
 
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class TheaterResponse {
     private String id;
     private String managerId; // ADD THIS FIELD
@@ -69,12 +71,5 @@ public class TheaterResponse {
             this.monthlyBookings = monthlyBookings;
         }    
         
-        public String getManagerId() {
-        return managerId;
-        }
-        
-        public void setManagerId(String managerId) {
-            this.managerId = managerId;
-        }
 }
 }

@@ -48,7 +48,7 @@ const SubscriptionPlans = () => {
   useEffect(() => {
     dispatch(fetchActivePlans());
 
-    // Get theater ID and use it to find manager ID from Redux theater state
+    // Get theater ID and fetch theater details to get manager ID
     const theaterId =
       localStorage.getItem("theaterid") ||
       localStorage.getItem("theaterId") ||
@@ -57,87 +57,42 @@ const SubscriptionPlans = () => {
     console.log("Theater ID from localStorage:", theaterId);
 
     if (theaterId) {
-      // Since the theater API doesn't return managerId, we'll use the theaterid
-      // directly as managerId (based on your localStorage structure)
-      // OR fetch manager theaters to get the manager ID
+      // Fetch theater details to get manager ID from the API response
+      console.log("Fetching theater details using theaterService...");
 
-      // Option 1: Try to get managerId from current user/auth context
-      const userRole = localStorage.getItem("userRole");
-      console.log("User role:", userRole);
+      theaterService
+        .getTheaterById(theaterId)
+        .then((theater) => {
+          console.log("Theater details received:", theater);
 
-      if (userRole === "THEATER_MANAGER") {
-        // For theater managers, we can use their user ID as manager ID
-        // Check if there's a user ID that might be the manager ID
-        const potentialManagerId =
-          localStorage.getItem("userId") ||
-          localStorage.getItem("id") ||
-          localStorage.getItem("managerId");
+          if (theater.managerId) {
+            setManagerId(theater.managerId);
+            console.log(
+              "Manager ID found in theater response:",
+              theater.managerId
+            );
 
-        console.log("Potential manager ID:", potentialManagerId);
-
-        if (potentialManagerId) {
-          setManagerId(potentialManagerId);
-          console.log(
-            "Using manager ID from user context:",
-            potentialManagerId
-          );
-
-          // Fetch manager subscription
-          dispatch(fetchManagerSubscription(potentialManagerId))
-            .unwrap()
-            .catch((err) => {
-              console.log("No active subscription found:", err);
-            });
-        } else {
-          // Fallback: Try to fetch theaters by calling the manager endpoint
-          // to reverse-lookup the manager ID
-          console.log(
-            "Attempting to fetch theater details to extract manager info..."
-          );
-
-          theaterService
-            .getTheaterById(theaterId)
-            .then((theater) => {
-              console.log("Theater details received:", theater);
-
-              // If theater response includes managerId (after backend fix)
-              if (theater.managerId) {
-                setManagerId(theater.managerId);
-                console.log(
-                  "Manager ID found in theater response:",
-                  theater.managerId
-                );
-
-                dispatch(fetchManagerSubscription(theater.managerId))
-                  .unwrap()
-                  .catch((err) => {
-                    console.log("No active subscription found:", err);
-                  });
-              } else {
-                // If still no managerId, show error
-                console.error("No manager ID found in theater details!");
-                setPaymentStatus({
-                  status: "error",
-                  message:
-                    "Manager information not found. Please contact support.",
-                });
-              }
-            })
-            .catch((error) => {
-              console.error("Failed to fetch theater details:", error);
-              setPaymentStatus({
-                status: "error",
-                message:
-                  "Failed to load theater information. Please try again.",
+            // Fetch manager subscription
+            dispatch(fetchManagerSubscription(theater.managerId))
+              .unwrap()
+              .catch((err) => {
+                console.log("No active subscription found:", err);
               });
+          } else {
+            console.error("No manager ID found in theater details!");
+            setPaymentStatus({
+              status: "error",
+              message: "Manager information not found. Please contact support.",
             });
-        }
-      } else {
-        setPaymentStatus({
-          status: "error",
-          message: "Access denied. Theater manager role required.",
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to fetch theater details:", error);
+          setPaymentStatus({
+            status: "error",
+            message: "Failed to load theater information. Please try again.",
+          });
         });
-      }
     } else {
       console.error("No Theater ID found in localStorage!");
       setPaymentStatus({
