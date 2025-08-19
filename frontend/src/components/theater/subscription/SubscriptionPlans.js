@@ -44,6 +44,7 @@ const SubscriptionPlans = () => {
     message: "",
   });
   const [managerId, setManagerId] = useState(null); // Add state for managerId
+  const [processingPlanId, setProcessingPlanId] = useState(null); // Track which plan is being processed
 
   useEffect(() => {
     dispatch(fetchActivePlans());
@@ -119,6 +120,7 @@ const SubscriptionPlans = () => {
 
   useEffect(() => {
     if (success && message) {
+      setProcessingPlanId(null); // Reset processing state on success
       setPaymentStatus({
         status: "success",
         message: message,
@@ -128,6 +130,7 @@ const SubscriptionPlans = () => {
 
   useEffect(() => {
     if (currentSubscription?.status === "ACTIVE" && paymentDetails) {
+      setProcessingPlanId(null); // Reset processing state on success
       setPaymentStatus({
         status: "success",
         message: "Your subscription has been successfully activated!",
@@ -137,6 +140,7 @@ const SubscriptionPlans = () => {
 
   const handleSubscribe = async (planId) => {
     try {
+      setProcessingPlanId(planId); // Set the specific plan being processed
       setPaymentStatus({
         status: "processing",
         message: "Processing your subscription request...",
@@ -147,6 +151,7 @@ const SubscriptionPlans = () => {
       console.log("HandleSubscribe - Plan ID:", planId);
 
       if (!currentManagerId) {
+        setProcessingPlanId(null); // Reset processing state
         setPaymentStatus({
           status: "error",
           message: "Manager ID not found. Please login again.",
@@ -155,6 +160,7 @@ const SubscriptionPlans = () => {
       }
 
       if (!planId) {
+        setProcessingPlanId(null); // Reset processing state
         setPaymentStatus({
           status: "error",
           message: "Invalid plan selected. Please try again.",
@@ -255,6 +261,7 @@ const SubscriptionPlans = () => {
 
       razorpay.on("payment.failed", function (response) {
         console.error("Payment failed:", response);
+        setProcessingPlanId(null); // Reset processing state
         setPaymentStatus({
           status: "error",
           message: `Payment failed: ${
@@ -379,7 +386,7 @@ const SubscriptionPlans = () => {
 
       {renderPaymentStatusAlert()}
 
-      {process.env.NODE_ENV === "development" && (
+      {/* {process.env.NODE_ENV === "development" && (
         <Alert variant="warning" className="mb-4">
           <small>
             Debug Info: Theater ID ={" "}
@@ -390,7 +397,7 @@ const SubscriptionPlans = () => {
             | Manager ID = {managerId || "LOADING..."}
           </small>
         </Alert>
-      )}
+      )} */}
 
       {currentSubscription && currentSubscription.status === "ACTIVE" && (
         <Alert variant="info" className="mb-4">
@@ -515,12 +522,13 @@ const SubscriptionPlans = () => {
                       className="w-100 py-2 rounded-pill"
                       onClick={() => handleSubscribe(plan.id)}
                       disabled={
-                        paymentStatus.status === "processing" ||
+                        processingPlanId === plan.id || // Only disable the specific plan being processed
                         !razorpayLoaded ||
-                        isActive
+                        isActive ||
+                        hasActiveSubscription() // Disable all if has active subscription
                       }
                     >
-                      {paymentStatus.status === "processing" ? (
+                      {processingPlanId === plan.id ? ( // Show loader only for the specific plan
                         <>
                           <Spinner
                             as="span"
