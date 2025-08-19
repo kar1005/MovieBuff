@@ -1,9 +1,11 @@
-import React, { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import { logout } from '../../redux/slices/authSlice';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import authService from '../../services/authServices';
+import React, { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { logout } from "../../redux/slices/authSlice";
+import { resetState } from "../../redux/slices/subscriptionSlice";
+// Don't import resetState from other slices if they don't export it
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import authService from "../../services/authServices";
 
 const Logout = () => {
   const dispatch = useDispatch();
@@ -11,46 +13,49 @@ const Logout = () => {
 
   useEffect(() => {
     let isMounted = true;
-  
+
     const performLogout = async () => {
       if (!isMounted) return;
-      
+
       try {
-        console.log('msg form logout here');
-        
+        console.log("msg form logout here");
+
         // Clear all localStorage items
-        localStorage.removeItem('token');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('userEmail');
-        localStorage.removeItem('currentTheater');
-        localStorage.removeItem('selectedTheaterId');
-        
+        localStorage.clear(); // This clears ALL localStorage items at once
+
         // Call the backend logout endpoint
         await authService.logout();
-        
+
         // Only proceed if component is still mounted
         if (isMounted) {
-          // Dispatch the logout action to reset the Redux state
-          dispatch(logout());
-          
+          // Clear Redux states (only the ones that have resetState exported)
+          dispatch(logout()); // Auth state
+          dispatch(resetState()); // Subscription state (this one exists)
+
           // Show a success message
-          toast.success('You have been successfully logged out');
-          
+          toast.success("You have been successfully logged out");
+
           // Redirect to the login page
-          navigate('/login');
+          navigate("/login");
         }
       } catch (error) {
         if (isMounted) {
-          console.error('Logout error:', error);
+          console.error("Logout error:", error);
+
+          // Even on error, clear states
           dispatch(logout());
-          toast.error('Logout encountered an error, but you have been logged out locally');
-          navigate('/login');
+          dispatch(resetState());
+
+          toast.error(
+            "Logout encountered an error, but you have been logged out locally"
+          );
+          navigate("/login");
         }
       }
     };
-  
+
     performLogout();
-  
+
     // Cleanup function
     return () => {
       isMounted = false;
@@ -58,7 +63,10 @@ const Logout = () => {
   }, [dispatch, navigate]);
 
   return (
-    <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+    <div
+      className="d-flex justify-content-center align-items-center"
+      style={{ height: "100vh" }}
+    >
       <div className="text-center">
         <div className="spinner-border text-primary mb-3" role="status">
           <span className="visually-hidden">Loading...</span>

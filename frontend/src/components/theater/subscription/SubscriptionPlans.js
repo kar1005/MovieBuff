@@ -202,7 +202,7 @@ const SubscriptionPlans = () => {
       }
 
       const options = {
-        key: process.env.REACT_APP_RAZORPAY_KEY_ID || "rzp_test_key",
+        key: process.env.REACT_APP_RAZORPAY_KEY_ID || "rzp_test_9CX0WJkeeVpcmx",
         amount: subscription.amount * 100,
         currency: "INR",
         name: "MovieBuff",
